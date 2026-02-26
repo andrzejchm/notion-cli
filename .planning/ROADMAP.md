@@ -48,11 +48,13 @@ Plans:
   3. User can read comments on a page and list workspace users
   4. Running in a terminal shows formatted tables; piping output produces JSON by default; `--json` and `--md` flags override format
   5. All list/search commands handle pagination transparently without user intervention
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
+- [ ] 02-01-PLAN.md — Output formatter (TTY/JSON/MD modes) + pagination utility
+- [ ] 02-02-PLAN.md — notion search and notion ls commands
+- [ ] 02-03-PLAN.md — notion open, notion users, notion comments commands
+- [ ] 02-04-PLAN.md — CLI wiring (all commands + global --json/--md flags) + human verify
 
 ### Phase 3: Page Reading
 **Goal**: User can read any Notion page as full-fidelity markdown with all block types and rich text preserved
@@ -105,7 +107,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Auth | 4/4 | Complete   | 2026-02-26 |
-| 2. Search, Discovery & Output | 0/? | Not started | - |
+| 2. Search, Discovery & Output | 0/4 | Not started | - |
 | 3. Page Reading | 0/? | Not started | - |
 | 4. Database Operations | 0/? | Not started | - |
 | 5. Agent Integration & Distribution | 0/? | Not started | - |
