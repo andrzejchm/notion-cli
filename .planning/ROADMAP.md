@@ -1,0 +1,109 @@
+# Roadmap: notion (Notion CLI)
+
+## Overview
+
+Build a read-only CLI for Notion workspaces that AI agents and developers use to search, read pages as markdown, and query databases — all from the terminal. The journey starts with a working CLI skeleton and auth, adds search/discovery commands with dual-mode output, tackles the core-value block-to-markdown converter, delivers database operations, and ships with agent skill files and npm distribution.
+
+## Phases
+
+**Phase Numbering:**
+- Integer phases (1, 2, 3): Planned milestone work
+- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
+
+Decimal phases appear between their surrounding integers in numeric order.
+
+- [ ] **Phase 1: Foundation & Auth** - Project scaffold, CLI skeleton, auth setup, config, URL parsing, error handling
+- [ ] **Phase 2: Search, Discovery & Output** - Search workspace, list content, browse users/comments, dual-mode output formatting
+- [ ] **Phase 3: Page Reading** - Full-fidelity block-to-markdown converter with rich text annotations and page properties
+- [ ] **Phase 4: Database Operations** - Database schema, query, filtering, sorting, and tabular display
+- [ ] **Phase 5: Agent Integration & Distribution** - Agent skill files, npm packaging, publish-ready CLI
+
+## Phase Details
+
+### Phase 1: Foundation & Auth
+**Goal**: User has a working `notion` CLI binary that authenticates with Notion and provides the infrastructure all commands build on
+**Depends on**: Nothing (first phase)
+**Requirements**: AUTH-01, AUTH-02, AUTH-03, AUTH-04, AUTH-05, OUT-05, DIST-02, DIST-03, DIST-04
+**Success Criteria** (what must be TRUE):
+  1. User can run `ntn init`, enter their integration token, and have it validated against the Notion API before saving
+  2. User can run `ntn --help` and `ntn --version` and see accurate output
+  3. Token is loaded from config file, overridden by `NOTION_API_TOKEN` env var, and persists across sessions
+  4. User can pass a Notion URL anywhere an ID is expected and the CLI extracts the correct page/database ID
+  5. Errors go to stderr with exit code 1 (no silent failures)
+**Plans**: TBD
+
+Plans:
+- [ ] 01-01: TBD
+- [ ] 01-02: TBD
+
+### Phase 2: Search, Discovery & Output
+**Goal**: User can find content in their Notion workspace and see results formatted for their context (human-readable in terminal, JSON when piped)
+**Depends on**: Phase 1
+**Requirements**: SRCH-01, SRCH-02, SRCH-03, SRCH-04, SRCH-05, META-01, META-02, OUT-01, OUT-02, OUT-03, OUT-04
+**Success Criteria** (what must be TRUE):
+  1. User can search their workspace by keyword and filter results by page or database type
+  2. User can list all accessible pages and databases with `ntn ls`
+  3. User can read comments on a page and list workspace users
+  4. Running in a terminal shows formatted tables; piping output produces JSON by default; `--json` and `--md` flags override format
+  5. All list/search commands handle pagination transparently without user intervention
+**Plans**: TBD
+
+Plans:
+- [ ] 02-01: TBD
+- [ ] 02-02: TBD
+
+### Phase 3: Page Reading
+**Goal**: User can read any Notion page as full-fidelity markdown with all block types and rich text preserved
+**Depends on**: Phase 2
+**Requirements**: PAGE-01, PAGE-02, PAGE-03, PAGE-04
+**Success Criteria** (what must be TRUE):
+  1. User can run `ntn read <id/url>` and get the full page content as markdown
+  2. All P1 block types (paragraph, headings, lists, to_do, code, quote, divider, callout, toggle, image, bookmark, table, child_page, child_database) render correctly in markdown
+  3. Page properties (title, status, dates, people, select, multi-select, url, email, checkbox, number, rich_text, relation, formula, rollup, timestamps) display as a metadata header
+  4. Rich text annotations (bold, italic, strikethrough, code, underline, color, links, mentions, equations) convert to correct markdown equivalents
+**Plans**: TBD
+
+Plans:
+- [ ] 03-01: TBD
+- [ ] 03-02: TBD
+
+### Phase 4: Database Operations
+**Goal**: User can inspect database structure and query entries with filtering and sorting
+**Depends on**: Phase 2
+**Requirements**: DB-01, DB-02, DB-03, DB-04, DB-05
+**Success Criteria** (what must be TRUE):
+  1. User can view a database's schema showing property names, types, and valid select/status values
+  2. User can query a database and see entries with configurable columns in table or JSON format
+  3. User can filter database entries by property values and sort results via flags
+  4. Database queries handle pagination transparently for large databases
+**Plans**: TBD
+
+Plans:
+- [ ] 04-01: TBD
+- [ ] 04-02: TBD
+
+### Phase 5: Agent Integration & Distribution
+**Goal**: AI coding agents can install `notion` via npm and learn all commands from a bundled skill file
+**Depends on**: Phase 3, Phase 4
+**Requirements**: AGNT-01, AGNT-02, DIST-01
+**Success Criteria** (what must be TRUE):
+  1. User can run `npm install -g @andrzejchm/notion-cli` and get a working `notion` binary
+  2. Repository includes an agent skill file documenting all commands, flags, output formats, and common patterns
+  3. Skill file covers setup instructions for Claude Code, OpenCode, and Codex agents
+**Plans**: TBD
+
+Plans:
+- [ ] 05-01: TBD
+
+## Progress
+
+**Execution Order:**
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 1. Foundation & Auth | 0/? | Not started | - |
+| 2. Search, Discovery & Output | 0/? | Not started | - |
+| 3. Page Reading | 0/? | Not started | - |
+| 4. Database Operations | 0/? | Not started | - |
+| 5. Agent Integration & Distribution | 0/? | Not started | - |
