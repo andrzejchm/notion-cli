@@ -1,0 +1,22 @@
+export const ErrorCodes = {
+  // Auth errors
+  AUTH_NO_TOKEN: 'AUTH_NO_TOKEN',
+  AUTH_INVALID: 'AUTH_INVALID',
+  AUTH_EXPIRED: 'AUTH_EXPIRED',
+  AUTH_PROFILE_NOT_FOUND: 'AUTH_PROFILE_NOT_FOUND',
+  // Config errors
+  CONFIG_READ_ERROR: 'CONFIG_READ_ERROR',
+  CONFIG_WRITE_ERROR: 'CONFIG_WRITE_ERROR',
+  CONFIG_INVALID: 'CONFIG_INVALID',
+  // Input errors
+  INVALID_ID: 'INVALID_ID',
+  INVALID_URL: 'INVALID_URL',
+  // API errors
+  API_ERROR: 'API_ERROR',
+  API_RATE_LIMITED: 'API_RATE_LIMITED',
+  API_NOT_FOUND: 'API_NOT_FOUND',
+  // General
+  UNKNOWN: 'UNKNOWN',
+} as const;
+
+export type ErrorCode = typeof ErrorCodes[keyof typeof ErrorCodes];

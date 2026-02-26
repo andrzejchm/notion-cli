@@ -1,0 +1,28 @@
+{
+  "name": "@andrzejchm/notion-cli",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "notion": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "^8.3.0",
+    "@notionhq/client": "^5.10.0",
+    "chalk": "^5.6.0",
+    "commander": "^14.0.0",
+    "yaml": "^2.8.0"
+  },
+  "devDependencies": {
+    "@commander-js/extra-typings": "^14.0.0",
+    "@types/node": "^22",
+    "tsup": "^8.5.0",
+    "typescript": "~5.9.0",
+    "vitest": "^4.0.0"
+  }
+}
