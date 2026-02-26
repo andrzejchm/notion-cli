@@ -9,11 +9,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Authentication & Setup
 
-- [ ] **AUTH-01**: User can run `notion init` to set up their Notion integration token with guided prompts
-- [ ] **AUTH-02**: `notion init` validates the token against Notion API (`GET /users/me`) before saving
-- [ ] **AUTH-03**: Token and workspace config stored in `~/.config/notion-cli/config.json` (or `$XDG_CONFIG_HOME`)
-- [ ] **AUTH-04**: Environment variables (`NOTION_API_TOKEN`) override config file values
-- [ ] **AUTH-05**: User can pass Notion URLs anywhere an ID is expected (URL parsing extracts page/database IDs)
+- [x] **AUTH-01**: User can run `notion init` to set up their Notion integration token with guided prompts
+- [x] **AUTH-02**: `notion init` validates the token against Notion API (`GET /users/me`) before saving
+- [x] **AUTH-03**: Token and workspace config stored in `~/.config/notion-cli/config.json` (or `$XDG_CONFIG_HOME`)
+- [x] **AUTH-04**: Environment variables (`NOTION_API_TOKEN`) override config file values
+- [x] **AUTH-05**: User can pass Notion URLs anywhere an ID is expected (URL parsing extracts page/database IDs)
 
 ### Search & Discovery
 
@@ -44,7 +44,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **OUT-02**: When piped (no TTY), commands output JSON by default
 - [ ] **OUT-03**: `--json` flag forces JSON output regardless of TTY detection
 - [ ] **OUT-04**: `--md` flag forces markdown output for page content when piped
-- [ ] **OUT-05**: Error messages go to stderr with exit code 1
+- [x] **OUT-05**: Error messages go to stderr with exit code 1
 
 ### Agent Integration
 
@@ -59,9 +59,9 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Distribution
 
 - [ ] **DIST-01**: CLI installable via `npm install -g @andrzejchm/notion-cli`
-- [ ] **DIST-02**: CLI binary named `notion`
-- [ ] **DIST-03**: `notion --help` shows all commands with descriptions
-- [ ] **DIST-04**: `notion --version` shows current version
+- [x] **DIST-02**: CLI binary named `notion`
+- [x] **DIST-03**: `notion --help` shows all commands with descriptions
+- [x] **DIST-04**: `notion --version` shows current version
 
 ## v2 Requirements
 
@@ -103,11 +103,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | Phase 1 | Pending |
-| AUTH-02 | Phase 1 | Pending |
-| AUTH-03 | Phase 1 | Pending |
-| AUTH-04 | Phase 1 | Pending |
-| AUTH-05 | Phase 1 | Pending |
+| AUTH-01 | Phase 1 | Complete |
+| AUTH-02 | Phase 1 | Complete |
+| AUTH-03 | Phase 1 | Complete |
+| AUTH-04 | Phase 1 | Complete |
+| AUTH-05 | Phase 1 | Complete |
 | SRCH-01 | Phase 2 | Pending |
 | SRCH-02 | Phase 2 | Pending |
 | SRCH-03 | Phase 2 | Pending |
@@ -126,15 +126,15 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OUT-02 | Phase 2 | Pending |
 | OUT-03 | Phase 2 | Pending |
 | OUT-04 | Phase 2 | Pending |
-| OUT-05 | Phase 1 | Pending |
+| OUT-05 | Phase 1 | Complete |
 | AGNT-01 | Phase 5 | Pending |
 | AGNT-02 | Phase 5 | Pending |
 | META-01 | Phase 2 | Pending |
 | META-02 | Phase 2 | Pending |
 | DIST-01 | Phase 5 | Pending |
-| DIST-02 | Phase 1 | Pending |
-| DIST-03 | Phase 1 | Pending |
-| DIST-04 | Phase 1 | Pending |
+| DIST-02 | Phase 1 | Complete |
+| DIST-03 | Phase 1 | Complete |
+| DIST-04 | Phase 1 | Complete |
 
 **Coverage:**
 - v1 requirements: 32 total
@@ -143,4 +143,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-26*
-*Last updated: 2026-02-26 after roadmap creation*
+*Last updated: 2026-02-26 after 01-01 plan completion (OUT-05, DIST-02, DIST-04 complete)*

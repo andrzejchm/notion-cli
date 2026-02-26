@@ -12,7 +12,7 @@ Build a read-only CLI for Notion workspaces that AI agents and developers use to
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation & Auth** - Project scaffold, CLI skeleton, auth setup, config, URL parsing, error handling
+- [x] **Phase 1: Foundation & Auth** - Project scaffold, CLI skeleton, auth setup, config, URL parsing, error handling (completed 2026-02-26)
 - [ ] **Phase 2: Search, Discovery & Output** - Search workspace, list content, browse users/comments, dual-mode output formatting
 - [ ] **Phase 3: Page Reading** - Full-fidelity block-to-markdown converter with rich text annotations and page properties
 - [ ] **Phase 4: Database Operations** - Database schema, query, filtering, sorting, and tabular display
@@ -25,16 +25,18 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Depends on**: Nothing (first phase)
 **Requirements**: AUTH-01, AUTH-02, AUTH-03, AUTH-04, AUTH-05, OUT-05, DIST-02, DIST-03, DIST-04
 **Success Criteria** (what must be TRUE):
-  1. User can run `ntn init`, enter their integration token, and have it validated against the Notion API before saving
-  2. User can run `ntn --help` and `ntn --version` and see accurate output
+  1. User can run `notion init`, enter their integration token, and have it validated against the Notion API before saving
+  2. User can run `notion --help` and `notion --version` and see accurate output
   3. Token is loaded from config file, overridden by `NOTION_API_TOKEN` env var, and persists across sessions
   4. User can pass a Notion URL anywhere an ID is expected and the CLI extracts the correct page/database ID
   5. Errors go to stderr with exit code 1 (no silent failures)
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
+- [x] 01-01-PLAN.md — Project scaffold, types, error handling, and output utilities
+- [ ] 01-02-PLAN.md — Config system (paths, YAML read/write, token resolution)
+- [ ] 01-03-PLAN.md — Notion URL/ID parser (TDD)
+- [ ] 01-04-PLAN.md — CLI commands (init, profile, completion) and build verification
 
 ### Phase 2: Search, Discovery & Output
 **Goal**: User can find content in their Notion workspace and see results formatted for their context (human-readable in terminal, JSON when piped)
@@ -102,7 +104,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Auth | 0/? | Not started | - |
+| 1. Foundation & Auth | 4/4 | Complete   | 2026-02-26 |
 | 2. Search, Discovery & Output | 0/? | Not started | - |
 | 3. Page Reading | 0/? | Not started | - |
 | 4. Database Operations | 0/? | Not started | - |
