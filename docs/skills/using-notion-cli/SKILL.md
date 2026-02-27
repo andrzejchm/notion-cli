@@ -29,9 +29,9 @@ Pages must be shared with your integration: open page → `⋯` → **Add connec
 | Context | Default | Override |
 |---------|---------|----------|
 | Terminal (TTY) | Formatted tables | `--json` |
-| Piped / agent | JSON | `--md` |
+| Piped / agent | Plain text tables | `--json` |
 
-`notion read` always outputs **markdown** regardless of context.
+`notion read` always outputs **markdown** — in terminal and when piped.
 
 Pipe any command to get JSON:
 ```bash

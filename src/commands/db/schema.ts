@@ -18,7 +18,7 @@ export function dbSchemaCommand(): Command {
         const dbId = parseNotionId(id);
         const schema = await fetchDatabaseSchema(client, dbId);
 
-        if (options.json || !isHumanMode()) {
+        if (options.json) {
           process.stdout.write(formatJSON(schema) + '\n');
           return;
         }

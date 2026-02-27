@@ -20,7 +20,7 @@ export function isatty(): boolean {
 export function isHumanMode(): boolean {
   if (_mode === 'json') return false;
   if (_mode === 'md') return false; // md mode: caller decides rendering
-  return isatty(); // 'auto': check TTY
+  return true; // 'auto': always human/table; use --json to get JSON
 }
 
 export function formatJSON(data: unknown): string {
@@ -90,9 +90,8 @@ export function printOutput(
   tableRows?: string[][]
 ): void {
   const mode = getOutputMode();
-  const tty = isatty();
 
-  if (mode === 'json' || (!tty && mode === 'auto')) {
+  if (mode === 'json') {
     process.stdout.write(formatJSON(data) + '\n');
   } else if (isHumanMode() && tableHeaders && tableRows) {
     printWithPager(formatTable(tableRows, tableHeaders) + '\n');

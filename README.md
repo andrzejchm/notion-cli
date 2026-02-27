@@ -88,9 +88,9 @@ The CLI auto-detects your context:
 | Context | Default output | Override |
 |---------|----------------|----------|
 | Terminal (TTY) | Formatted tables, colored | `--json` for raw JSON |
-| Piped / agent | JSON | `--md` for markdown |
+| Piped / agent | Plain text tables | `--json` for raw JSON |
 
-`notion read` always outputs **markdown** regardless of context — even when piped.
+`notion read` always outputs **markdown** — in terminal and when piped.
 
 ---
 

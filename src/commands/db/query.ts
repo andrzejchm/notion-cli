@@ -87,7 +87,7 @@ export function dbQueryCommand(): Command {
 
           const entries = await queryDatabase(client, dbId, { filter, sorts, columns });
 
-          if (options.json || !isHumanMode()) {
+          if (options.json) {
             process.stdout.write(formatJSON(entries.map((e) => e.raw)) + '\n');
             return;
           }
