@@ -13,7 +13,7 @@ Build a read-only CLI for Notion workspaces that AI agents and developers use to
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation & Auth** - Project scaffold, CLI skeleton, auth setup, config, URL parsing, error handling (completed 2026-02-26)
-- [ ] **Phase 2: Search, Discovery & Output** - Search workspace, list content, browse users/comments, dual-mode output formatting
+- [x] **Phase 2: Search, Discovery & Output** - Search workspace, list content, browse users/comments, dual-mode output formatting (completed 2026-02-27)
 - [ ] **Phase 3: Page Reading** - Full-fidelity block-to-markdown converter with rich text annotations and page properties
 - [ ] **Phase 4: Database Operations** - Database schema, query, filtering, sorting, and tabular display
 - [ ] **Phase 5: Agent Integration & Distribution** - Agent skill files, npm packaging, publish-ready CLI
@@ -51,10 +51,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Output formatter (TTY/JSON/MD modes) + pagination utility
-- [ ] 02-02-PLAN.md — notion search and notion ls commands
-- [ ] 02-03-PLAN.md — notion open, notion users, notion comments commands
-- [ ] 02-04-PLAN.md — CLI wiring (all commands + global --json/--md flags) + human verify
+- [x] 02-01-PLAN.md — Output formatter (TTY/JSON/MD modes) + pagination utility
+- [x] 02-02-PLAN.md — notion search and notion ls commands
+- [x] 02-03-PLAN.md — notion open, notion users, notion comments commands
+- [x] 02-04-PLAN.md — CLI wiring (all commands + global --json/--md flags) + human verify
 
 ### Phase 3: Page Reading
 **Goal**: User can read any Notion page as full-fidelity markdown with all block types and rich text preserved
@@ -65,11 +65,13 @@ Plans:
   2. All P1 block types (paragraph, headings, lists, to_do, code, quote, divider, callout, toggle, image, bookmark, table, child_page, child_database) render correctly in markdown
   3. Page properties (title, status, dates, people, select, multi-select, url, email, checkbox, number, rich_text, relation, formula, rollup, timestamps) display as a metadata header
   4. Rich text annotations (bold, italic, strikethrough, code, underline, color, links, mentions, equations) convert to correct markdown equivalents
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
+- [ ] 03-01-PLAN.md — TDD: Rich text annotation converter (bold, italic, code, links, equations)
+- [ ] 03-02-PLAN.md — Page service (recursive block tree fetcher) + properties formatter
+- [ ] 03-03-PLAN.md — TDD: Block type converter registry (14 P1 block types)
+- [ ] 03-04-PLAN.md — Page markdown assembler + notion read command + human verify
 
 ### Phase 4: Database Operations
 **Goal**: User can inspect database structure and query entries with filtering and sorting
@@ -80,11 +82,11 @@ Plans:
   2. User can query a database and see entries with configurable columns in table or JSON format
   3. User can filter database entries by property values and sort results via flags
   4. Database queries handle pagination transparently for large databases
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 04-01: TBD
-- [ ] 04-02: TBD
+- [ ] 04-01-PLAN.md — Database service (schema fetch, filtered query, filter/sort builders, display formatter)
+- [ ] 04-02-PLAN.md — notion db schema + notion db query commands + CLI wiring + human verify
 
 ### Phase 5: Agent Integration & Distribution
 **Goal**: AI coding agents can install `notion` via npm and learn all commands from a bundled skill file
@@ -94,10 +96,12 @@ Plans:
   1. User can run `npm install -g @andrzejchm/notion-cli` and get a working `notion` binary
   2. Repository includes an agent skill file documenting all commands, flags, output formats, and common patterns
   3. Skill file covers setup instructions for Claude Code, OpenCode, and Codex agents
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 05-01: TBD
+- [ ] 05-01-PLAN.md — Agent skill file (docs/agent-skill.md) covering all commands + Claude Code/OpenCode/Codex setup
+- [ ] 05-02-PLAN.md — npm packaging (package.json metadata, README.md, .npmignore, pack dry-run)
+- [ ] 05-03-PLAN.md — Local install verification + npm publish (human checkpoint)
 
 ## Progress
 
@@ -107,7 +111,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Auth | 4/4 | Complete   | 2026-02-26 |
-| 2. Search, Discovery & Output | 0/4 | Not started | - |
-| 3. Page Reading | 0/? | Not started | - |
-| 4. Database Operations | 0/? | Not started | - |
-| 5. Agent Integration & Distribution | 0/? | Not started | - |
+| 2. Search, Discovery & Output | 4/4 | Complete   | 2026-02-27 |
+| 3. Page Reading | 0/4 | Not started | - |
+| 4. Database Operations | 0/2 | Not started | - |
+| 5. Agent Integration & Distribution | 0/3 | Not started | - |

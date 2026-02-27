@@ -3,9 +3,9 @@ import { input, password, confirm } from '@inquirer/prompts';
 import { CliError } from '../errors/cli-error.js';
 import { ErrorCodes } from '../errors/codes.js';
 import { readGlobalConfig, writeGlobalConfig } from '../config/config.js';
-import { validateToken } from '../notion/client.js';
+import { validateToken, createNotionClient } from '../notion/client.js';
 import { stderrWrite } from '../output/stderr.js';
-import { success, bold } from '../output/color.js';
+import { success, bold, dim } from '../output/color.js';
 import { withErrorHandling } from '../errors/error-handler.js';
 
 export function initCommand(): Command {
@@ -72,6 +72,27 @@ export function initCommand(): Command {
       });
 
       stderrWrite(success(`Profile "${profileName}" saved and set as active.`));
+
+      // Check if the integration has access to any content
+      stderrWrite(dim('Checking integration access...'));
+      try {
+        const notion = createNotionClient(token);
+        const probe = await notion.search({ page_size: 1 });
+        if (probe.results.length === 0) {
+          stderrWrite('');
+          stderrWrite('⚠️  Your integration has no pages connected.');
+          stderrWrite('   To grant access, open any Notion page or database:');
+          stderrWrite('     1. Click ··· (three dots) in the top-right corner');
+          stderrWrite('     2. Select "Connect to"');
+          stderrWrite(`     3. Choose "${workspaceName}"`);
+          stderrWrite('   Then re-run any notion command to confirm access.');
+        } else {
+          stderrWrite(success(`✓ Integration has access to content in ${bold(workspaceName)}.`));
+        }
+      } catch {
+        // Non-fatal — don't block init if the probe fails for any reason
+        stderrWrite(dim('(Could not verify integration access — run `notion ls` to check)'));
+      }
     }));
 
   return cmd;

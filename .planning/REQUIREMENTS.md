@@ -17,11 +17,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Search & Discovery
 
-- [ ] **SRCH-01**: User can search workspace by keyword (`notion search <query>`)
-- [ ] **SRCH-02**: Search results can be filtered by type (page, database) via `--type` flag
-- [ ] **SRCH-03**: User can list all accessible pages and databases (`notion ls`)
-- [ ] **SRCH-04**: User can open a page in their browser (`notion open <id/url>`)
-- [ ] **SRCH-05**: All list/search commands handle Notion API pagination transparently (auto-paginate by default)
+- [x] **SRCH-01**: User can search workspace by keyword (`notion search <query>`)
+- [x] **SRCH-02**: Search results can be filtered by type (page, database) via `--type` flag
+- [x] **SRCH-03**: User can list all accessible pages and databases (`notion ls`)
+- [x] **SRCH-04**: User can open a page in their browser (`notion open <id/url>`)
+- [x] **SRCH-05**: All list/search commands handle Notion API pagination transparently (auto-paginate by default)
 
 ### Page Reading
 
@@ -40,10 +40,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Output & Formatting
 
-- [ ] **OUT-01**: When run in a TTY, commands display human-readable formatted tables and markdown
-- [ ] **OUT-02**: When piped (no TTY), commands output JSON by default
-- [ ] **OUT-03**: `--json` flag forces JSON output regardless of TTY detection
-- [ ] **OUT-04**: `--md` flag forces markdown output for page content when piped
+- [x] **OUT-01**: When run in a TTY, commands display human-readable formatted tables and markdown
+- [x] **OUT-02**: When piped (no TTY), commands output JSON by default
+- [x] **OUT-03**: `--json` flag forces JSON output regardless of TTY detection
+- [x] **OUT-04**: `--md` flag forces markdown output for page content when piped
 - [x] **OUT-05**: Error messages go to stderr with exit code 1
 
 ### Agent Integration
@@ -53,8 +53,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Social & Meta
 
-- [ ] **META-01**: User can read comments on a page (`notion comments <id/url>`)
-- [ ] **META-02**: User can list workspace users (`notion users`)
+- [x] **META-01**: User can read comments on a page (`notion comments <id/url>`)
+- [x] **META-02**: User can list workspace users (`notion users`)
 
 ### Distribution
 
@@ -108,11 +108,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTH-03 | Phase 1 | Complete |
 | AUTH-04 | Phase 1 | Complete |
 | AUTH-05 | Phase 1 | Complete |
-| SRCH-01 | Phase 2 | Pending |
-| SRCH-02 | Phase 2 | Pending |
-| SRCH-03 | Phase 2 | Pending |
-| SRCH-04 | Phase 2 | Pending |
-| SRCH-05 | Phase 2 | Pending |
+| SRCH-01 | Phase 2 | Complete |
+| SRCH-02 | Phase 2 | Complete |
+| SRCH-03 | Phase 2 | Complete |
+| SRCH-04 | Phase 2 | Complete |
+| SRCH-05 | Phase 2 | Complete |
 | PAGE-01 | Phase 3 | Pending |
 | PAGE-02 | Phase 3 | Pending |
 | PAGE-03 | Phase 3 | Pending |
@@ -122,15 +122,15 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DB-03 | Phase 4 | Pending |
 | DB-04 | Phase 4 | Pending |
 | DB-05 | Phase 4 | Pending |
-| OUT-01 | Phase 2 | Pending |
-| OUT-02 | Phase 2 | Pending |
-| OUT-03 | Phase 2 | Pending |
-| OUT-04 | Phase 2 | Pending |
+| OUT-01 | Phase 2 | Complete |
+| OUT-02 | Phase 2 | Complete |
+| OUT-03 | Phase 2 | Complete |
+| OUT-04 | Phase 2 | Complete |
 | OUT-05 | Phase 1 | Complete |
 | AGNT-01 | Phase 5 | Pending |
 | AGNT-02 | Phase 5 | Pending |
-| META-01 | Phase 2 | Pending |
-| META-02 | Phase 2 | Pending |
+| META-01 | Phase 2 | Complete |
+| META-02 | Phase 2 | Complete |
 | DIST-01 | Phase 5 | Pending |
 | DIST-02 | Phase 1 | Complete |
 | DIST-03 | Phase 1 | Complete |
