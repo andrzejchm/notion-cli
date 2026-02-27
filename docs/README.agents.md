@@ -15,10 +15,15 @@ Fetch and follow instructions from https://raw.githubusercontent.com/andrzejchm/
 ### 1. Install the CLI
 
 ```bash
+# Homebrew (recommended)
+brew tap andrzejchm/notion-cli
+brew install notion-cli
+
+# npm (alternative)
 npm install -g @andrzejchm/notion-cli
 ```
 
-Requires Node.js ≥ 22.
+Homebrew bundles Node.js automatically. npm requires Node.js ≥ 22.
 
 ### 2. Install the skill file
 
@@ -53,7 +58,13 @@ Restart OpenCode after installing. The skill is now discoverable via the `skill`
 ## Updating
 
 ```bash
+# Homebrew
+brew upgrade notion-cli
+
+# npm
 npm install -g @andrzejchm/notion-cli
+
+# Update skill file (either install method)
 curl -fsSL https://raw.githubusercontent.com/andrzejchm/notion-cli/main/docs/skills/using-notion-cli/SKILL.md \
   -o ~/.config/opencode/skills/using-notion-cli/SKILL.md
 ```

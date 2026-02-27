@@ -4,3 +4,6 @@ dist/
 .env
 .env.local
 *.tgz
+
+.opencode/
+example.md
