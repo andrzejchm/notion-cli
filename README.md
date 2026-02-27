@@ -3,11 +3,18 @@
 > Read and write Notion pages from your terminal — built for AI coding agents and developers.
 
 [![npm version](https://img.shields.io/npm/v/@andrzejchm/notion-cli.svg?style=flat&color=4B78E6)](https://www.npmjs.com/package/@andrzejchm/notion-cli)
+[![homebrew tap](https://img.shields.io/badge/homebrew-andrzejchm%2Fnotion--cli-orange?style=flat&logo=homebrew)](https://github.com/andrzejchm/homebrew-notion-cli)
 [![Node.js >=22](https://img.shields.io/badge/node-%3E%3D22-brightgreen?style=flat)](https://nodejs.org)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 
 ```bash
+# Homebrew (recommended)
+brew tap andrzejchm/notion-cli
+brew install notion-cli
+
+# npm (alternative)
 npm install -g @andrzejchm/notion-cli
+
 notion init   # paste your Notion integration token once
 ```
 

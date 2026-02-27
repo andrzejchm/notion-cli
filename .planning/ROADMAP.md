@@ -18,7 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Database Operations** - Database schema, query, filtering, sorting, and tabular display (completed 2026-02-27)
 - [x] **Phase 5: Agent Integration & Distribution** - Agent skill files, npm packaging, publish-ready CLI (completed 2026-02-27)
 - [x] **Phase 6: Write Operations** - Add comment, append blocks, and create-page commands for AI agent write workflows (completed 2026-02-27)
-- [ ] **Phase 7: Homebrew Distribution** - Personal tap + formula so users can `brew install notion-cli`
+- [x] **Phase 7: Homebrew Distribution** - Personal tap + formula so users can `brew install notion-cli` (completed 2026-02-27)
 
 ## Phase Details
 
@@ -133,8 +133,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 07-01-PLAN.md — Create `homebrew-notion-cli` tap repo with Homebrew formula
-- [ ] 07-02-PLAN.md — GitHub Actions auto-update workflow + README brew instructions
+- [x] 07-01-PLAN.md — Create `homebrew-notion-cli` tap repo with Homebrew formula
+- [x] 07-02-PLAN.md — GitHub Actions auto-update workflow + README brew instructions
 
 ## Progress
 
@@ -149,4 +149,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 4. Database Operations | 2/2 | Complete | 2026-02-27 |
 | 5. Agent Integration & Distribution | 3/3 | Complete | 2026-02-27 |
 | 6. Write Operations | 3/3 | Complete   | 2026-02-27 |
-| 7. Homebrew Distribution | 0/2 | Pending |  |
+| 7. Homebrew Distribution | 2/2 | Complete | 2026-02-27 |

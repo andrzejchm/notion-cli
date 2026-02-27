@@ -79,7 +79,7 @@ Phase 7 addition — Homebrew distribution.
 
 ### Distribution (Homebrew)
 
-- [ ] **ADV-04**: Homebrew distribution via a personal tap (`brew tap andrzejchm/notion-cli && brew install notion-cli`)
+- [x] **ADV-04**: Homebrew distribution via a personal tap (`brew tap andrzejchm/notion-cli && brew install notion-cli`)
   - Installs the `notion` binary with a single brew command
   - Formula pulls from the published npm tarball on registry.npmjs.org
   - A companion `homebrew-notion-cli` GitHub repo hosts the formula
@@ -157,7 +157,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | WRITE-01 | Phase 6 | Complete |
 | WRITE-03 | Phase 6 | Complete |
 | ADV-05 | Phase 6 | Complete |
-| ADV-04 | Phase 7 | Pending |
+| ADV-04 | Phase 7 | Complete (2026-02-27) |
 
 **Coverage:**
 - v1 requirements: 32 total (complete)
