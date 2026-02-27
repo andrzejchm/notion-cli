@@ -13,6 +13,14 @@ notion init   # paste your Notion integration token once
 
 ---
 
+## For AI Agents
+
+```
+Fetch and follow instructions from https://raw.githubusercontent.com/andrzejchm/notion-cli/main/docs/README.agents.md
+```
+
+---
+
 ## Features
 
 - **`notion search`** — find any page or database by title
@@ -21,38 +29,6 @@ notion init   # paste your Notion integration token once
 - **Agent-friendly** — auto-detects piped context and outputs JSON; formatted tables in TTY
 - **Flexible auth** — interactive setup or `NOTION_API_TOKEN` env var
 - **Accepts URLs** — pass full Notion URLs anywhere an ID is expected
-
----
-
-## Getting Started
-
-### 1. Install
-
-```bash
-npm install -g @andrzejchm/notion-cli
-```
-
-### 2. Create a Notion integration
-
-Go to [notion.so/profile/integrations/internal](https://www.notion.so/profile/integrations/internal) → **New integration** → copy the token.
-
-### 3. Authenticate
-
-```bash
-notion init
-# or: export NOTION_API_TOKEN=ntn_your_token_here
-```
-
-### 4. Share pages with your integration
-
-Open any Notion page → `⋯` menu → **Add connections** → select your integration.
-
-### 5. Run your first command
-
-```bash
-notion search "meeting notes"
-notion read https://www.notion.so/workspace/My-Page-abc123
-```
 
 ---
 
@@ -115,25 +91,6 @@ The CLI auto-detects your context:
 | Piped / agent | JSON | `--md` for markdown |
 
 `notion read` always outputs **markdown** regardless of context — even when piped.
-
----
-
-## For AI Agents
-
-Pipe commands to get JSON output that's easy to process:
-
-```bash
-# Find a page ID
-notion search "project spec" | jq -r '.[0].id'
-
-# Read items with a specific status
-notion db query "$DB_ID" --filter "Status=In Progress" | jq '.[] | {id, title: .properties.Name}'
-
-# Read page content (markdown works great in agents)
-notion read "$PAGE_ID"
-```
-
-For Claude Code, OpenCode, and Codex — including copy-paste setup snippets and common agent patterns — see [`docs/agent-skill.md`](docs/agent-skill.md).
 
 ---
 
