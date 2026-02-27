@@ -55,7 +55,7 @@ Add to `CLAUDE.md`:
 Use `notion` CLI to access Notion pages and databases.
 
 - Auth: ensure `NOTION_API_TOKEN` is set, or run `notion init` once.
-- Page content: `notion read <id>` outputs markdown; pipe for JSON.
+- Page content: `notion read <id>` outputs markdown.
 - Structured data: `notion db query <id> --json | jq '.[] | .properties'`
 - See `docs/agent-skill.md` for full command reference and patterns.
 ```
@@ -87,19 +87,19 @@ See docs/agent-skill.md for commands, flags, and agent patterns.
 
 ## Output Modes
 
-The CLI auto-detects context and adjusts output format:
+The CLI outputs plain text tables by default — in terminal and when piped.
 
 | Context           | Default Output              | Override flag      |
 |-------------------|-----------------------------|--------------------|
 | Terminal (TTY)    | Formatted tables, colored   | `--json` for JSON  |
-| Piped / agent     | JSON                        | `--md` for markdown|
+| Piped / agent     | Plain text tables           | `--json` for JSON  |
 
-**For agents: pipe the command to get JSON automatically:**
+**For agents: add `--json` to get machine-readable output:**
 
 ```bash
-notion search "my query" | jq '.[]'
-notion ls | jq '.[] | {id, title}'
-notion db query "$DB_ID" | jq '.[] | .properties.Status'
+notion search "my query" --json | jq '.[]'
+notion ls --json | jq '.[] | {id, title}'
+notion db query "$DB_ID" --json | jq '.[] | .properties.Status'
 ```
 
 **For page content: markdown is always the default in both modes:**
@@ -111,10 +111,9 @@ notion read "$PAGE_ID" --json   # raw JSON block tree
 
 **Global flags** (apply to all commands):
 
-| Flag     | Effect                                 |
-|----------|----------------------------------------|
-| `--json` | Force JSON output (overrides TTY mode) |
-| `--md`   | Force markdown output                  |
+| Flag     | Effect          |
+|----------|-----------------|
+| `--json` | Force JSON output |
 
 ---
 

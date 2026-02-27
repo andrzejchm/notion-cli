@@ -26,7 +26,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/andrzejchm/
 - **`notion search`** — find any page or database by title
 - **`notion read`** — render any page as full-fidelity markdown
 - **`notion db query`** — filter, sort, and select columns from any database
-- **Agent-friendly** — auto-detects piped context and outputs JSON; formatted tables in TTY
+- **Agent-friendly** — plain text tables by default; `--json` for machine-readable output
 - **Flexible auth** — interactive setup or `NOTION_API_TOKEN` env var
 - **Accepts URLs** — pass full Notion URLs anywhere an ID is expected
 
