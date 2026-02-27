@@ -11,6 +11,7 @@ export const ErrorCodes = {
   // Input errors
   INVALID_ID: 'INVALID_ID',
   INVALID_URL: 'INVALID_URL',
+  INVALID_ARG: 'INVALID_ARG',
   // API errors
   API_ERROR: 'API_ERROR',
   API_RATE_LIMITED: 'API_RATE_LIMITED',

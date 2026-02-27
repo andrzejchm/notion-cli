@@ -29,13 +29,16 @@ export function formatJSON(data: unknown): string {
 
 // Column width caps by header name
 const COLUMN_CAPS: Record<string, number> = {
-  TYPE: 8,
   TITLE: 50,
   ID: 36,
 };
 
+// Default max width for any column not explicitly capped — prevents long
+// free-text fields (Summary, Description, etc.) from blowing out the table
+const DEFAULT_MAX_COL_WIDTH = 40;
+
 function getColumnCap(header: string): number {
-  return COLUMN_CAPS[header.toUpperCase()] ?? Infinity;
+  return COLUMN_CAPS[header.toUpperCase()] ?? DEFAULT_MAX_COL_WIDTH;
 }
 
 function truncate(str: string, maxLen: number): string {

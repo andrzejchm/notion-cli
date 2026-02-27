@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-02-27T11:27:06.031Z"
+last_updated: "2026-02-27T14:01:15.935Z"
 progress:
   total_phases: 5
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 17
-  completed_plans: 12
+  completed_plans: 14
 ---
 
 # Project State
@@ -22,12 +22,12 @@ See: .planning/PROJECT.md (updated 2026-02-26)
 
 ## Current Position
 
-Phase: 3 of 5 COMPLETE — ready for Phase 4
-Plan: 4 of 4 in Phase 3 complete (03-01, 03-02, 03-03, 03-04 all complete)
-Status: Phase 3 complete — Phase 4 (Database Operations) can now begin
-Last activity: 2026-02-27 — Completed 03-04 CLI wiring + human-verified notion read command
+Phase: 4 of 5 IN PROGRESS
+Plan: 2 of 4 in Phase 4 complete (04-01 database service, 04-02 db commands complete)
+Status: Phase 4 in progress — 04-03 (if exists) or Phase 5 (Ship) is next
+Last activity: 2026-02-27 — Completed 04-02 db schema+query commands with human verification
 
-Progress: [████████████░░░░░░░░] 60%
+Progress: [██████████████░░░░░░] 70%
 
 ## Performance Metrics
 
@@ -81,6 +81,12 @@ Recent decisions affecting current work:
 - [Phase 02-03]: open command prints URL to stdout so piped usage is scriptable (no --json flag needed)
 - [Phase 02-04]: Global --json/--md flags live on root program, not per-command — single preAction hook propagates output mode to all subcommands
 - [Phase 02-04]: preAction hook checks json first, then md — json takes precedence if both flags are provided
+- [Phase 04-01]: SDK v5 databases are dataSources — use client.dataSources.retrieve/query with data_source_id (not databases.query)
+- [Phase 04-01]: DataSourceObjectResponse has .properties but DatabaseObjectResponse does not — always use dataSources.retrieve for schema
+- [Phase 04-01]: buildFilter inspects schema property type before constructing Notion API filter — schema required for correct filter shape
+- [Phase 04-02]: Auto-select columns that fit terminal width — skip relation/rich_text/people by default for clean table output
+- [Phase 04-02]: Cap all column values to 40 chars and strip newlines to prevent table layout corruption
+- [Phase 04-02]: Commander collect() helper pattern for repeatable flags (--filter, --sort)
 
 ### Pending Todos
 
@@ -93,5 +99,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Completed 03-04-PLAN.md — notion read command + terminal markdown rendering, Phase 3 human-verified
+Stopped at: Completed 04-02-PLAN.md — db schema+query commands, human verification passed, post-checkpoint display fixes applied
 Resume file: None

@@ -32,11 +32,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Database Operations
 
-- [ ] **DB-01**: User can view database schema (`notion db schema <id/url>`) showing property names, types, and valid select/status values
-- [ ] **DB-02**: User can query a database (`notion db query <id/url>`) to list entries with pagination
-- [ ] **DB-03**: Database query supports basic filtering via flags (e.g. `--filter "property=value"`)
-- [ ] **DB-04**: Database query supports sorting via `--sort` flag
-- [ ] **DB-05**: Database entries display configurable columns (property names as columns in table output)
+- [x] **DB-01**: User can view database schema (`notion db schema <id/url>`) showing property names, types, and valid select/status values
+- [x] **DB-02**: User can query a database (`notion db query <id/url>`) to list entries with pagination
+- [x] **DB-03**: Database query supports basic filtering via flags (e.g. `--filter "property=value"`)
+- [x] **DB-04**: Database query supports sorting via `--sort` flag
+- [x] **DB-05**: Database entries display configurable columns (property names as columns in table output)
 
 ### Output & Formatting
 
@@ -117,11 +117,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PAGE-02 | Phase 3 | Pending |
 | PAGE-03 | Phase 3 | Pending |
 | PAGE-04 | Phase 3 | Pending |
-| DB-01 | Phase 4 | Pending |
-| DB-02 | Phase 4 | Pending |
-| DB-03 | Phase 4 | Pending |
-| DB-04 | Phase 4 | Pending |
-| DB-05 | Phase 4 | Pending |
+| DB-01 | Phase 4 | Complete |
+| DB-02 | Phase 4 | Complete |
+| DB-03 | Phase 4 | Complete |
+| DB-04 | Phase 4 | Complete |
+| DB-05 | Phase 4 | Complete |
 | OUT-01 | Phase 2 | Complete |
 | OUT-02 | Phase 2 | Complete |
 | OUT-03 | Phase 2 | Complete |
