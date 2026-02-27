@@ -18,6 +18,9 @@ import { commentsCommand } from './commands/comments.js';
 import { readCommand } from './commands/read.js';
 import { dbSchemaCommand } from './commands/db/schema.js';
 import { dbQueryCommand } from './commands/db/query.js';
+import { commentAddCommand } from './commands/comment-add.js';
+import { appendCommand } from './commands/append.js';
+import { createPageCommand } from './commands/create-page.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -80,6 +83,9 @@ program.addCommand(openCommand());
 program.addCommand(usersCommand());
 program.addCommand(commentsCommand());
 program.addCommand(readCommand());
+program.addCommand(commentAddCommand());
+program.addCommand(appendCommand());
+program.addCommand(createPageCommand());
 
 // --- Database ---
 const dbCmd = new Command('db').description('Database operations');

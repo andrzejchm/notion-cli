@@ -1,6 +1,6 @@
 ---
 name: using-notion-cli
-description: Reads Notion pages and queries databases using the `notion` CLI tool. Use when accessing Notion content, searching workspace pages, querying database entries, or reading page markdown from the terminal or within automated workflows.
+description: Reads and writes Notion pages using the `notion` CLI tool. Use when accessing Notion content, searching workspace pages, querying database entries, reading page markdown, appending content, creating pages, or adding comments from the terminal or within automated workflows.
 license: MIT
 compatibility: opencode
 ---
@@ -21,6 +21,11 @@ export NOTION_API_TOKEN=ntn_your_token_here
 Get token: https://www.notion.so/profile/integrations/internal
 
 Pages must be shared with your integration: open page → `⋯` → **Add connections**.
+
+**Integration capabilities** (set at notion.so/profile/integrations/internal → your integration → Capabilities):
+- Read-only commands: **Read content** only
+- `notion append`, `notion create-page`: also need **Insert content**
+- `notion comment`: also need **Read comments** + **Insert comments**
 
 ---
 
@@ -73,6 +78,20 @@ notion db query <id|url> --columns "Title,Status"     # limit columns
 notion db query <id|url> --json | jq '.[] | .properties'
 ```
 
+### Write Operations
+
+```bash
+notion append <id|url> -m "## Heading\nParagraph text"   # append markdown blocks to a page
+notion append <id|url> -m "$(cat notes.md)"              # append file contents
+
+notion create-page --parent <id|url> --title "Title"               # title-only page
+notion create-page --parent <id|url> --title "Title" -m "# Hello"  # with markdown body
+echo "# Content" | notion create-page --parent <id|url> --title "Title"  # from stdin
+URL=$(notion create-page --parent <id|url> --title "Summary" -m "...")   # capture URL
+
+notion comment <id|url> -m "Reviewed and approved."      # add comment to a page
+```
+
 ### Auth
 
 ```bash
@@ -111,8 +130,16 @@ notion db query "$DB_ID" --filter "Status=Done"
 # Extract page section
 notion read "$PAGE_ID" | grep -A 10 "## Action Items"
 
-# Pipe to LLM / summarizer
-notion read "$PAGE_ID" | your-summarize-command
+# Summarize a page and append the summary back
+SUMMARY=$(notion read "$PAGE_ID" | your-summarize-command)
+notion append "$PAGE_ID" -m "## AI Summary\n$SUMMARY"
+
+# Create a page and capture its URL for further use
+URL=$(notion create-page --parent "$PAGE_ID" --title "Report $(date +%Y-%m-%d)" -m "# Report\n...")
+echo "Created: $URL"
+
+# Pipe command output into a new page
+my-report-command | notion create-page --parent "$PAGE_ID" --title "Auto Report"
 ```
 
 ---
@@ -128,3 +155,7 @@ notion read "$PAGE_ID" | your-summarize-command
 **Empty db query** — Run `notion db schema <id>` to see valid property names and values.
 
 **`notion init` fails in agent** — Requires TTY. Use `NOTION_API_TOKEN` env var instead.
+
+**`notion comment` returns "Insufficient permissions"** — Enable **Read comments** + **Insert comments** in integration capabilities: notion.so/profile/integrations/internal → your integration → Capabilities.
+
+**`notion append` / `notion create-page` returns "Insufficient permissions"** — Enable **Insert content** in integration capabilities.

@@ -93,6 +93,12 @@ export function initCommand(): Command {
         // Non-fatal — don't block init if the probe fails for any reason
         stderrWrite(dim('(Could not verify integration access — run `notion ls` to check)'));
       }
+
+      stderrWrite('');
+      stderrWrite(dim('Write commands (comment, append, create-page) require additional'));
+      stderrWrite(dim('capabilities in your integration settings:'));
+      stderrWrite(dim('  notion.so/profile/integrations/internal → your integration →'));
+      stderrWrite(dim('  Capabilities: enable "Read content", "Insert content", "Read comments", "Insert comments"'));
     }));
 
   return cmd;
