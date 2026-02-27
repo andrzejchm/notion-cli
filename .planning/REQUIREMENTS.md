@@ -63,15 +63,23 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **DIST-03**: `notion --help` shows all commands with descriptions
 - [x] **DIST-04**: `notion --version` shows current version
 
+## v1.1 Requirements
+
+Phase 6 additions — write operations for AI agent workflows.
+
+### Write Operations
+
+- [ ] **WRITE-01**: User can create a new page under a parent (`notion create-page --parent <id> --title "Title" -m "markdown"`)
+- [ ] **WRITE-03**: User can append content blocks to an existing page (`notion append <id> -m "markdown"`)
+- [ ] **ADV-05**: User can post a comment on a page (`notion comment <id> -m "text"`)
+
 ## v2 Requirements
 
 Deferred to future release. Tracked but not in current roadmap.
 
-### Write Operations
+### Write Operations (remaining)
 
-- **WRITE-01**: User can create a new page from markdown content
 - **WRITE-02**: User can update page properties
-- **WRITE-03**: User can append content blocks to a page
 - **WRITE-04**: User can archive/delete a page
 
 ### Advanced Features
@@ -80,7 +88,6 @@ Deferred to future release. Tracked but not in current roadmap.
 - **ADV-02**: Human-friendly filter syntax (`--where "Status=Done,Priority=High"`)
 - **ADV-03**: Output format flags (`--format json|md|yaml`)
 - **ADV-04**: Homebrew distribution (`brew install notion-cli`)
-- **ADV-05**: Post comments on a page (`notion comment <id> -m "text"`)
 - **ADV-06**: Bulk/batch operations with dry-run safety
 
 ## Out of Scope
@@ -135,10 +142,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DIST-02 | Phase 1 | Complete |
 | DIST-03 | Phase 1 | Complete |
 | DIST-04 | Phase 1 | Complete |
+| WRITE-01 | Phase 6 | Pending |
+| WRITE-03 | Phase 6 | Pending |
+| ADV-05 | Phase 6 | Pending |
 
 **Coverage:**
-- v1 requirements: 32 total
-- Mapped to phases: 32
+- v1 requirements: 32 total (complete)
+- v1.1 requirements: 3 total
+- Mapped to phases: 35
 - Unmapped: 0 ✓
 
 ---

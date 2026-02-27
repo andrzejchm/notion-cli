@@ -1,5 +1,3 @@
-import { spawnSync } from 'child_process';
-
 export type OutputMode = 'auto' | 'json' | 'md';
 
 let _mode: OutputMode = 'auto';
@@ -99,21 +97,5 @@ export function printOutput(
 }
 
 function printWithPager(text: string): void {
-  // Only use pager when stdout is a TTY — scripts and pipes get raw output
-  if (!isatty()) {
-    process.stdout.write(text);
-    return;
-  }
-
-  // less -I: case-insensitive search
-  //      -R: pass through ANSI color codes
-  const result = spawnSync('less', ['-IR'], {
-    input: text,
-    stdio: ['pipe', 'inherit', 'inherit'],
-  });
-
-  // Fall back to plain write if less isn't available
-  if (result.error) {
-    process.stdout.write(text);
-  }
+  process.stdout.write(text);
 }

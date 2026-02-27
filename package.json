@@ -1,6 +1,6 @@
 {
   "name": "@andrzejchm/notion-cli",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Read Notion pages and databases from the terminal. Built for AI agents and developers.",
   "keywords": [
     "notion",

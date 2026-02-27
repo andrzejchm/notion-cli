@@ -11,6 +11,8 @@ npm install -g @andrzejchm/notion-cli
 notion init   # paste your Notion integration token once
 ```
 
+![notion-cli demo](docs/demo.gif)
+
 ---
 
 ## For AI Agents

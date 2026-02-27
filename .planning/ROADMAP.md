@@ -17,6 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Page Reading** - Full-fidelity block-to-markdown converter with rich text annotations and page properties (completed 2026-02-27)
 - [x] **Phase 4: Database Operations** - Database schema, query, filtering, sorting, and tabular display (completed 2026-02-27)
 - [x] **Phase 5: Agent Integration & Distribution** - Agent skill files, npm packaging, publish-ready CLI (completed 2026-02-27)
+- [ ] **Phase 6: Write Operations** - Add comment, append blocks, and create-page commands for AI agent write workflows
 
 ## Phase Details
 
@@ -103,10 +104,26 @@ Plans:
 - [x] 05-02-PLAN.md — npm packaging (package.json metadata, README.md, .npmignore, pack dry-run)
 - [x] 05-03-PLAN.md — Local install verification + npm publish (human checkpoint)
 
+### Phase 6: Write Operations
+**Goal**: AI agents can post comments, append markdown content, and create new pages via CLI commands
+**Depends on**: Phase 5
+**Requirements**: WRITE-01, WRITE-03, ADV-05
+**Success Criteria** (what must be TRUE):
+  1. User can run `notion comment <id> -m "text"` and a comment appears on the Notion page
+  2. User can run `notion append <id> -m "markdown"` and blocks appear at the bottom of the page
+  3. User can run `notion create-page --parent <id> --title "Title"` and a new page is created, returning its URL
+  4. All three commands handle stdin as an alternative content source
+**Plans**: 3 plans
+
+Plans:
+- [ ] 06-01-PLAN.md — TDD: markdown-to-blocks converter (mdToBlocks)
+- [ ] 06-02-PLAN.md — `notion comment` + `notion append` commands + CLI wiring
+- [ ] 06-03-PLAN.md — `notion create-page` command + human verify
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -115,3 +132,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 3. Page Reading | 4/4 | Complete | 2026-02-27 |
 | 4. Database Operations | 2/2 | Complete | 2026-02-27 |
 | 5. Agent Integration & Distribution | 3/3 | Complete | 2026-02-27 |
+| 6. Write Operations | 0/3 | Pending | — |
