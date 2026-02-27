@@ -35,12 +35,19 @@ curl -fsSL https://raw.githubusercontent.com/andrzejchm/notion-cli/main/docs/ski
 
 ### 3. Authenticate
 
+**Internal integration token** (read-only and automated agents):
 ```bash
 notion init
 # or: export NOTION_API_TOKEN=ntn_your_token_here
 ```
 
 Get a token: https://www.notion.so/profile/integrations/internal
+
+**OAuth login** (recommended for write operations — attributes comments/pages to your user):
+```bash
+notion auth login          # opens browser
+notion auth login --manual # headless: prints URL, paste redirect back
+```
 
 ### 4. Share pages with your integration
 
