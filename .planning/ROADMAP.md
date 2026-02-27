@@ -17,7 +17,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Page Reading** - Full-fidelity block-to-markdown converter with rich text annotations and page properties (completed 2026-02-27)
 - [x] **Phase 4: Database Operations** - Database schema, query, filtering, sorting, and tabular display (completed 2026-02-27)
 - [x] **Phase 5: Agent Integration & Distribution** - Agent skill files, npm packaging, publish-ready CLI (completed 2026-02-27)
-- [ ] **Phase 6: Write Operations** - Add comment, append blocks, and create-page commands for AI agent write workflows
+- [x] **Phase 6: Write Operations** - Add comment, append blocks, and create-page commands for AI agent write workflows (completed 2026-02-27)
+- [ ] **Phase 7: Homebrew Distribution** - Personal tap + formula so users can `brew install notion-cli`
 
 ## Phase Details
 
@@ -116,14 +117,29 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 06-01-PLAN.md — TDD: markdown-to-blocks converter (mdToBlocks)
-- [ ] 06-02-PLAN.md — `notion comment` + `notion append` commands + CLI wiring
-- [ ] 06-03-PLAN.md — `notion create-page` command + human verify
+- [x] 06-01-PLAN.md — TDD: markdown-to-blocks converter (mdToBlocks)
+- [x] 06-02-PLAN.md — `notion comment` + `notion append` commands + CLI wiring
+- [x] 06-03-PLAN.md — `notion create-page` command + human verify
+
+### Phase 7: Homebrew Distribution
+**Goal**: Users can install the `notion` CLI with a single `brew install andrzejchm/notion-cli/notion-cli` command
+**Depends on**: Phase 5 (npm package published)
+**Requirements**: ADV-04
+**Success Criteria** (what must be TRUE):
+  1. User can run `brew tap andrzejchm/notion-cli && brew install notion-cli` and get a working `notion` binary
+  2. Formula installs from the published npm tarball on registry.npmjs.org (no npm required from user)
+  3. README documents Homebrew as the primary installation method
+  4. A GitHub Actions workflow in the tap repo auto-updates the formula sha256 + version on each new npm release
+**Plans**: 2 plans
+
+Plans:
+- [ ] 07-01-PLAN.md — Create `homebrew-notion-cli` tap repo with Homebrew formula
+- [ ] 07-02-PLAN.md — GitHub Actions auto-update workflow + README brew instructions
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -132,4 +148,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 3. Page Reading | 4/4 | Complete | 2026-02-27 |
 | 4. Database Operations | 2/2 | Complete | 2026-02-27 |
 | 5. Agent Integration & Distribution | 3/3 | Complete | 2026-02-27 |
-| 6. Write Operations | 0/3 | Pending | — |
+| 6. Write Operations | 3/3 | Complete   | 2026-02-27 |
+| 7. Homebrew Distribution | 0/2 | Pending |  |

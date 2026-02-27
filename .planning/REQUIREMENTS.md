@@ -69,9 +69,22 @@ Phase 6 additions — write operations for AI agent workflows.
 
 ### Write Operations
 
-- [ ] **WRITE-01**: User can create a new page under a parent (`notion create-page --parent <id> --title "Title" -m "markdown"`)
-- [ ] **WRITE-03**: User can append content blocks to an existing page (`notion append <id> -m "markdown"`)
-- [ ] **ADV-05**: User can post a comment on a page (`notion comment <id> -m "text"`)
+- [x] **WRITE-01**: User can create a new page under a parent (`notion create-page --parent <id> --title "Title" -m "markdown"`)
+- [x] **WRITE-03**: User can append content blocks to an existing page (`notion append <id> -m "markdown"`)
+- [x] **ADV-05**: User can post a comment on a page (`notion comment <id> -m "text"`)
+
+## v1.2 Requirements
+
+Phase 7 addition — Homebrew distribution.
+
+### Distribution (Homebrew)
+
+- [ ] **ADV-04**: Homebrew distribution via a personal tap (`brew tap andrzejchm/notion-cli && brew install notion-cli`)
+  - Installs the `notion` binary with a single brew command
+  - Formula pulls from the published npm tarball on registry.npmjs.org
+  - A companion `homebrew-notion-cli` GitHub repo hosts the formula
+  - README documents `brew install` as the primary install method
+  - GitHub Actions workflow auto-updates the formula on new npm releases
 
 ## v2 Requirements
 
@@ -87,7 +100,6 @@ Deferred to future release. Tracked but not in current roadmap.
 - **ADV-01**: Recursive page reading (`notion read --deep`) follows child pages
 - **ADV-02**: Human-friendly filter syntax (`--where "Status=Done,Priority=High"`)
 - **ADV-03**: Output format flags (`--format json|md|yaml`)
-- **ADV-04**: Homebrew distribution (`brew install notion-cli`)
 - **ADV-06**: Bulk/batch operations with dry-run safety
 
 ## Out of Scope
@@ -142,14 +154,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DIST-02 | Phase 1 | Complete |
 | DIST-03 | Phase 1 | Complete |
 | DIST-04 | Phase 1 | Complete |
-| WRITE-01 | Phase 6 | Pending |
-| WRITE-03 | Phase 6 | Pending |
-| ADV-05 | Phase 6 | Pending |
+| WRITE-01 | Phase 6 | Complete |
+| WRITE-03 | Phase 6 | Complete |
+| ADV-05 | Phase 6 | Complete |
+| ADV-04 | Phase 7 | Pending |
 
 **Coverage:**
 - v1 requirements: 32 total (complete)
 - v1.1 requirements: 3 total
-- Mapped to phases: 35
+- v1.2 requirements: 1 total
+- Mapped to phases: 36
 - Unmapped: 0 ✓
 
 ---

@@ -1,14 +1,14 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: write-operations
-status: in_progress
-last_updated: "2026-02-27T16:30:00.000Z"
+milestone: v1.0
+milestone_name: milestone
+status: unknown
+last_updated: "2026-02-27T19:35:46.299Z"
 progress:
-  total_phases: 6
-  completed_phases: 5
-  total_plans: 20
-  completed_plans: 17
+  total_phases: 7
+  completed_phases: 6
+  total_plans: 22
+  completed_plans: 20
 ---
 
 # Project State
@@ -22,12 +22,12 @@ See: .planning/PROJECT.md (updated 2026-02-26)
 
 ## Current Position
 
-Phase: 6 of 6 (ACTIVE)
-Plan: 0 of 3 in Phase 6 complete
-Status: Phase 6 write operations planned — ready to execute 06-01
-Last activity: 2026-02-27 — Planned Phase 6 write operations (comment, append, create-page)
+Phase: 7 of 7 (ACTIVE)
+Plan: 0 of 2 in Phase 7 complete
+Status: Phase 7 planned — ready to execute 07-01 (create homebrew-notion-cli tap repo)
+Last activity: 2026-02-27 — Phase 7 Homebrew distribution planned
 
-Progress: [█████████████████░░░] 85% (5/6 phases)
+Progress: [███████████████████░░] 91% (20/22 plans)
 
 ## Performance Metrics
 
@@ -51,6 +51,9 @@ Progress: [█████████████████░░░] 85% (5/
 | Phase 02-search-discovery-output P04 | ~15 min | 2 tasks | 1 file |
 | Phase 05-agent-distribution P01 | 2 | 1 tasks | 1 files |
 | Phase 05-agent-distribution P02 | 8 | 2 tasks | 3 files |
+| Phase 06-write-operations P01 | 2 min | 2 tasks | 2 files |
+| Phase 06-write-operations P02 | 1 min | 2 tasks | 4 files |
+| Phase 06-write-operations P03 | 1 min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -95,10 +98,21 @@ Recent decisions affecting current work:
 - [Phase 05-agent-distribution]: engines.node >=22.0.0 matches tsup build target node22
 - [Phase 05-agent-distribution]: .npmignore excludes src/, tests/, .planning/, .opencode/, tsconfig files from npm tarball
 - [Phase 05-03]: npm pkg fix normalized bin field from ./dist/cli.js to dist/cli.js — required for clean npm publish
+- [06-01]: parseInlineMarkdown uses single-pass regex for all annotation types — no nesting, good enough for AI agent output patterns
+- [06-01]: Code fence language passed through as-is with type cast — SDK LanguageRequest is strict enum but arbitrary tags like 'ts' should round-trip
+- [06-01]: BlockObjectRequest type assertions required in SDK v5 — discriminated union narrows on content key (paragraph:) not type: field
+- [06-02]: write.service.ts provides thin wrappers — no business logic; callers own ID conversion (toUuid)
+- [06-02]: appendCommand guards blocks.length === 0 — prints 'Nothing to append.' rather than empty API call
+- [06-02]: requiredOption() used for -m/--message — Commander handles missing-flag error with usage message
+- [06-02]: comment (singular) is the write command; comments (plural) is the read command — matches natural English
+- [06-03]: createPage() casts response as { url: string } — PageObjectResponse has url at runtime but SDK v5 union type requires assertion
+- [06-03]: stdin read deferred until after -m check — prevents hanging if -m flag not provided in interactive session
+- [06-03]: requiredOption() for both --parent and --title — Commander handles missing-flag error automatically
 
 ### Pending Todos
 
-- Execute Phase 6: run `/gsd-execute-phase 06-write-operations`
+- Execute Phase 7 plan 01: Create homebrew-notion-cli tap repo + formula (07-01)
+- Execute Phase 7 plan 02: Add auto-update GH Actions workflow + README brew docs (07-02)
 
 ### Blockers/Concerns
 
@@ -107,5 +121,5 @@ None active.
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Planned Phase 6 write operations — 3 plans created (06-01 TDD md-to-blocks, 06-02 comment+append, 06-03 create-page)
-Resume file: None — run `/gsd-execute-phase 06-write-operations` to start
+Stopped at: Phase 7 planned — Homebrew distribution (07-01 + 07-02 ready to execute)
+Resume file: None — run `/gsd-execute-phase 07-homebrew-distribution` to start
