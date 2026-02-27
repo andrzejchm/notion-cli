@@ -48,8 +48,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Agent Integration
 
-- [ ] **AGNT-01**: Repository includes an agent skill file (`.md`) documenting all commands, flags, output formats, and common patterns for AI agents
-- [ ] **AGNT-02**: Skill file covers Claude Code, OpenCode, and Codex agent setup instructions
+- [x] **AGNT-01**: Repository includes an agent skill file (`.md`) documenting all commands, flags, output formats, and common patterns for AI agents
+- [x] **AGNT-02**: Skill file covers Claude Code, OpenCode, and Codex agent setup instructions
 
 ### Social & Meta
 
@@ -58,7 +58,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Distribution
 
-- [ ] **DIST-01**: CLI installable via `npm install -g @andrzejchm/notion-cli`
+- [x] **DIST-01**: CLI installable via `npm install -g @andrzejchm/notion-cli`
 - [x] **DIST-02**: CLI binary named `notion`
 - [x] **DIST-03**: `notion --help` shows all commands with descriptions
 - [x] **DIST-04**: `notion --version` shows current version
@@ -127,11 +127,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OUT-03 | Phase 2 | Complete |
 | OUT-04 | Phase 2 | Complete |
 | OUT-05 | Phase 1 | Complete |
-| AGNT-01 | Phase 5 | Pending |
-| AGNT-02 | Phase 5 | Pending |
+| AGNT-01 | Phase 5 | Complete |
+| AGNT-02 | Phase 5 | Complete |
 | META-01 | Phase 2 | Complete |
 | META-02 | Phase 2 | Complete |
-| DIST-01 | Phase 5 | Pending |
+| DIST-01 | Phase 5 | Complete |
 | DIST-02 | Phase 1 | Complete |
 | DIST-03 | Phase 1 | Complete |
 | DIST-04 | Phase 1 | Complete |

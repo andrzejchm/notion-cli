@@ -15,8 +15,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Foundation & Auth** - Project scaffold, CLI skeleton, auth setup, config, URL parsing, error handling (completed 2026-02-26)
 - [x] **Phase 2: Search, Discovery & Output** - Search workspace, list content, browse users/comments, dual-mode output formatting (completed 2026-02-27)
 - [x] **Phase 3: Page Reading** - Full-fidelity block-to-markdown converter with rich text annotations and page properties (completed 2026-02-27)
-- [ ] **Phase 4: Database Operations** - Database schema, query, filtering, sorting, and tabular display
-- [ ] **Phase 5: Agent Integration & Distribution** - Agent skill files, npm packaging, publish-ready CLI
+- [x] **Phase 4: Database Operations** - Database schema, query, filtering, sorting, and tabular display (completed 2026-02-27)
+- [x] **Phase 5: Agent Integration & Distribution** - Agent skill files, npm packaging, publish-ready CLI (completed 2026-02-27)
 
 ## Phase Details
 
@@ -85,8 +85,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — Database service (schema fetch, filtered query, filter/sort builders, display formatter)
-- [ ] 04-02-PLAN.md — notion db schema + notion db query commands + CLI wiring + human verify
+- [x] 04-01-PLAN.md — Database service (schema fetch, filtered query, filter/sort builders, display formatter)
+- [x] 04-02-PLAN.md — notion db schema + notion db query commands + CLI wiring + human verify
 
 ### Phase 5: Agent Integration & Distribution
 **Goal**: AI coding agents can install `notion` via npm and learn all commands from a bundled skill file
@@ -99,9 +99,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 05-01-PLAN.md — Agent skill file (docs/agent-skill.md) covering all commands + Claude Code/OpenCode/Codex setup
-- [ ] 05-02-PLAN.md — npm packaging (package.json metadata, README.md, .npmignore, pack dry-run)
-- [ ] 05-03-PLAN.md — Local install verification + npm publish (human checkpoint)
+- [x] 05-01-PLAN.md — Agent skill file (docs/agent-skill.md) covering all commands + Claude Code/OpenCode/Codex setup
+- [x] 05-02-PLAN.md — npm packaging (package.json metadata, README.md, .npmignore, pack dry-run)
+- [x] 05-03-PLAN.md — Local install verification + npm publish (human checkpoint)
 
 ## Progress
 
@@ -113,5 +113,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 1. Foundation & Auth | 4/4 | Complete   | 2026-02-26 |
 | 2. Search, Discovery & Output | 4/4 | Complete   | 2026-02-27 |
 | 3. Page Reading | 4/4 | Complete | 2026-02-27 |
-| 4. Database Operations | 1/2 | In Progress|  |
-| 5. Agent Integration & Distribution | 0/3 | Not started | - |
+| 4. Database Operations | 2/2 | Complete | 2026-02-27 |
+| 5. Agent Integration & Distribution | 3/3 | Complete | 2026-02-27 |

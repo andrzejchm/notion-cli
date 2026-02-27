@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-02-27T14:01:15.935Z"
+last_updated: "2026-02-27T16:07:34.021Z"
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 17
-  completed_plans: 14
+  completed_plans: 17
 ---
 
 # Project State
@@ -22,12 +22,12 @@ See: .planning/PROJECT.md (updated 2026-02-26)
 
 ## Current Position
 
-Phase: 4 of 5 IN PROGRESS
-Plan: 2 of 4 in Phase 4 complete (04-01 database service, 04-02 db commands complete)
-Status: Phase 4 in progress — 04-03 (if exists) or Phase 5 (Ship) is next
-Last activity: 2026-02-27 — Completed 04-02 db schema+query commands with human verification
+Phase: 5 of 5 COMPLETE
+Plan: 3 of 3 in Phase 5 complete (05-01 agent skill file, 05-02 npm package metadata, 05-03 npm publish)
+Status: ALL PHASES COMPLETE — milestone v1.0 achieved
+Last activity: 2026-02-27 — Completed 05-03 npm publish (@andrzejchm/notion-cli@0.1.0 live on npm)
 
-Progress: [██████████████░░░░░░] 70%
+Progress: [████████████████████] 100%
 
 ## Performance Metrics
 
@@ -49,6 +49,8 @@ Progress: [██████████████░░░░░░] 70%
 *Updated after each plan completion*
 | Phase 02-search-discovery-output P03 | 2 | 2 tasks | 3 files |
 | Phase 02-search-discovery-output P04 | ~15 min | 2 tasks | 1 file |
+| Phase 05-agent-distribution P01 | 2 | 1 tasks | 1 files |
+| Phase 05-agent-distribution P02 | 8 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -87,6 +89,12 @@ Recent decisions affecting current work:
 - [Phase 04-02]: Auto-select columns that fit terminal width — skip relation/rich_text/people by default for clean table output
 - [Phase 04-02]: Cap all column values to 40 chars and strip newlines to prevent table layout corruption
 - [Phase 04-02]: Commander collect() helper pattern for repeatable flags (--filter, --sort)
+- [Phase 05-agent-distribution]: Agent skill file is 475 lines (above target) — chose completeness; all content substantive
+- [Phase 05-agent-distribution]: docs/ directory created as top-level folder for project documentation
+- [Phase 05-agent-distribution]: package.json files array allowlists dist/, docs/agent-skill.md, README.md for tarball
+- [Phase 05-agent-distribution]: engines.node >=22.0.0 matches tsup build target node22
+- [Phase 05-agent-distribution]: .npmignore excludes src/, tests/, .planning/, .opencode/, tsconfig files from npm tarball
+- [Phase 05-03]: npm pkg fix normalized bin field from ./dist/cli.js to dist/cli.js — required for clean npm publish
 
 ### Pending Todos
 
@@ -99,5 +107,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Completed 04-02-PLAN.md — db schema+query commands, human verification passed, post-checkpoint display fixes applied
+Stopped at: Completed 05-03-PLAN.md — @andrzejchm/notion-cli@0.1.0 published to npm registry
 Resume file: None

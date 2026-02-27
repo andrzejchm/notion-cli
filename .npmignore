@@ -1,0 +1,25 @@
+# Source files (not needed in package)
+src/
+tests/
+*.test.ts
+
+# Config files
+tsconfig.json
+tsup.config.ts
+vitest.config.ts
+.eslintrc*
+.prettierrc*
+
+# Planning and development docs
+.planning/
+.opencode/
+.agents/
+CLAUDE.md
+
+# Build artifacts we don't want published
+*.tsbuildinfo
+*.map
+
+# Environment
+.env
+.env.*
