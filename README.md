@@ -130,4 +130,4 @@ Get a token: [notion.so/profile/integrations/internal](https://www.notion.so/pro
 
 ## License
 
-MIT © [Andrzej Chm](https://github.com/andrzejchm)
+MIT © [Andrzej Chmielewski](https://github.com/andrzejchm)
