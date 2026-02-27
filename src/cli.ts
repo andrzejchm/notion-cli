@@ -15,6 +15,7 @@ import { lsCommand } from './commands/ls.js';
 import { openCommand } from './commands/open.js';
 import { usersCommand } from './commands/users.js';
 import { commentsCommand } from './commands/comments.js';
+import { readCommand } from './commands/read.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -76,6 +77,7 @@ program.addCommand(lsCommand());
 program.addCommand(openCommand());
 program.addCommand(usersCommand());
 program.addCommand(commentsCommand());
+program.addCommand(readCommand());
 
 // --- Utilities ---
 program.addCommand(completionCommand());

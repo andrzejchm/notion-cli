@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation & Auth** - Project scaffold, CLI skeleton, auth setup, config, URL parsing, error handling (completed 2026-02-26)
 - [x] **Phase 2: Search, Discovery & Output** - Search workspace, list content, browse users/comments, dual-mode output formatting (completed 2026-02-27)
-- [ ] **Phase 3: Page Reading** - Full-fidelity block-to-markdown converter with rich text annotations and page properties
+- [x] **Phase 3: Page Reading** - Full-fidelity block-to-markdown converter with rich text annotations and page properties (completed 2026-02-27)
 - [ ] **Phase 4: Database Operations** - Database schema, query, filtering, sorting, and tabular display
 - [ ] **Phase 5: Agent Integration & Distribution** - Agent skill files, npm packaging, publish-ready CLI
 
@@ -68,10 +68,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — TDD: Rich text annotation converter (bold, italic, code, links, equations)
-- [ ] 03-02-PLAN.md — Page service (recursive block tree fetcher) + properties formatter
-- [ ] 03-03-PLAN.md — TDD: Block type converter registry (14 P1 block types)
-- [ ] 03-04-PLAN.md — Page markdown assembler + notion read command + human verify
+- [x] 03-01-PLAN.md — TDD: Rich text annotation converter (bold, italic, code, links, equations)
+- [x] 03-02-PLAN.md — Page service (recursive block tree fetcher) + properties formatter
+- [x] 03-03-PLAN.md — TDD: Block type converter registry (14 P1 block types)
+- [x] 03-04-PLAN.md — Page markdown assembler + notion read command + human verify
 
 ### Phase 4: Database Operations
 **Goal**: User can inspect database structure and query entries with filtering and sorting
@@ -112,6 +112,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 |-------|----------------|--------|-----------|
 | 1. Foundation & Auth | 4/4 | Complete   | 2026-02-26 |
 | 2. Search, Discovery & Output | 4/4 | Complete   | 2026-02-27 |
-| 3. Page Reading | 0/4 | Not started | - |
+| 3. Page Reading | 4/4 | Complete | 2026-02-27 |
 | 4. Database Operations | 0/2 | Not started | - |
 | 5. Agent Integration & Distribution | 0/3 | Not started | - |

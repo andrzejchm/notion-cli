@@ -5,7 +5,6 @@ import { resolveToken } from '../config/token.js';
 import { createNotionClient } from '../notion/client.js';
 import { reportTokenSource } from '../output/stderr.js';
 import { setOutputMode, printOutput } from '../output/format.js';
-import { paginateResults } from '../output/paginate.js';
 import { withErrorHandling } from '../errors/error-handler.js';
 
 function getTitle(item: PageObjectResponse | DataSourceObjectResponse): string {
@@ -41,9 +40,10 @@ export function searchCommand(): Command {
       }
       return val as 'page' | 'database';
     })
+    .option('--cursor <cursor>', 'start from this pagination cursor (from a previous --next hint)')
     .option('--json', 'force JSON output')
     .action(
-      withErrorHandling(async (query: string, opts: { type?: 'page' | 'database'; json?: boolean }) => {
+      withErrorHandling(async (query: string, opts: { type?: 'page' | 'database'; cursor?: string; json?: boolean }) => {
         if (opts.json) {
           setOutputMode('json');
         }
@@ -52,17 +52,16 @@ export function searchCommand(): Command {
         reportTokenSource(source);
         const notion = createNotionClient(token);
 
-        const results = await paginateResults((cursor) =>
-          notion.search({
-            query,
-            filter: opts.type
-              ? { property: 'object', value: toSdkFilterValue(opts.type) }
-              : undefined,
-            start_cursor: cursor,
-          })
-        );
+        const response = await notion.search({
+          query,
+          filter: opts.type
+            ? { property: 'object', value: toSdkFilterValue(opts.type) }
+            : undefined,
+          start_cursor: opts.cursor,
+          page_size: 20,
+        });
 
-        const fullResults = results.filter((r) => isFullPageOrDataSource(r)) as (
+        const fullResults = response.results.filter((r) => isFullPageOrDataSource(r)) as (
           | PageObjectResponse
           | DataSourceObjectResponse
         )[];
@@ -81,6 +80,10 @@ export function searchCommand(): Command {
         ]);
 
         printOutput(fullResults, headers, rows);
+
+        if (response.has_more && response.next_cursor) {
+          process.stderr.write(`\n  --next: notion search "${query}" --cursor ${response.next_cursor}\n`);
+        }
       })
     );
 

@@ -5,7 +5,6 @@ import { resolveToken } from '../config/token.js';
 import { createNotionClient } from '../notion/client.js';
 import { reportTokenSource } from '../output/stderr.js';
 import { setOutputMode, printOutput } from '../output/format.js';
-import { paginateResults } from '../output/paginate.js';
 import { withErrorHandling } from '../errors/error-handler.js';
 
 function getTitle(item: PageObjectResponse | DataSourceObjectResponse): string {
@@ -28,16 +27,17 @@ export function lsCommand(): Command {
   const cmd = new Command('ls');
 
   cmd
-    .description('list all accessible Notion pages and databases')
+    .description('list accessible Notion pages and databases')
     .option('--type <type>', 'filter by object type (page or database)', (val) => {
       if (val !== 'page' && val !== 'database') {
         throw new Error('--type must be "page" or "database"');
       }
       return val as 'page' | 'database';
     })
+    .option('--cursor <cursor>', 'start from this pagination cursor (from a previous --next hint)')
     .option('--json', 'force JSON output')
     .action(
-      withErrorHandling(async (opts: { type?: 'page' | 'database'; json?: boolean }) => {
+      withErrorHandling(async (opts: { type?: 'page' | 'database'; cursor?: string; json?: boolean }) => {
         if (opts.json) {
           setOutputMode('json');
         }
@@ -46,11 +46,12 @@ export function lsCommand(): Command {
         reportTokenSource(source);
         const notion = createNotionClient(token);
 
-        const results = await paginateResults((cursor) =>
-          notion.search({ start_cursor: cursor })
-        );
+        const response = await notion.search({
+          start_cursor: opts.cursor,
+          page_size: 20,
+        });
 
-        let items = results.filter((r) => isFullPageOrDataSource(r)) as (
+        let items = response.results.filter((r) => isFullPageOrDataSource(r)) as (
           | PageObjectResponse
           | DataSourceObjectResponse
         )[];
@@ -76,6 +77,10 @@ export function lsCommand(): Command {
         ]);
 
         printOutput(items, headers, rows);
+
+        if (response.has_more && response.next_cursor) {
+          process.stderr.write(`\n  --next: notion ls --cursor ${response.next_cursor}\n`);
+        }
       })
     );
 

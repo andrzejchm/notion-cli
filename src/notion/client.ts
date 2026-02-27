@@ -44,5 +44,5 @@ export async function validateToken(token: string): Promise<WorkspaceInfo> {
  * Used by all commands that need to interact with the Notion API.
  */
 export function createNotionClient(token: string): Client {
-  return new Client({ auth: token });
+  return new Client({ auth: token, timeoutMs: 120_000 });
 }

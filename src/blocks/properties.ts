@@ -1,0 +1,105 @@
+import type { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints.js';
+
+type PropertyValue = PageObjectResponse['properties'][string];
+
+export function formatPropertyValue(name: string, prop: PropertyValue): string {
+  switch (prop.type) {
+    case 'title':
+      return prop.title.map((rt) => rt.plain_text).join('');
+
+    case 'rich_text':
+      return prop.rich_text.map((rt) => rt.plain_text).join('');
+
+    case 'number':
+      return prop.number !== null ? String(prop.number) : '';
+
+    case 'select':
+      return prop.select?.name ?? '';
+
+    case 'status':
+      return prop.status?.name ?? '';
+
+    case 'multi_select':
+      return prop.multi_select.map((s) => s.name).join(', ');
+
+    case 'date':
+      if (!prop.date) return '';
+      return prop.date.end ? `${prop.date.start} → ${prop.date.end}` : prop.date.start;
+
+    case 'checkbox':
+      return prop.checkbox ? 'true' : 'false';
+
+    case 'url':
+      return prop.url ?? '';
+
+    case 'email':
+      return prop.email ?? '';
+
+    case 'phone_number':
+      return prop.phone_number ?? '';
+
+    case 'people':
+      return prop.people
+        .map((p) => ('name' in p && p.name ? p.name : p.id))
+        .join(', ');
+
+    case 'relation':
+      return prop.relation.map((r) => r.id).join(', ');
+
+    case 'formula': {
+      const f = prop.formula;
+      if (f.type === 'string') return f.string ?? '';
+      if (f.type === 'number') return f.number !== null ? String(f.number) : '';
+      if (f.type === 'boolean') return String(f.boolean);
+      if (f.type === 'date') return f.date?.start ?? '';
+      return '';
+    }
+
+    case 'rollup': {
+      const r = prop.rollup;
+      if (r.type === 'number') return r.number !== null ? String(r.number) : '';
+      if (r.type === 'date') return r.date?.start ?? '';
+      if (r.type === 'array') return `[${r.array.length} items]`;
+      return '';
+    }
+
+    case 'created_time':
+      return prop.created_time;
+
+    case 'last_edited_time':
+      return prop.last_edited_time;
+
+    case 'created_by':
+      return 'name' in prop.created_by
+        ? (prop.created_by.name ?? prop.created_by.id)
+        : prop.created_by.id;
+
+    case 'last_edited_by':
+      return 'name' in prop.last_edited_by
+        ? (prop.last_edited_by.name ?? prop.last_edited_by.id)
+        : prop.last_edited_by.id;
+
+    case 'files':
+      return prop.files
+        .map((f) => {
+          if (f.type === 'external') return f.external.url;
+          return f.name;
+        })
+        .join(', ');
+
+    case 'unique_id':
+      return prop.unique_id.prefix
+        ? `${prop.unique_id.prefix}-${prop.unique_id.number}`
+        : String(prop.unique_id.number ?? '');
+
+    default:
+      return '';
+  }
+}
+
+export function extractPageTitle(page: PageObjectResponse): string {
+  const titleProp = Object.values(page.properties).find((p) => p.type === 'title');
+  if (!titleProp || titleProp.type !== 'title') return page.id;
+  return titleProp.title.map((rt) => rt.plain_text).join('') || page.id;
+}
+

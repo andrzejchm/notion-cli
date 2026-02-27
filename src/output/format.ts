@@ -1,3 +1,5 @@
+import { spawnSync } from 'child_process';
+
 export type OutputMode = 'auto' | 'json' | 'md';
 
 let _mode: OutputMode = 'auto';
@@ -29,7 +31,7 @@ export function formatJSON(data: unknown): string {
 const COLUMN_CAPS: Record<string, number> = {
   TYPE: 8,
   TITLE: 50,
-  ID: 32,
+  ID: 36,
 };
 
 function getColumnCap(header: string): number {
@@ -90,6 +92,26 @@ export function printOutput(
   if (mode === 'json' || (!tty && mode === 'auto')) {
     process.stdout.write(formatJSON(data) + '\n');
   } else if (isHumanMode() && tableHeaders && tableRows) {
-    process.stdout.write(formatTable(tableRows, tableHeaders) + '\n');
+    printWithPager(formatTable(tableRows, tableHeaders) + '\n');
+  }
+}
+
+function printWithPager(text: string): void {
+  // Only use pager when stdout is a TTY — scripts and pipes get raw output
+  if (!isatty()) {
+    process.stdout.write(text);
+    return;
+  }
+
+  // less -I: case-insensitive search
+  //      -R: pass through ANSI color codes
+  const result = spawnSync('less', ['-IR'], {
+    input: text,
+    stdio: ['pipe', 'inherit', 'inherit'],
+  });
+
+  // Fall back to plain write if less isn't available
+  if (result.error) {
+    process.stdout.write(text);
   }
 }
