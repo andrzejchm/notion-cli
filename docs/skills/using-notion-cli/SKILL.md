@@ -29,6 +29,31 @@ Pages must be shared with your integration: open page → `⋯` → **Add connec
 
 ---
 
+## Authentication
+
+Two auth methods are available. If both are configured, **OAuth takes precedence**.
+
+### Internal integration token (default)
+Set up via `notion init`. Comments and pages created via this method are attributed to the **integration bot** (not a real user).
+
+```bash
+notion init                    # interactive setup (requires TTY)
+export NOTION_API_TOKEN=ntn_…  # or via environment variable
+```
+
+### OAuth user login (recommended for write operations)
+Set up via `notion auth login`. Comments and pages are attributed to your **actual Notion user account**.
+
+```bash
+notion auth login [--profile <name>] [--manual]   # opens browser OAuth flow; --manual for headless
+notion auth logout [--profile <name>]              # removes OAuth tokens
+notion auth status [--profile <name>]              # shows current auth state
+```
+
+**Headless / remote servers:** `notion auth login --manual` prints the auth URL for you to open in a local browser, then prompts you to paste the redirect URL back.
+
+---
+
 ## Output Modes
 
 | Context | Default | Override |

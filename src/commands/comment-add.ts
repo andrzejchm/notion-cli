@@ -21,7 +21,7 @@ export function commentAddCommand(): Command {
       const id = parseNotionId(idOrUrl);
       const uuid = toUuid(id);
 
-      await addComment(client, uuid, opts.message);
+      await addComment(client, uuid, opts.message, { asUser: source === 'oauth' });
 
       process.stdout.write('Comment added.\n');
     }));

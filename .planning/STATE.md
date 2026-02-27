@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-02-27T19:57:09.608Z"
+last_updated: "2026-02-27T22:12:46Z"
 progress:
-  total_phases: 7
-  completed_phases: 7
-  total_plans: 22
-  completed_plans: 22
+  total_phases: 8
+  completed_phases: 8
+  total_plans: 25
+  completed_plans: 25
 ---
 
 # Project State
@@ -22,12 +22,12 @@ See: .planning/PROJECT.md (updated 2026-02-26)
 
 ## Current Position
 
-Phase: 7 of 7 (COMPLETE)
-Plan: 2 of 2 in Phase 7 complete
-Status: ALL PHASES COMPLETE — 22/22 plans executed, project milestone v1.0 reached
-Last activity: 2026-02-27 — 07-02 complete: Auto-update workflow + README Homebrew docs
+Phase: 8 of 8 (COMPLETE)
+Plan: 3 of 3 in Phase 8 complete
+Status: Phase 8 complete — OAuth docs, init hint, E2E verification, user attribution fix
+Last activity: 2026-02-27 — 08-03 executed: README/SKILL.md OAuth docs, init hint, display_name fix, human verified
 
-Progress: [█████████████████████] 100% (22/22 plans)
+Progress: [█████████████████████████] 100% (25/25 plans)
 
 ## Performance Metrics
 
@@ -47,6 +47,7 @@ Progress: [█████████████████████] 100%
 - Trend: Steady
 
 *Updated after each plan completion*
+| Phase 08-oauth-login P01 | 8 min | 2 tasks | 4 files |
 | Phase 02-search-discovery-output P03 | 2 | 2 tasks | 3 files |
 | Phase 02-search-discovery-output P04 | ~15 min | 2 tasks | 1 file |
 | Phase 05-agent-distribution P01 | 2 | 1 tasks | 1 files |
@@ -54,6 +55,8 @@ Progress: [█████████████████████] 100%
 | Phase 06-write-operations P01 | 2 min | 2 tasks | 2 files |
 | Phase 06-write-operations P02 | 1 min | 2 tasks | 4 files |
 | Phase 06-write-operations P03 | 1 min | 2 tasks | 3 files |
+| Phase 08-oauth-login P02 | 9 | 2 tasks | 5 files |
+| Phase 08-oauth-login P03 | ~15 min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -113,17 +116,27 @@ Recent decisions affecting current work:
 - [07-02]: Workflow uses grep -oP (Perl regex) to extract current version from formula URL — works on ubuntu-latest
 - [07-02]: up_to_date=true guard skips commit on daily runs when already current — avoids empty commits
 - [07-02]: Homebrew badge placed after npm version badge; brew tap labeled "recommended", npm as "alternative"
+- [08-01]: ProfileConfig.token made optional — OAuth profiles don't have an internal integration token
+- [08-01]: OAuth credentials XOR-encoded + split per RFC 8252 (client secrets not truly secret in native apps; redirect URI lock is the real boundary)
+- [08-01]: Conservative 1-hour expiry for OAuth tokens — Notion omits expires_in for public integrations
+- [08-01]: resolveToken() returns source:'oauth' to distinguish OAuth-attributed operations from internal integration operations
+- [08-01]: clearOAuthTokens() called on refresh failure to avoid stale token state before re-auth
+- [Phase 08-02]: TTY check in login: non-TTY without --manual throws AUTH_NO_TOKEN (prevents hanging in piped/CI environments)
+- [Phase 08-02]: Browser open failure auto-falls-back to manual flow — no crash on headless systems
+- [Phase 08-02]: notion auth logout preserves internal integration token — only clears OAuth fields
+- [08-03]: display_name:{type:'user'} required in comments.create() for Notion API to attribute comment to OAuth user — without it, comment is bot-attributed even with valid OAuth token
+- [08-03]: Auth priority documented in README and SKILL.md — OAuth takes precedence over internal integration token when both configured
 
 ### Pending Todos
 
-None — all plans complete.
+None — all 25 plans complete. Project milestone v1.0 delivered.
 
 ### Blockers/Concerns
 
-None active.
+None.
 
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Completed 07-homebrew-distribution-07-02 — Auto-update workflow live; README updated with Homebrew install section
-Resume file: None — all 22 plans complete, milestone v1.0 achieved
+Stopped at: Completed 08-03-PLAN.md — OAuth docs update, init hint, E2E human verification, user attribution fix
+Resume: All plans complete — project milestone v1.0 delivered

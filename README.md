@@ -121,6 +121,12 @@ The CLI auto-detects your context:
 
 ## Authentication
 
+Two authentication methods are available. If both are configured, **OAuth takes precedence** for API calls.
+
+### Internal integration token
+
+Run `notion init`. Suitable for read-only operations and automated agents. Write operations are attributed to the **integration bot** (not a real user).
+
 ```bash
 # Interactive setup (recommended for first-time use)
 notion init
@@ -136,6 +142,19 @@ notion profile use <name>
 
 Token format: starts with `ntn_` (new) or `secret_` (legacy integrations).  
 Get a token: [notion.so/profile/integrations/internal](https://www.notion.so/profile/integrations/internal)
+
+### OAuth user login (recommended for write operations)
+
+Run `notion auth login`. Notion opens in your browser. After approving, your comments and pages will be attributed to your **actual Notion account** — not the integration bot.
+
+```bash
+notion auth login       # Opens browser, authenticates
+notion comment <id> -m "My comment"  # Now attributed to your user
+notion auth status      # Check auth state
+notion auth logout      # Remove OAuth session
+```
+
+**Headless / remote servers:** `notion auth login --manual` prints the auth URL for you to open in a local browser, then prompts you to paste the redirect URL back.
 
 ### Integration capabilities
 

@@ -99,6 +99,9 @@ export function initCommand(): Command {
       stderrWrite(dim('capabilities in your integration settings:'));
       stderrWrite(dim('  notion.so/profile/integrations/internal → your integration →'));
       stderrWrite(dim('  Capabilities: enable "Read content", "Insert content", "Read comments", "Insert comments"'));
+      stderrWrite('');
+      stderrWrite(dim('To post comments and create pages attributed to your user account:'));
+      stderrWrite(dim('  notion auth login'));
     }));
 
   return cmd;

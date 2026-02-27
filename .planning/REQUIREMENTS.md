@@ -86,6 +86,21 @@ Phase 7 addition — Homebrew distribution.
   - README documents `brew install` as the primary install method
   - GitHub Actions workflow auto-updates the formula on new npm releases
 
+## v1.3 Requirements
+
+Phase 8 addition — OAuth user login for user-attributed write operations.
+
+### OAuth Authentication
+
+- [x] **OAUTH-01**: `ProfileConfig` extended to store `oauth_access_token`, `oauth_refresh_token`, `oauth_expiry_ms`, `oauth_user_id`, `oauth_user_name` fields alongside existing `token`
+- [x] **OAUTH-02**: OAuth app credentials (client_id + client_secret) are bundled in the CLI binary (developer registers a public Notion integration, users don't manage their own OAuth app)
+- [x] **OAUTH-03**: `resolveToken()` prefers OAuth access token over internal integration token; auto-refreshes expired access tokens using refresh_token transparently
+- [x] **OAUTH-04**: `notion auth login [--profile <name>] [--manual]` — opens browser-based Notion OAuth flow via loopback localhost:54321 server; stores access_token + refresh_token in profile
+- [x] **OAUTH-05**: `notion auth login --manual` prints the auth URL for headless/remote environments and prompts user to paste the redirect URL back
+- [x] **OAUTH-06**: `notion auth logout [--profile <name>]` — removes OAuth tokens from profile (internal integration token, if any, remains active)
+- [x] **OAUTH-07**: `notion auth status [--profile <name>]` — shows which auth method is active (OAuth with user name, or internal integration token)
+- [x] **OAUTH-08**: README and agent-skill.md document OAuth login flow, when to use it vs `notion init`, and how it affects write operation attribution
+
 ## v2 Requirements
 
 Deferred to future release. Tracked but not in current roadmap.
@@ -158,12 +173,21 @@ Which phases cover which requirements. Updated during roadmap creation.
 | WRITE-03 | Phase 6 | Complete |
 | ADV-05 | Phase 6 | Complete |
 | ADV-04 | Phase 7 | Complete (2026-02-27) |
+| OAUTH-01 | Phase 8 | Complete (2026-02-27) |
+| OAUTH-02 | Phase 8 | Complete (2026-02-27) |
+| OAUTH-03 | Phase 8 | Complete (2026-02-27) |
+| OAUTH-04 | Phase 8 | Complete |
+| OAUTH-05 | Phase 8 | Complete |
+| OAUTH-06 | Phase 8 | Complete |
+| OAUTH-07 | Phase 8 | Complete (2026-02-27) |
+| OAUTH-08 | Phase 8 | Complete (2026-02-27) |
 
 **Coverage:**
 - v1 requirements: 32 total (complete)
 - v1.1 requirements: 3 total
 - v1.2 requirements: 1 total
-- Mapped to phases: 36
+- v1.3 requirements: 8 total (OAuth login)
+- Mapped to phases: 44
 - Unmapped: 0 ✓
 
 ---

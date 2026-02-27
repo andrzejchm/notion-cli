@@ -19,6 +19,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 5: Agent Integration & Distribution** - Agent skill files, npm packaging, publish-ready CLI (completed 2026-02-27)
 - [x] **Phase 6: Write Operations** - Add comment, append blocks, and create-page commands for AI agent write workflows (completed 2026-02-27)
 - [x] **Phase 7: Homebrew Distribution** - Personal tap + formula so users can `brew install notion-cli` (completed 2026-02-27)
+- [x] **Phase 8: OAuth Login** - Browser-based OAuth flow so write operations (comments, pages) are attributed to the logged-in user, not the integration bot (completed 2026-02-27)
 
 ## Phase Details
 
@@ -136,10 +137,28 @@ Plans:
 - [x] 07-01-PLAN.md — Create `homebrew-notion-cli` tap repo with Homebrew formula
 - [x] 07-02-PLAN.md — GitHub Actions auto-update workflow + README brew instructions
 
+### Phase 8: OAuth Login
+**Goal**: User can run `notion auth login` to authenticate via Notion OAuth so that write operations (comments, pages) are attributed to their actual user account, not the integration bot
+**Depends on**: Phase 6 (Write Operations)
+**Requirements**: OAUTH-01, OAUTH-02, OAUTH-03, OAUTH-04, OAUTH-05, OAUTH-06, OAUTH-07, OAUTH-08
+**Success Criteria** (what must be TRUE):
+  1. User can run `notion auth login` and complete browser OAuth flow — token stored in profile
+  2. After OAuth login, `notion comment <id> -m "text"` posts comment attributed to the user (not the integration bot)
+  3. Access tokens auto-refresh using the stored refresh_token (transparent to the user)
+  4. `notion auth status` shows which auth method is active (OAuth vs internal integration token)
+  5. `notion auth logout` removes the OAuth session, falling back to internal integration token
+  6. Headless flow: `notion auth login --manual` prints auth URL for copy-paste without a local browser
+**Plans**: 3 plans
+
+Plans:
+- [x] 08-01-PLAN.md — Type extensions, OAuth client module (bundled creds), token-store, resolveToken() with auto-refresh
+- [x] 08-02-PLAN.md — OAuth loopback flow + auth login/logout/status commands + CLI wiring
+- [x] 08-03-PLAN.md — Docs update (README, agent-skill) + init hint + human verify
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -150,3 +169,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 5. Agent Integration & Distribution | 3/3 | Complete | 2026-02-27 |
 | 6. Write Operations | 3/3 | Complete   | 2026-02-27 |
 | 7. Homebrew Distribution | 2/2 | Complete | 2026-02-27 |
+| 8. OAuth Login | 3/3 | Complete   | 2026-02-27 |

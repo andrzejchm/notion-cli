@@ -6,6 +6,9 @@ import { setColorForced } from './output/color.js';
 import { withErrorHandling } from './errors/error-handler.js';
 import { setOutputMode } from './output/format.js';
 import { initCommand } from './commands/init.js';
+import { loginCommand } from './commands/auth/login.js';
+import { logoutCommand } from './commands/auth/logout.js';
+import { statusCommand } from './commands/auth/status.js';
 import { profileListCommand } from './commands/profile/list.js';
 import { profileUseCommand } from './commands/profile/use.js';
 import { profileRemoveCommand } from './commands/profile/remove.js';
@@ -65,6 +68,13 @@ program.hook('preAction', (thisCommand) => {
 
 // --- Authentication ---
 program.addCommand(initCommand());
+
+// auth subcommand group
+const authCmd = new Command('auth').description('manage Notion authentication');
+authCmd.addCommand(loginCommand());
+authCmd.addCommand(logoutCommand());
+authCmd.addCommand(statusCommand());
+program.addCommand(authCmd);
 
 // --- Profile Management ---
 const profileCmd = new Command('profile')

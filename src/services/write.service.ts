@@ -1,7 +1,12 @@
 import { Client } from '@notionhq/client';
 import type { BlockObjectRequest } from '@notionhq/client/build/src/api-endpoints.js';
 
-export async function addComment(client: Client, pageId: string, text: string): Promise<void> {
+export async function addComment(
+  client: Client,
+  pageId: string,
+  text: string,
+  options: { asUser?: boolean } = {},
+): Promise<void> {
   await client.comments.create({
     parent: { page_id: pageId },
     rich_text: [
@@ -18,6 +23,7 @@ export async function addComment(client: Client, pageId: string, text: string): 
         },
       },
     ],
+    ...(options.asUser && { display_name: { type: 'user' } }),
   });
 }
 
