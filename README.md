@@ -15,7 +15,7 @@ brew install notion-cli
 # npm (alternative)
 npm install -g @andrzejchm/notion-cli
 
-notion init   # paste your Notion integration token once
+notion auth login   # choose your auth method
 ```
 
 ## For AI Agents
@@ -80,7 +80,11 @@ notion ls
 
 | Command | Description |
 |---------|-------------|
-| `notion init` | Set up your Notion integration token |
+| `notion auth login` | Interactive auth setup — choose OAuth or integration token |
+| `notion auth logout` | Remove a profile and all its credentials |
+| `notion auth status` | Show current auth state |
+| `notion auth list` | List all saved profiles |
+| `notion auth use <name>` | Switch the active profile |
 | `notion search <query>` | Search pages and databases by title |
 | `notion ls` | List all accessible pages and databases |
 | `notion open <id\|url>` | Open a page in your browser |
@@ -92,7 +96,6 @@ notion ls
 | `notion comment <id\|url> -m <text>` | Add a comment to a page |
 | `notion append <id\|url> -m <markdown>` | Append markdown blocks to a page |
 | `notion create-page --parent <id\|url> --title <title>` | Create a new page, prints URL |
-| `notion profile list\|use\|remove` | Manage multiple auth profiles |
 | `notion completion bash\|zsh\|fish` | Install shell tab completion |
 
 ### `notion db query` flags
@@ -123,38 +126,57 @@ The CLI auto-detects your context:
 
 Two authentication methods are available. If both are configured, **OAuth takes precedence** for API calls.
 
-### Internal integration token
-
-Run `notion init`. Suitable for read-only operations and automated agents. Write operations are attributed to the **integration bot** (not a real user).
+Start with the interactive setup:
 
 ```bash
-# Interactive setup (recommended for first-time use)
-notion init
-
-# Environment variable (CI, Docker, agents)
-export NOTION_API_TOKEN=ntn_your_token_here
-
-# Multiple workspaces
-notion init                    # saves as "default"
-notion profile list
-notion profile use <name>
+notion auth login   # choose OAuth or integration token
 ```
+
+### Tradeoff comparison
+
+| Method | Best for | Write attribution | Requires |
+|--------|----------|-------------------|----------|
+| **OAuth user login** | Write-heavy workflows, personal use | Your Notion account | Browser (or `--manual` for headless) |
+| **Integration token** | CI, Docker, automated agents | Integration bot | Token from notion.so/profile/integrations |
+| `NOTION_API_TOKEN` env var | CI/Docker without config files | Integration bot | Token set in environment |
+
+**Priority:** `NOTION_API_TOKEN` env var → OAuth token → integration token (first found wins)
+
+### OAuth user login
+
+```bash
+notion auth login         # interactive selector — choose OAuth
+notion auth login --manual  # headless: prints URL, prompts to paste redirect
+notion auth status        # show current auth state
+notion auth logout        # remove profile and credentials
+```
+
+Comments and pages are attributed to your **actual Notion account**.
+Access tokens expire after ~1 hour and are refreshed automatically.
+
+### Integration token
+
+```bash
+notion auth login   # interactive selector — choose "Integration token"
+
+# or: environment variable (CI, Docker, agents — no profile needed)
+export NOTION_API_TOKEN=ntn_your_token_here
+```
+
+Works everywhere (CI, headless, agents). Write operations are attributed to the **integration bot**.
+You must manually connect the integration to each page (`⋯` → Add connections).
 
 Token format: starts with `ntn_` (new) or `secret_` (legacy integrations).  
 Get a token: [notion.so/profile/integrations/internal](https://www.notion.so/profile/integrations/internal)
 
-### OAuth user login (recommended for write operations)
-
-Run `notion auth login`. Notion opens in your browser. After approving, your comments and pages will be attributed to your **actual Notion account** — not the integration bot.
+### Profile management
 
 ```bash
-notion auth login       # Opens browser, authenticates
-notion comment <id> -m "My comment"  # Now attributed to your user
-notion auth status      # Check auth state
-notion auth logout      # Remove OAuth session
+notion auth list          # list all profiles
+notion auth use <name>    # switch active profile
+notion auth logout        # remove a profile (interactive selector)
+notion auth logout --profile <name>  # remove specific profile directly
 ```
-
-**Headless / remote servers:** `notion auth login --manual` prints the auth URL for you to open in a local browser, then prompts you to paste the redirect URL back.
 
 ### Integration capabilities
 
@@ -174,7 +196,7 @@ Write commands require additional capabilities — enable in your integration se
 
 **Page not found (404):** Share the page with your integration — open the page → `⋯` → **Add connections**.
 
-**Unauthorized (401):** Run `notion init` to reconfigure, or check your `NOTION_API_TOKEN`.
+**Unauthorized (401):** Run `notion auth login` to reconfigure, or check your `NOTION_API_TOKEN`.
 
 **Search returns nothing:** Search is title-only. The page must also be shared with your integration.
 

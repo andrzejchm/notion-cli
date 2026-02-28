@@ -10,7 +10,7 @@ compatibility: opencode
 Install once:
 ```bash
 npm install -g @andrzejchm/notion-cli
-notion init   # enter your Notion integration token
+notion auth login   # interactive setup — choose OAuth or integration token
 ```
 
 Or set env var (preferred for CI/agents):
@@ -33,24 +33,23 @@ Pages must be shared with your integration: open page → `⋯` → **Add connec
 
 Two auth methods are available. If both are configured, **OAuth takes precedence**.
 
-### Internal integration token (default)
-Set up via `notion init`. Comments and pages created via this method are attributed to the **integration bot** (not a real user).
+| Method | Command | Attribution | Notes |
+|--------|---------|-------------|-------|
+| Interactive setup | `notion auth login` | — | Guides you to choose; TTY required |
+| OAuth user login | select "OAuth user login" in `notion auth login` | Your Notion account | Browser required; `--manual` for headless |
+| Integration token | select "Integration token" in `notion auth login` | Integration bot | Works in CI/headless; must connect integration to pages |
 
 ```bash
-notion init                    # interactive setup (requires TTY)
-export NOTION_API_TOKEN=ntn_…  # or via environment variable
+notion auth login                    # interactive selector — OAuth or integration token
+notion auth login --manual           # headless OAuth (prints URL, paste redirect back)
+notion auth status                   # show current auth state
+notion auth logout                   # remove a profile (interactive selector)
+notion auth logout --profile <name>  # remove specific profile directly
+notion auth list                     # list all saved profiles
+notion auth use <name>               # switch active profile
 ```
 
-### OAuth user login (recommended for write operations)
-Set up via `notion auth login`. Comments and pages are attributed to your **actual Notion user account**.
-
-```bash
-notion auth login [--profile <name>] [--manual]   # opens browser OAuth flow; --manual for headless
-notion auth logout [--profile <name>]              # removes OAuth tokens
-notion auth status [--profile <name>]              # shows current auth state
-```
-
-**Headless / remote servers:** `notion auth login --manual` prints the auth URL for you to open in a local browser, then prompts you to paste the redirect URL back.
+**Headless/CI agents:** Use `NOTION_API_TOKEN=<token>` env var — overrides all config, no TTY needed.
 
 ---
 
@@ -117,15 +116,6 @@ URL=$(notion create-page --parent <id|url> --title "Summary" -m "...")   # captu
 notion comment <id|url> -m "Reviewed and approved."      # add comment to a page
 ```
 
-### Auth
-
-```bash
-notion init                   # interactive setup (requires TTY)
-notion profile list           # show saved profiles
-notion profile use <name>     # switch active profile
-notion profile remove <name>  # delete a profile
-```
-
 ---
 
 ## ID Formats
@@ -173,13 +163,13 @@ my-report-command | notion create-page --parent "$PAGE_ID" --title "Auto Report"
 
 **404 / page not found** — Share the page with your integration: page → `⋯` → **Add connections**.
 
-**401 / unauthorized** — Run `notion init` or set `NOTION_API_TOKEN`.
+**401 / unauthorized** — Run `notion auth login` or set `NOTION_API_TOKEN`.
 
 **Search returns nothing** — Search is title-only. Page must be shared with integration.
 
 **Empty db query** — Run `notion db schema <id>` to see valid property names and values.
 
-**`notion init` fails in agent** — Requires TTY. Use `NOTION_API_TOKEN` env var instead.
+**`notion auth login` requires TTY** — Use `NOTION_API_TOKEN` env var in agents, or use `notion auth login --manual` for headless OAuth.
 
 **`notion comment` returns "Insufficient permissions"** — Enable **Read comments** + **Insert comments** in integration capabilities: notion.so/profile/integrations/internal → your integration → Capabilities.
 

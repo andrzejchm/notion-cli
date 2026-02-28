@@ -7,7 +7,7 @@ Complete guide for using notion-cli with [OpenCode](https://opencode.ai).
 Tell OpenCode:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/andrzejchm/notion-cli/main/docs/README.opencode.md
+Fetch and follow instructions from https://raw.githubusercontent.com/andrzejchm/notion-cli/main/docs/README.agents.md
 ```
 
 ## Installation
@@ -35,17 +35,21 @@ curl -fsSL https://raw.githubusercontent.com/andrzejchm/notion-cli/main/docs/ski
 
 ### 3. Authenticate
 
-**Internal integration token** (read-only and automated agents):
+**Interactive setup** (choose OAuth or integration token):
 ```bash
-notion init
-# or: export NOTION_API_TOKEN=ntn_your_token_here
+notion auth login
+```
+
+**Integration token only** (CI/agents — no TTY needed):
+```bash
+export NOTION_API_TOKEN=ntn_your_token_here
 ```
 
 Get a token: https://www.notion.so/profile/integrations/internal
 
-**OAuth login** (recommended for write operations — attributes comments/pages to your user):
+**OAuth** (recommended for write operations — attributes comments/pages to your user):
 ```bash
-notion auth login          # opens browser
+notion auth login          # select "OAuth user login" in the prompt
 notion auth login --manual # headless: prints URL, paste redirect back
 ```
 
