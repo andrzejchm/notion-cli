@@ -6,6 +6,7 @@ import { setColorForced } from './output/color.js';
 import { withErrorHandling } from './errors/error-handler.js';
 import { setOutputMode } from './output/format.js';
 import { initCommand } from './commands/init.js';
+import { authDefaultAction } from './commands/auth/index.js';
 import { loginCommand } from './commands/auth/login.js';
 import { logoutCommand } from './commands/auth/logout.js';
 import { statusCommand } from './commands/auth/status.js';
@@ -71,6 +72,7 @@ program.addCommand(initCommand());
 
 // auth subcommand group
 const authCmd = new Command('auth').description('manage Notion authentication');
+authCmd.action(authDefaultAction());   // fires when no subcommand given
 authCmd.addCommand(loginCommand());
 authCmd.addCommand(logoutCommand());
 authCmd.addCommand(statusCommand());
