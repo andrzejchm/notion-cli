@@ -8,6 +8,92 @@ import { stderrWrite } from '../output/stderr.js';
 import { success, bold, dim } from '../output/color.js';
 import { withErrorHandling } from '../errors/error-handler.js';
 
+/**
+ * Pure flow function: prompt for integration token, validate, save profile.
+ * Caller is responsible for TTY guarding before calling this function.
+ */
+export async function runInitFlow(): Promise<void> {
+  // Prompt for profile name
+  const profileName = await input({
+    message: 'Profile name:',
+    default: 'default',
+  });
+
+  // Prompt for token
+  const token = await password({
+    message: 'Integration token (from notion.so/profile/integrations/internal):',
+    mask: '*',
+  });
+
+  stderrWrite('Validating token...');
+
+  // Validate token
+  const { workspaceName, workspaceId } = await validateToken(token);
+
+  stderrWrite(success(`✓ Connected to workspace: ${bold(workspaceName)}`));
+
+  // Read existing config
+  const config = await readGlobalConfig();
+
+  // Check for existing profile
+  if (config.profiles?.[profileName]) {
+    const replace = await confirm({
+      message: `Profile "${profileName}" already exists. Replace?`,
+      default: false,
+    });
+    if (!replace) {
+      stderrWrite('Aborted.');
+      return;
+    }
+  }
+
+  // Save profile
+  const profiles = config.profiles ?? {};
+  profiles[profileName] = {
+    token,
+    workspace_name: workspaceName,
+    workspace_id: workspaceId,
+  };
+
+  await writeGlobalConfig({
+    ...config,
+    profiles,
+    active_profile: profileName,
+  });
+
+  stderrWrite(success(`Profile "${profileName}" saved and set as active.`));
+
+  // Check if the integration has access to any content
+  stderrWrite(dim('Checking integration access...'));
+  try {
+    const notion = createNotionClient(token);
+    const probe = await notion.search({ page_size: 1 });
+    if (probe.results.length === 0) {
+      stderrWrite('');
+      stderrWrite('⚠️  Your integration has no pages connected.');
+      stderrWrite('   To grant access, open any Notion page or database:');
+      stderrWrite('     1. Click ··· (three dots) in the top-right corner');
+      stderrWrite('     2. Select "Connect to"');
+      stderrWrite(`     3. Choose "${workspaceName}"`);
+      stderrWrite('   Then re-run any notion command to confirm access.');
+    } else {
+      stderrWrite(success(`✓ Integration has access to content in ${bold(workspaceName)}.`));
+    }
+  } catch {
+    // Non-fatal — don't block init if the probe fails for any reason
+    stderrWrite(dim('(Could not verify integration access — run `notion ls` to check)'));
+  }
+
+  stderrWrite('');
+  stderrWrite(dim('Write commands (comment, append, create-page) require additional'));
+  stderrWrite(dim('capabilities in your integration settings:'));
+  stderrWrite(dim('  notion.so/profile/integrations/internal → your integration →'));
+  stderrWrite(dim('  Capabilities: enable "Read content", "Insert content", "Read comments", "Insert comments"'));
+  stderrWrite('');
+  stderrWrite(dim('To post comments and create pages attributed to your user account:'));
+  stderrWrite(dim('  notion auth login'));
+}
+
 export function initCommand(): Command {
   const cmd = new Command('init');
 
@@ -23,85 +109,7 @@ export function initCommand(): Command {
         );
       }
 
-      // Prompt for profile name
-      const profileName = await input({
-        message: 'Profile name:',
-        default: 'default',
-      });
-
-      // Prompt for token
-      const token = await password({
-        message: 'Integration token (from notion.so/profile/integrations/internal):',
-        mask: '*',
-      });
-
-      stderrWrite('Validating token...');
-
-      // Validate token
-      const { workspaceName, workspaceId } = await validateToken(token);
-
-      stderrWrite(success(`✓ Connected to workspace: ${bold(workspaceName)}`));
-
-      // Read existing config
-      const config = await readGlobalConfig();
-
-      // Check for existing profile
-      if (config.profiles?.[profileName]) {
-        const replace = await confirm({
-          message: `Profile "${profileName}" already exists. Replace?`,
-          default: false,
-        });
-        if (!replace) {
-          stderrWrite('Aborted.');
-          return;
-        }
-      }
-
-      // Save profile
-      const profiles = config.profiles ?? {};
-      profiles[profileName] = {
-        token,
-        workspace_name: workspaceName,
-        workspace_id: workspaceId,
-      };
-
-      await writeGlobalConfig({
-        ...config,
-        profiles,
-        active_profile: profileName,
-      });
-
-      stderrWrite(success(`Profile "${profileName}" saved and set as active.`));
-
-      // Check if the integration has access to any content
-      stderrWrite(dim('Checking integration access...'));
-      try {
-        const notion = createNotionClient(token);
-        const probe = await notion.search({ page_size: 1 });
-        if (probe.results.length === 0) {
-          stderrWrite('');
-          stderrWrite('⚠️  Your integration has no pages connected.');
-          stderrWrite('   To grant access, open any Notion page or database:');
-          stderrWrite('     1. Click ··· (three dots) in the top-right corner');
-          stderrWrite('     2. Select "Connect to"');
-          stderrWrite(`     3. Choose "${workspaceName}"`);
-          stderrWrite('   Then re-run any notion command to confirm access.');
-        } else {
-          stderrWrite(success(`✓ Integration has access to content in ${bold(workspaceName)}.`));
-        }
-      } catch {
-        // Non-fatal — don't block init if the probe fails for any reason
-        stderrWrite(dim('(Could not verify integration access — run `notion ls` to check)'));
-      }
-
-      stderrWrite('');
-      stderrWrite(dim('Write commands (comment, append, create-page) require additional'));
-      stderrWrite(dim('capabilities in your integration settings:'));
-      stderrWrite(dim('  notion.so/profile/integrations/internal → your integration →'));
-      stderrWrite(dim('  Capabilities: enable "Read content", "Insert content", "Read comments", "Insert comments"'));
-      stderrWrite('');
-      stderrWrite(dim('To post comments and create pages attributed to your user account:'));
-      stderrWrite(dim('  notion auth login'));
+      await runInitFlow();
     }));
 
   return cmd;
