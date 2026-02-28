@@ -70,7 +70,7 @@ program.hook('preAction', (thisCommand) => {
 // --- Authentication ---
 // auth subcommand group
 const authCmd = new Command('auth').description('manage Notion authentication');
-authCmd.action(authDefaultAction());   // fires when no subcommand given
+authCmd.action(authDefaultAction(authCmd));   // fires when no subcommand given
 authCmd.addCommand(loginCommand());
 authCmd.addCommand(logoutCommand());
 authCmd.addCommand(statusCommand());
