@@ -4,6 +4,88 @@ import { isatty } from './format.js';
 // Use a Chalk instance that always produces color — we only call this when stdout is a TTY
 const c = new Chalk({ level: 3 });
 
+interface FenceState {
+  inFence: boolean;
+  fenceLang: string;
+  fenceLines: string[];
+}
+
+/** Returns non-null if `line` opens or closes a fenced code block. */
+function handleFenceLine(
+  line: string,
+  state: FenceState,
+  out: string[],
+): boolean {
+  const fenceMatch = line.match(/^```(\w*)$/);
+  if (fenceMatch && !state.inFence) {
+    state.inFence = true;
+    state.fenceLang = fenceMatch[1] ?? '';
+    state.fenceLines = [];
+    return true;
+  }
+  if (line === '```' && state.inFence) {
+    state.inFence = false;
+    const header = state.fenceLang ? c.dim(`[${state.fenceLang}]`) : '';
+    if (header) out.push(header);
+    for (const fl of state.fenceLines) {
+      out.push(c.green(`  ${fl}`));
+    }
+    out.push('');
+    return true;
+  }
+  return false;
+}
+
+function handleHeading(line: string, out: string[]): boolean {
+  const h1 = line.match(/^# (.+)/);
+  if (h1) {
+    out.push(`\n${c.bold.cyan(h1[1])}`);
+    return true;
+  }
+  const h2 = line.match(/^## (.+)/);
+  if (h2) {
+    out.push(`\n${c.bold.blue(h2[1])}`);
+    return true;
+  }
+  const h3 = line.match(/^### (.+)/);
+  if (h3) {
+    out.push(`\n${c.bold(h3[1])}`);
+    return true;
+  }
+  const h4 = line.match(/^#### (.+)/);
+  if (h4) {
+    out.push(c.bold.underline(h4[1]));
+    return true;
+  }
+  return false;
+}
+
+function handleListLine(line: string, out: string[]): boolean {
+  const bulletMatch = line.match(/^(\s*)- (\[[ x]\] )?(.+)/);
+  if (bulletMatch) {
+    const indent = bulletMatch[1] ?? '';
+    const checkbox = bulletMatch[2];
+    const text = bulletMatch[3] ?? '';
+    if (checkbox) {
+      const checked = checkbox.trim() === '[x]';
+      const box = checked ? c.green('☑') : c.dim('☐');
+      out.push(`${indent + box} ${renderInline(text)}`);
+    } else {
+      out.push(`${indent + c.cyan('•')} ${renderInline(text)}`);
+    }
+    return true;
+  }
+  const numMatch = line.match(/^(\s*)(\d+)\. (.+)/);
+  if (numMatch) {
+    const indent = numMatch[1] ?? '';
+    const num = numMatch[2] ?? '';
+    const text = numMatch[3] ?? '';
+    out.push(`${indent + c.cyan(`${num}.`)} ${renderInline(text)}`);
+    return true;
+  }
+  return false;
+}
+
 /**
  * Render markdown text with terminal ANSI styling.
  * Only call when stdout is a TTY — returns raw markdown otherwise.
@@ -13,116 +95,42 @@ export function renderMarkdown(md: string): string {
 
   const lines = md.split('\n');
   const out: string[] = [];
-  let inFence = false;
-  let fenceLang = '';
-  let fenceLines: string[] = [];
+  const fence: FenceState = { inFence: false, fenceLang: '', fenceLines: [] };
 
   for (const line of lines) {
-    // --- Fenced code blocks ---
-    const fenceMatch = line.match(/^```(\w*)$/);
-    if (fenceMatch && !inFence) {
-      inFence = true;
-      fenceLang = fenceMatch[1] ?? '';
-      fenceLines = [];
-      continue;
-    }
-    if (line === '```' && inFence) {
-      inFence = false;
-      const header = fenceLang ? c.dim(`[${fenceLang}]`) : '';
-      if (header) out.push(header);
-      for (const fl of fenceLines) {
-        out.push(c.green(`  ${fl}`));
-      }
-      out.push('');
-      continue;
-    }
-    if (inFence) {
-      fenceLines.push(line);
+    if (handleFenceLine(line, fence, out)) continue;
+
+    if (fence.inFence) {
+      fence.fenceLines.push(line);
       continue;
     }
 
-    // --- YAML frontmatter block (--- ... ---) ---
+    // YAML frontmatter separator / horizontal rule
     if (line === '---') {
       out.push(c.dim('─'.repeat(40)));
       continue;
     }
 
-    // --- HTML comments (unsupported blocks) — suppress ---
-    if (/^<!--.*-->$/.test(line.trim())) {
-      continue;
-    }
+    // HTML comments (unsupported blocks) — suppress
+    if (/^<!--.*-->$/.test(line.trim())) continue;
 
-    // --- Headings ---
-    const h1 = line.match(/^# (.+)/);
-    if (h1) {
-      out.push(`\n${c.bold.cyan(h1[1])}`);
-      continue;
-    }
+    if (handleHeading(line, out)) continue;
 
-    const h2 = line.match(/^## (.+)/);
-    if (h2) {
-      out.push(`\n${c.bold.blue(h2[1])}`);
-      continue;
-    }
-
-    const h3 = line.match(/^### (.+)/);
-    if (h3) {
-      out.push(`\n${c.bold(h3[1])}`);
-      continue;
-    }
-
-    const h4 = line.match(/^#### (.+)/);
-    if (h4) {
-      out.push(c.bold.underline(h4[1]));
-      continue;
-    }
-
-    // --- Blockquotes / callouts ---
+    // Blockquotes / callouts
     if (line.startsWith('> ')) {
       out.push(c.yellow('▎ ') + renderInline(line.slice(2)));
       continue;
     }
 
-    // --- Horizontal rule ---
-    if (line === '---') {
-      out.push(c.dim('─'.repeat(40)));
-      continue;
-    }
-
-    // --- Frontmatter properties (key: value) ---
+    // Frontmatter properties (key: value)
     const propMatch = line.match(/^([A-Za-z_][A-Za-z0-9_ ]*): (.+)$/);
     if (propMatch) {
       out.push(c.dim(`${propMatch[1]}: `) + c.white(propMatch[2]));
       continue;
     }
 
-    // --- Bullet list ---
-    const bulletMatch = line.match(/^(\s*)- (\[[ x]\] )?(.+)/);
-    if (bulletMatch) {
-      const indent = bulletMatch[1] ?? '';
-      const checkbox = bulletMatch[2];
-      const text = bulletMatch[3] ?? '';
-      if (checkbox) {
-        const checked = checkbox.trim() === '[x]';
-        const box = checked ? c.green('☑') : c.dim('☐');
-        out.push(`${indent + box} ${renderInline(text)}`);
-      } else {
-        out.push(`${indent + c.cyan('•')} ${renderInline(text)}`);
-      }
-      continue;
-    }
+    if (handleListLine(line, out)) continue;
 
-    // --- Numbered list ---
-    const numMatch = line.match(/^(\s*)(\d+)\. (.+)/);
-    if (numMatch) {
-      const indent = numMatch[1] ?? '';
-      const num = numMatch[2] ?? '';
-      const text = numMatch[3] ?? '';
-      out.push(`${indent + c.cyan(`${num}.`)} ${renderInline(text)}`);
-      continue;
-    }
-
-    // --- Regular paragraph ---
     out.push(renderInline(line));
   }
 

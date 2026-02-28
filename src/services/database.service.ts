@@ -189,9 +189,26 @@ export function buildSorts(
   });
 }
 
-export function displayPropertyValue(
-  prop: PageObjectResponse['properties'][string],
+type PropValue = PageObjectResponse['properties'][string];
+type FormulaValue = Extract<PropValue, { type: 'formula' }>['formula'];
+
+function displayFormula(f: FormulaValue): string {
+  if (f.type === 'string') return f.string ?? '';
+  if (f.type === 'number')
+    return f.number !== null && f.number !== undefined ? String(f.number) : '';
+  if (f.type === 'boolean') return f.boolean ? 'true' : 'false';
+  if (f.type === 'date') return f.date?.start ?? '';
+  return '';
+}
+
+function displayDate(
+  date: { start: string; end: string | null } | null,
 ): string {
+  if (!date) return '';
+  return date.end ? `${date.start} → ${date.end}` : date.start;
+}
+
+export function displayPropertyValue(prop: PropValue): string {
   switch (prop.type) {
     case 'title':
       return prop.title
@@ -214,11 +231,7 @@ export function displayPropertyValue(
     case 'multi_select':
       return prop.multi_select.map((s) => s.name).join(', ');
     case 'date':
-      return prop.date
-        ? prop.date.end
-          ? `${prop.date.start} → ${prop.date.end}`
-          : prop.date.start
-        : '';
+      return displayDate(prop.date);
     case 'checkbox':
       return prop.checkbox ? '✓' : '✗';
     case 'url':
@@ -233,17 +246,8 @@ export function displayPropertyValue(
         .join(', ');
     case 'relation':
       return prop.relation.length > 0 ? `[${prop.relation.length}]` : '';
-    case 'formula': {
-      const f = prop.formula;
-      if (f.type === 'string') return f.string ?? '';
-      if (f.type === 'number')
-        return f.number !== null && f.number !== undefined
-          ? String(f.number)
-          : '';
-      if (f.type === 'boolean') return f.boolean ? 'true' : 'false';
-      if (f.type === 'date') return f.date?.start ?? '';
-      return '';
-    }
+    case 'formula':
+      return displayFormula(prop.formula);
     case 'created_time':
       return prop.created_time;
     case 'last_edited_time':

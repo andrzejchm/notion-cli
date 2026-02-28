@@ -1,6 +1,10 @@
 import { spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { createServer } from 'node:http';
+import {
+  createServer,
+  type IncomingMessage,
+  type ServerResponse,
+} from 'node:http';
 import { createInterface } from 'node:readline';
 import { CliError } from '../errors/cli-error.js';
 import { ErrorCodes } from '../errors/codes.js';
@@ -114,6 +118,95 @@ async function manualFlow(url: string): Promise<OAuthFlowResult> {
   });
 }
 
+interface CallbackContext {
+  expectedState: string;
+  settled: boolean;
+  timeoutHandle: ReturnType<typeof setTimeout> | null;
+  resolve: (result: OAuthFlowResult) => void;
+  reject: (err: unknown) => void;
+  server: ReturnType<typeof createServer>;
+}
+
+function handleCallbackRequest(
+  req: IncomingMessage,
+  res: ServerResponse,
+  ctx: CallbackContext,
+): void {
+  if (ctx.settled) {
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end(
+      '<html><body><h1>Already handled. You can close this tab.</h1></body></html>',
+    );
+    return;
+  }
+
+  try {
+    const reqUrl = new URL(req.url ?? '/', 'http://localhost:54321');
+    const code = reqUrl.searchParams.get('code');
+    const returnedState = reqUrl.searchParams.get('state');
+    const errorParam = reqUrl.searchParams.get('error');
+
+    if (errorParam === 'access_denied') {
+      ctx.settled = true;
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(
+        '<html><body><h1>Access Denied</h1><p>You cancelled the Notion OAuth request. You can close this tab.</p></body></html>',
+      );
+      if (ctx.timeoutHandle) clearTimeout(ctx.timeoutHandle);
+      ctx.server.close(() => {
+        ctx.reject(
+          new CliError(
+            ErrorCodes.AUTH_INVALID,
+            'Notion OAuth access was denied.',
+            'Run "notion auth login" to try again',
+          ),
+        );
+      });
+      return;
+    }
+
+    if (!code || !returnedState) {
+      // Probably a favicon request or other unrelated GET — ignore
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end('<html><body><p>Waiting for OAuth callback...</p></body></html>');
+      return;
+    }
+
+    if (returnedState !== ctx.expectedState) {
+      ctx.settled = true;
+      res.writeHead(400, { 'Content-Type': 'text/html' });
+      res.end(
+        '<html><body><h1>Security Error</h1><p>State mismatch — possible CSRF attempt. You can close this tab.</p></body></html>',
+      );
+      if (ctx.timeoutHandle) clearTimeout(ctx.timeoutHandle);
+      ctx.server.close(() => {
+        ctx.reject(
+          new CliError(
+            ErrorCodes.AUTH_INVALID,
+            'OAuth state mismatch — possible CSRF attempt. Aborting.',
+            'Run "notion auth login" to start a fresh OAuth flow',
+          ),
+        );
+      });
+      return;
+    }
+
+    // Success
+    ctx.settled = true;
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end(
+      '<html><body><h1>Authenticated!</h1><p>You can close this tab and return to the terminal.</p></body></html>',
+    );
+    if (ctx.timeoutHandle) clearTimeout(ctx.timeoutHandle);
+    ctx.server.close(() => {
+      ctx.resolve({ code, state: returnedState });
+    });
+  } catch {
+    res.writeHead(500, { 'Content-Type': 'text/html' });
+    res.end('<html><body><h1>Error processing callback</h1></body></html>');
+  }
+}
+
 /**
  * Runs the full OAuth browser flow:
  * 1. Generates random state (16 hex bytes via crypto.randomBytes)
@@ -137,97 +230,30 @@ export async function runOAuthFlow(options?: {
   const state = randomBytes(16).toString('hex');
   const authUrl = buildAuthUrl(state);
 
-  // If manual mode explicitly requested, skip the loopback server entirely
   if (options?.manual) {
     return manualFlow(authUrl);
   }
 
   return new Promise<OAuthFlowResult>((resolve, reject) => {
-    let settled = false;
-    let timeoutHandle: ReturnType<typeof setTimeout> | null = null;
+    const ctx: CallbackContext = {
+      expectedState: state,
+      settled: false,
+      timeoutHandle: null,
+      resolve,
+      reject,
+      // assigned below after server is created
+      server: null as unknown as ReturnType<typeof createServer>,
+    };
 
-    const server = createServer((req, res) => {
-      if (settled) {
-        res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end(
-          '<html><body><h1>Already handled. You can close this tab.</h1></body></html>',
-        );
-        return;
-      }
-
-      try {
-        const reqUrl = new URL(req.url ?? '/', `http://localhost:54321`);
-        const code = reqUrl.searchParams.get('code');
-        const returnedState = reqUrl.searchParams.get('state');
-        const errorParam = reqUrl.searchParams.get('error');
-
-        if (errorParam === 'access_denied') {
-          settled = true;
-          res.writeHead(200, { 'Content-Type': 'text/html' });
-          res.end(
-            '<html><body><h1>Access Denied</h1><p>You cancelled the Notion OAuth request. You can close this tab.</p></body></html>',
-          );
-          if (timeoutHandle) clearTimeout(timeoutHandle);
-          server.close(() => {
-            reject(
-              new CliError(
-                ErrorCodes.AUTH_INVALID,
-                'Notion OAuth access was denied.',
-                'Run "notion auth login" to try again',
-              ),
-            );
-          });
-          return;
-        }
-
-        if (!code || !returnedState) {
-          // Probably a favicon request or other unrelated GET — ignore
-          res.writeHead(200, { 'Content-Type': 'text/html' });
-          res.end(
-            '<html><body><p>Waiting for OAuth callback...</p></body></html>',
-          );
-          return;
-        }
-
-        if (returnedState !== state) {
-          settled = true;
-          res.writeHead(400, { 'Content-Type': 'text/html' });
-          res.end(
-            '<html><body><h1>Security Error</h1><p>State mismatch — possible CSRF attempt. You can close this tab.</p></body></html>',
-          );
-          if (timeoutHandle) clearTimeout(timeoutHandle);
-          server.close(() => {
-            reject(
-              new CliError(
-                ErrorCodes.AUTH_INVALID,
-                'OAuth state mismatch — possible CSRF attempt. Aborting.',
-                'Run "notion auth login" to start a fresh OAuth flow',
-              ),
-            );
-          });
-          return;
-        }
-
-        // Success!
-        settled = true;
-        res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end(
-          '<html><body><h1>Authenticated!</h1><p>You can close this tab and return to the terminal.</p></body></html>',
-        );
-        if (timeoutHandle) clearTimeout(timeoutHandle);
-        server.close(() => {
-          resolve({ code, state: returnedState });
-        });
-      } catch {
-        res.writeHead(500, { 'Content-Type': 'text/html' });
-        res.end('<html><body><h1>Error processing callback</h1></body></html>');
-      }
-    });
+    const server = createServer((req, res) =>
+      handleCallbackRequest(req, res, ctx),
+    );
+    ctx.server = server;
 
     server.on('error', (err) => {
-      if (settled) return;
-      settled = true;
-      if (timeoutHandle) clearTimeout(timeoutHandle);
+      if (ctx.settled) return;
+      ctx.settled = true;
+      if (ctx.timeoutHandle) clearTimeout(ctx.timeoutHandle);
       reject(
         new CliError(
           ErrorCodes.AUTH_INVALID,
@@ -238,14 +264,12 @@ export async function runOAuthFlow(options?: {
     });
 
     server.listen(54321, '127.0.0.1', () => {
-      // Try to open browser; fall back to manual if it fails
       const browserOpened = openBrowser(authUrl);
 
       if (!browserOpened) {
-        // Browser failed — switch to manual flow by closing server and using manual path
         server.close();
-        settled = true;
-        if (timeoutHandle) clearTimeout(timeoutHandle);
+        ctx.settled = true;
+        if (ctx.timeoutHandle) clearTimeout(ctx.timeoutHandle);
         manualFlow(authUrl).then(resolve, reject);
         return;
       }
@@ -254,10 +278,9 @@ export async function runOAuthFlow(options?: {
         `\nOpening browser for Notion OAuth...\nIf your browser didn't open, visit:\n  ${authUrl}\n\nWaiting for callback (up to 120 seconds)...\n`,
       );
 
-      // 120-second timeout
-      timeoutHandle = setTimeout(() => {
-        if (settled) return;
-        settled = true;
+      ctx.timeoutHandle = setTimeout(() => {
+        if (ctx.settled) return;
+        ctx.settled = true;
         server.close(() => {
           reject(
             new CliError(

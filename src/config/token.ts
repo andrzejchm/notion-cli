@@ -59,6 +59,24 @@ async function resolveOAuthToken(
 }
 
 /**
+ * Resolves a token from a named profile, preferring OAuth over integration tokens.
+ * Returns null if the profile has no usable token.
+ */
+async function resolveProfileToken(
+  profileName: string,
+  profile: ProfileConfig,
+): Promise<TokenResult | null> {
+  const oauthToken = await resolveOAuthToken(profileName, profile);
+  if (oauthToken) {
+    return { token: oauthToken, source: 'oauth' };
+  }
+  if (profile.token) {
+    return { token: profile.token, source: `profile: ${profileName}` };
+  }
+  return null;
+}
+
+/**
  * Resolves the Notion API token using a layered lookup chain:
  *   1. NOTION_API_TOKEN environment variable
  *   2. .notion.yaml token field (direct token)
@@ -89,20 +107,8 @@ export async function resolveToken(): Promise<TokenResult> {
       const globalConfig = await readGlobalConfig();
       const profile = globalConfig.profiles?.[localConfig.profile];
       if (profile) {
-        // Prefer OAuth access token over internal integration token
-        const oauthToken = await resolveOAuthToken(
-          localConfig.profile,
-          profile,
-        );
-        if (oauthToken) {
-          return { token: oauthToken, source: 'oauth' };
-        }
-        if (profile.token) {
-          return {
-            token: profile.token,
-            source: `profile: ${localConfig.profile}`,
-          };
-        }
+        const result = await resolveProfileToken(localConfig.profile, profile);
+        if (result) return result;
       }
     }
   }
@@ -112,20 +118,11 @@ export async function resolveToken(): Promise<TokenResult> {
   if (globalConfig.active_profile) {
     const profile = globalConfig.profiles?.[globalConfig.active_profile];
     if (profile) {
-      // Prefer OAuth access token over internal integration token
-      const oauthToken = await resolveOAuthToken(
+      const result = await resolveProfileToken(
         globalConfig.active_profile,
         profile,
       );
-      if (oauthToken) {
-        return { token: oauthToken, source: 'oauth' };
-      }
-      if (profile.token) {
-        return {
-          token: profile.token,
-          source: `profile: ${globalConfig.active_profile}`,
-        };
-      }
+      if (result) return result;
     }
   }
 
