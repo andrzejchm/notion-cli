@@ -34,7 +34,9 @@
   },
   "scripts": {
     "build": "tsup",
+    "build:local": "node --env-file=.env ./node_modules/.bin/tsup",
     "dev": "tsup --watch",
+    "dev:local": "node --env-file=.env ./node_modules/.bin/tsup --watch",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -48,7 +50,6 @@
   "devDependencies": {
     "@commander-js/extra-typings": "^14.0.0",
     "@types/node": "^22",
-    "dotenv": "^17.3.1",
     "tsup": "^8.5.0",
     "typescript": "~5.9.0",
     "vitest": "^4.0.0"
