@@ -170,3 +170,14 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | 6. Write Operations | 3/3 | Complete   | 2026-02-27 |
 | 7. Homebrew Distribution | 2/2 | Complete | 2026-02-27 |
 | 8. OAuth Login | 3/3 | Complete   | 2026-02-27 |
+
+### Phase 9: unify auth flow for the notion cli, should be a single command to start it, make explicit what are the downsides of each form
+
+**Goal:** User runs `notion auth` as a single unified entry point that presents an interactive selector to choose between OAuth (user-attributed) and internal integration token (bot-attributed), with inline tradeoff descriptions. README and SKILL.md updated to lead with `notion auth`. `notion init` retained for backward compatibility.
+**Requirements**: AUTH-UX-01, AUTH-UX-02, AUTH-UX-03, AUTH-UX-04, AUTH-UX-05
+**Depends on:** Phase 8
+**Plans:** 2 plans
+
+Plans:
+- [ ] 09-01-PLAN.md — Interactive `notion auth` selector + `runInitFlow` extraction + cli.ts wiring
+- [ ] 09-02-PLAN.md — README, SKILL.md, and docs/README.agents.md updated to lead with `notion auth`
