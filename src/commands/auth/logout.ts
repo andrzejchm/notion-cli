@@ -1,47 +1,86 @@
 import { Command } from 'commander';
+import { select } from '@inquirer/prompts';
+import { CliError } from '../../errors/cli-error.js';
+import { ErrorCodes } from '../../errors/codes.js';
 import { withErrorHandling } from '../../errors/error-handler.js';
-import { readGlobalConfig } from '../../config/config.js';
-import { clearOAuthTokens } from '../../oauth/token-store.js';
+import { readGlobalConfig, writeGlobalConfig } from '../../config/config.js';
 import { stderrWrite } from '../../output/stderr.js';
-import { success, dim } from '../../output/color.js';
+import { success, dim, bold } from '../../output/color.js';
 
 interface LogoutOptions {
   profile?: string;
+}
+
+function profileLabel(name: string, profile: { token?: string; oauth_access_token?: string; oauth_user_name?: string; workspace_name?: string }): string {
+  const parts: string[] = [];
+  if (profile.oauth_access_token) parts.push(`OAuth${profile.oauth_user_name ? ` (${profile.oauth_user_name})` : ''}`);
+  if (profile.token) parts.push('integration token');
+  const authDesc = parts.length > 0 ? parts.join(' + ') : 'no credentials';
+  const workspace = profile.workspace_name ? dim(` — ${profile.workspace_name}`) : '';
+  return `${bold(name)}  ${dim(authDesc)}${workspace}`;
 }
 
 export function logoutCommand(): Command {
   const cmd = new Command('logout');
 
   cmd
-    .description('remove OAuth tokens from the active profile')
-    .option('--profile <name>', 'profile name to log out from')
+    .description('remove a profile and its credentials')
+    .option('--profile <name>', 'profile name to remove (skips interactive selector)')
     .action(
       withErrorHandling(async (opts: LogoutOptions) => {
-        // Resolve profile name
-        let profileName = opts.profile;
-        if (!profileName) {
-          const config = await readGlobalConfig();
-          profileName = config.active_profile ?? 'default';
-        }
-
-        // Check if profile has OAuth tokens
         const config = await readGlobalConfig();
-        const profile = config.profiles?.[profileName];
+        const profiles = config.profiles ?? {};
+        const profileNames = Object.keys(profiles);
 
-        if (!profile?.oauth_access_token) {
-          stderrWrite(`No OAuth session found for profile '${profileName}'.`);
+        if (profileNames.length === 0) {
+          stderrWrite('No profiles configured.');
           return;
         }
 
-        // Clear OAuth tokens
-        await clearOAuthTokens(profileName);
+        let profileName = opts.profile;
 
-        stderrWrite(success(`✓ Logged out. OAuth tokens removed from profile '${profileName}'.`));
-        stderrWrite(
-          dim(
-            `Internal integration token (if any) is still active. Run 'notion init' to change it.`,
-          ),
-        );
+        if (!profileName) {
+          if (!process.stdin.isTTY) {
+            throw new CliError(
+              ErrorCodes.AUTH_NO_TOKEN,
+              'Cannot run interactive logout in non-TTY mode.',
+              'Use --profile <name> to specify the profile to remove',
+            );
+          }
+
+          profileName = await select({
+            message: 'Which profile do you want to log out of?',
+            choices: profileNames.map(name => ({
+              name: profileLabel(name, profiles[name]!),
+              value: name,
+            })),
+          });
+        }
+
+        if (!profiles[profileName]) {
+          throw new CliError(
+            ErrorCodes.AUTH_PROFILE_NOT_FOUND,
+            `Profile "${profileName}" not found.`,
+            `Run "notion auth list" to see available profiles`,
+          );
+        }
+
+        const updatedProfiles = { ...profiles };
+        delete updatedProfiles[profileName];
+
+        const newActiveProfile =
+          config.active_profile === profileName ? undefined : config.active_profile;
+
+        await writeGlobalConfig({
+          ...config,
+          profiles: updatedProfiles,
+          active_profile: newActiveProfile,
+        });
+
+        stderrWrite(success(`✓ Logged out of profile "${profileName}".`));
+        if (newActiveProfile === undefined && Object.keys(updatedProfiles).length > 0) {
+          stderrWrite(dim(`Run "notion auth use <name>" to set a new active profile.`));
+        }
       }),
     );
 

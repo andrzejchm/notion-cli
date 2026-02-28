@@ -12,7 +12,6 @@ import { logoutCommand } from './commands/auth/logout.js';
 import { statusCommand } from './commands/auth/status.js';
 import { profileListCommand } from './commands/profile/list.js';
 import { profileUseCommand } from './commands/profile/use.js';
-import { profileRemoveCommand } from './commands/profile/remove.js';
 import { completionCommand } from './commands/completion.js';
 import { searchCommand } from './commands/search.js';
 import { lsCommand } from './commands/ls.js';
@@ -76,7 +75,6 @@ authCmd.addCommand(logoutCommand());
 authCmd.addCommand(statusCommand());
 authCmd.addCommand(profileListCommand());
 authCmd.addCommand(profileUseCommand());
-authCmd.addCommand(profileRemoveCommand());
 program.addCommand(authCmd);
 
 // Backward-compat aliases (hidden from help)
@@ -85,7 +83,6 @@ program.addCommand(initCommand(), { hidden: true });
 const profileCmd = new Command('profile').description('manage authentication profiles');
 profileCmd.addCommand(profileListCommand());
 profileCmd.addCommand(profileUseCommand());
-profileCmd.addCommand(profileRemoveCommand());
 program.addCommand(profileCmd, { hidden: true });
 
 // --- Discovery ---
