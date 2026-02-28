@@ -22,7 +22,7 @@ export function authDefaultAction(): () => Promise<void> {
       throw new CliError(
         ErrorCodes.AUTH_NO_TOKEN,
         'Cannot run interactive auth in non-TTY mode.',
-        'Use "notion auth login" for OAuth or "notion init" for integration token',
+        'Use "notion auth login" to authenticate',
       );
     }
 

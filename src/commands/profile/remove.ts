@@ -20,7 +20,7 @@ export function profileRemoveCommand(): Command {
         throw new CliError(
           ErrorCodes.AUTH_PROFILE_NOT_FOUND,
           `Profile "${name}" not found.`,
-          `Run "notion profile list" to see available profiles`,
+          `Run "notion auth list" to see available profiles`,
         );
       }
 

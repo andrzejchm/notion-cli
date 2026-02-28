@@ -14,7 +14,7 @@ export function profileListCommand(): Command {
       const profileNames = Object.keys(profiles);
 
       if (profileNames.length === 0) {
-        process.stdout.write('No profiles configured. Run `notion init` to get started.\n');
+        process.stdout.write('No profiles configured. Run `notion auth login` to get started.\n');
         return;
       }
 

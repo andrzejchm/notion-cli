@@ -68,25 +68,25 @@ program.hook('preAction', (thisCommand) => {
 });
 
 // --- Authentication ---
-program.addCommand(initCommand());
-
 // auth subcommand group
 const authCmd = new Command('auth').description('manage Notion authentication');
 authCmd.action(authDefaultAction());   // fires when no subcommand given
 authCmd.addCommand(loginCommand());
 authCmd.addCommand(logoutCommand());
 authCmd.addCommand(statusCommand());
+authCmd.addCommand(profileListCommand());
+authCmd.addCommand(profileUseCommand());
+authCmd.addCommand(profileRemoveCommand());
 program.addCommand(authCmd);
 
-// --- Profile Management ---
-const profileCmd = new Command('profile')
-  .description('manage authentication profiles');
+// Backward-compat aliases (hidden from help)
+program.addCommand(initCommand(), { hidden: true });
 
+const profileCmd = new Command('profile').description('manage authentication profiles');
 profileCmd.addCommand(profileListCommand());
 profileCmd.addCommand(profileUseCommand());
 profileCmd.addCommand(profileRemoveCommand());
-
-program.addCommand(profileCmd);
+program.addCommand(profileCmd, { hidden: true });
 
 // --- Discovery ---
 program.addCommand(searchCommand());
