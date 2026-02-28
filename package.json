@@ -34,9 +34,7 @@
   },
   "scripts": {
     "build": "tsup",
-    "build:local": "node --env-file=.env ./node_modules/.bin/tsup",
     "dev": "tsup --watch",
-    "dev:local": "node --env-file=.env ./node_modules/.bin/tsup --watch",
     "test": "vitest run",
     "test:watch": "vitest"
   },
