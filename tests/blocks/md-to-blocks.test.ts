@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { mdToBlocks } from '../../src/blocks/md-to-blocks.js';
 
 describe('mdToBlocks', () => {
@@ -17,10 +17,16 @@ describe('mdToBlocks', () => {
       const result = mdToBlocks('Hello world');
       expect(result).toHaveLength(1);
       expect(result[0].type).toBe('paragraph');
-      const block = result[0] as Extract<typeof result[0], { type: 'paragraph' }>;
+      const block = result[0] as Extract<
+        (typeof result)[0],
+        { type: 'paragraph' }
+      >;
       expect(block.paragraph.rich_text).toHaveLength(1);
       expect(block.paragraph.rich_text[0].type).toBe('text');
-      const rt = block.paragraph.rich_text[0] as Extract<typeof block.paragraph.rich_text[0], { type: 'text' }>;
+      const rt = block.paragraph.rich_text[0] as Extract<
+        (typeof block.paragraph.rich_text)[0],
+        { type: 'text' }
+      >;
       expect(rt.text.content).toBe('Hello world');
     });
   });
@@ -30,8 +36,14 @@ describe('mdToBlocks', () => {
       const result = mdToBlocks('# Heading');
       expect(result).toHaveLength(1);
       expect(result[0].type).toBe('heading_1');
-      const block = result[0] as Extract<typeof result[0], { type: 'heading_1' }>;
-      const rt = block.heading_1.rich_text[0] as Extract<typeof block.heading_1.rich_text[0], { type: 'text' }>;
+      const block = result[0] as Extract<
+        (typeof result)[0],
+        { type: 'heading_1' }
+      >;
+      const rt = block.heading_1.rich_text[0] as Extract<
+        (typeof block.heading_1.rich_text)[0],
+        { type: 'text' }
+      >;
       expect(rt.text.content).toBe('Heading');
     });
 
@@ -39,8 +51,14 @@ describe('mdToBlocks', () => {
       const result = mdToBlocks('## Subheading');
       expect(result).toHaveLength(1);
       expect(result[0].type).toBe('heading_2');
-      const block = result[0] as Extract<typeof result[0], { type: 'heading_2' }>;
-      const rt = block.heading_2.rich_text[0] as Extract<typeof block.heading_2.rich_text[0], { type: 'text' }>;
+      const block = result[0] as Extract<
+        (typeof result)[0],
+        { type: 'heading_2' }
+      >;
+      const rt = block.heading_2.rich_text[0] as Extract<
+        (typeof block.heading_2.rich_text)[0],
+        { type: 'text' }
+      >;
       expect(rt.text.content).toBe('Subheading');
     });
 
@@ -48,8 +66,14 @@ describe('mdToBlocks', () => {
       const result = mdToBlocks('### Section');
       expect(result).toHaveLength(1);
       expect(result[0].type).toBe('heading_3');
-      const block = result[0] as Extract<typeof result[0], { type: 'heading_3' }>;
-      const rt = block.heading_3.rich_text[0] as Extract<typeof block.heading_3.rich_text[0], { type: 'text' }>;
+      const block = result[0] as Extract<
+        (typeof result)[0],
+        { type: 'heading_3' }
+      >;
+      const rt = block.heading_3.rich_text[0] as Extract<
+        (typeof block.heading_3.rich_text)[0],
+        { type: 'text' }
+      >;
       expect(rt.text.content).toBe('Section');
     });
   });
@@ -59,8 +83,14 @@ describe('mdToBlocks', () => {
       const result = mdToBlocks('- item');
       expect(result).toHaveLength(1);
       expect(result[0].type).toBe('bulleted_list_item');
-      const block = result[0] as Extract<typeof result[0], { type: 'bulleted_list_item' }>;
-      const rt = block.bulleted_list_item.rich_text[0] as Extract<typeof block.bulleted_list_item.rich_text[0], { type: 'text' }>;
+      const block = result[0] as Extract<
+        (typeof result)[0],
+        { type: 'bulleted_list_item' }
+      >;
+      const rt = block.bulleted_list_item.rich_text[0] as Extract<
+        (typeof block.bulleted_list_item.rich_text)[0],
+        { type: 'text' }
+      >;
       expect(rt.text.content).toBe('item');
     });
 
@@ -74,8 +104,14 @@ describe('mdToBlocks', () => {
       const result = mdToBlocks('1. item');
       expect(result).toHaveLength(1);
       expect(result[0].type).toBe('numbered_list_item');
-      const block = result[0] as Extract<typeof result[0], { type: 'numbered_list_item' }>;
-      const rt = block.numbered_list_item.rich_text[0] as Extract<typeof block.numbered_list_item.rich_text[0], { type: 'text' }>;
+      const block = result[0] as Extract<
+        (typeof result)[0],
+        { type: 'numbered_list_item' }
+      >;
+      const rt = block.numbered_list_item.rich_text[0] as Extract<
+        (typeof block.numbered_list_item.rich_text)[0],
+        { type: 'text' }
+      >;
       expect(rt.text.content).toBe('item');
     });
   });
@@ -85,8 +121,11 @@ describe('mdToBlocks', () => {
       const result = mdToBlocks('> quote text');
       expect(result).toHaveLength(1);
       expect(result[0].type).toBe('quote');
-      const block = result[0] as Extract<typeof result[0], { type: 'quote' }>;
-      const rt = block.quote.rich_text[0] as Extract<typeof block.quote.rich_text[0], { type: 'text' }>;
+      const block = result[0] as Extract<(typeof result)[0], { type: 'quote' }>;
+      const rt = block.quote.rich_text[0] as Extract<
+        (typeof block.quote.rich_text)[0],
+        { type: 'text' }
+      >;
       expect(rt.text.content).toBe('quote text');
     });
   });
@@ -96,9 +135,12 @@ describe('mdToBlocks', () => {
       const result = mdToBlocks('```ts\nconsole.log()\n```');
       expect(result).toHaveLength(1);
       expect(result[0].type).toBe('code');
-      const block = result[0] as Extract<typeof result[0], { type: 'code' }>;
+      const block = result[0] as Extract<(typeof result)[0], { type: 'code' }>;
       expect(block.code.language).toBe('ts');
-      const rt = block.code.rich_text[0] as Extract<typeof block.code.rich_text[0], { type: 'text' }>;
+      const rt = block.code.rich_text[0] as Extract<
+        (typeof block.code.rich_text)[0],
+        { type: 'text' }
+      >;
       expect(rt.text.content).toBe('console.log()');
     });
 
@@ -106,7 +148,7 @@ describe('mdToBlocks', () => {
       const result = mdToBlocks('```\nhello\n```');
       expect(result).toHaveLength(1);
       expect(result[0].type).toBe('code');
-      const block = result[0] as Extract<typeof result[0], { type: 'code' }>;
+      const block = result[0] as Extract<(typeof result)[0], { type: 'code' }>;
       expect(block.code.language).toBe('plain text');
     });
   });
@@ -116,8 +158,14 @@ describe('mdToBlocks', () => {
       const result = mdToBlocks('**bold**');
       expect(result).toHaveLength(1);
       expect(result[0].type).toBe('paragraph');
-      const block = result[0] as Extract<typeof result[0], { type: 'paragraph' }>;
-      const rt = block.paragraph.rich_text[0] as Extract<typeof block.paragraph.rich_text[0], { type: 'text' }>;
+      const block = result[0] as Extract<
+        (typeof result)[0],
+        { type: 'paragraph' }
+      >;
+      const rt = block.paragraph.rich_text[0] as Extract<
+        (typeof block.paragraph.rich_text)[0],
+        { type: 'text' }
+      >;
       expect(rt.text.content).toBe('bold');
       expect(rt.annotations?.bold).toBe(true);
     });
@@ -125,8 +173,14 @@ describe('mdToBlocks', () => {
     it('converts _italic_ to paragraph with italic annotation', () => {
       const result = mdToBlocks('_italic_');
       expect(result).toHaveLength(1);
-      const block = result[0] as Extract<typeof result[0], { type: 'paragraph' }>;
-      const rt = block.paragraph.rich_text[0] as Extract<typeof block.paragraph.rich_text[0], { type: 'text' }>;
+      const block = result[0] as Extract<
+        (typeof result)[0],
+        { type: 'paragraph' }
+      >;
+      const rt = block.paragraph.rich_text[0] as Extract<
+        (typeof block.paragraph.rich_text)[0],
+        { type: 'text' }
+      >;
       expect(rt.text.content).toBe('italic');
       expect(rt.annotations?.italic).toBe(true);
     });
@@ -134,8 +188,14 @@ describe('mdToBlocks', () => {
     it('converts `code` to paragraph with code annotation', () => {
       const result = mdToBlocks('`code`');
       expect(result).toHaveLength(1);
-      const block = result[0] as Extract<typeof result[0], { type: 'paragraph' }>;
-      const rt = block.paragraph.rich_text[0] as Extract<typeof block.paragraph.rich_text[0], { type: 'text' }>;
+      const block = result[0] as Extract<
+        (typeof result)[0],
+        { type: 'paragraph' }
+      >;
+      const rt = block.paragraph.rich_text[0] as Extract<
+        (typeof block.paragraph.rich_text)[0],
+        { type: 'text' }
+      >;
       expect(rt.text.content).toBe('code');
       expect(rt.annotations?.code).toBe(true);
     });
@@ -143,8 +203,14 @@ describe('mdToBlocks', () => {
     it('converts [label](url) to paragraph with link', () => {
       const result = mdToBlocks('[label](https://example.com)');
       expect(result).toHaveLength(1);
-      const block = result[0] as Extract<typeof result[0], { type: 'paragraph' }>;
-      const rt = block.paragraph.rich_text[0] as Extract<typeof block.paragraph.rich_text[0], { type: 'text' }>;
+      const block = result[0] as Extract<
+        (typeof result)[0],
+        { type: 'paragraph' }
+      >;
+      const rt = block.paragraph.rich_text[0] as Extract<
+        (typeof block.paragraph.rich_text)[0],
+        { type: 'text' }
+      >;
       expect(rt.text.content).toBe('label');
       expect(rt.text.link).toEqual({ url: 'https://example.com' });
     });
@@ -169,10 +235,16 @@ describe('mdToBlocks', () => {
       const result = mdToBlocks('# Hello **bold**');
       expect(result).toHaveLength(1);
       expect(result[0].type).toBe('heading_1');
-      const block = result[0] as Extract<typeof result[0], { type: 'heading_1' }>;
+      const block = result[0] as Extract<
+        (typeof result)[0],
+        { type: 'heading_1' }
+      >;
       expect(block.heading_1.rich_text.length).toBeGreaterThan(1);
       const boldRt = block.heading_1.rich_text.find(
-        rt => rt.type === 'text' && (rt as Extract<typeof rt, { type: 'text' }>).annotations?.bold === true
+        (rt) =>
+          rt.type === 'text' &&
+          (rt as Extract<typeof rt, { type: 'text' }>).annotations?.bold ===
+            true,
       );
       expect(boldRt).toBeDefined();
     });

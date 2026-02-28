@@ -41,7 +41,7 @@ function getColumnCap(header: string): number {
 
 function truncate(str: string, maxLen: number): string {
   if (str.length <= maxLen) return str;
-  return str.slice(0, maxLen - 1) + '…';
+  return `${str.slice(0, maxLen - 1)}…`;
 }
 
 export function formatTable(rows: string[][], headers: string[]): string {
@@ -60,14 +60,10 @@ export function formatTable(rows: string[][], headers: string[]): string {
   const colSep = '  ';
 
   // Build header row
-  const headerRow = headers
-    .map((h, i) => h.padEnd(colWidths[i]))
-    .join(colSep);
+  const headerRow = headers.map((h, i) => h.padEnd(colWidths[i])).join(colSep);
 
   // Build separator row
-  const separatorRow = colWidths
-    .map((w) => sep.repeat(w))
-    .join(colSep);
+  const separatorRow = colWidths.map((w) => sep.repeat(w)).join(colSep);
 
   // Build data rows
   const dataRows = rows.map((row) =>
@@ -76,7 +72,7 @@ export function formatTable(rows: string[][], headers: string[]): string {
         const cell = row[i] ?? '';
         return truncate(cell, colWidths[i]).padEnd(colWidths[i]);
       })
-      .join(colSep)
+      .join(colSep),
   );
 
   return [headerRow, separatorRow, ...dataRows].join('\n');
@@ -85,14 +81,14 @@ export function formatTable(rows: string[][], headers: string[]): string {
 export function printOutput(
   data: unknown,
   tableHeaders?: string[],
-  tableRows?: string[][]
+  tableRows?: string[][],
 ): void {
   const mode = getOutputMode();
 
   if (mode === 'json') {
-    process.stdout.write(formatJSON(data) + '\n');
+    process.stdout.write(`${formatJSON(data)}\n`);
   } else if (isHumanMode() && tableHeaders && tableRows) {
-    printWithPager(formatTable(tableRows, tableHeaders) + '\n');
+    printWithPager(`${formatTable(tableRows, tableHeaders)}\n`);
   }
 }
 

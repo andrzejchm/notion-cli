@@ -1,4 +1,4 @@
-import { Command } from 'commander';
+import type { Command } from 'commander';
 
 /**
  * Default action for `notion auth` (no subcommand) — show help.

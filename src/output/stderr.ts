@@ -1,9 +1,9 @@
 import type { CliError } from '../errors/cli-error.js';
 import type { TokenResult } from '../types/config.js';
-import { dim, error as colorError } from './color.js';
+import { error as colorError, dim } from './color.js';
 
 export function stderrWrite(msg: string): void {
-  process.stderr.write(msg + '\n');
+  process.stderr.write(`${msg}\n`);
 }
 
 export function reportTokenSource(source: TokenResult['source']): void {

@@ -17,23 +17,23 @@ function buildPropertiesHeader(page: PageObjectResponse): string {
 
 function renderBlockTree(blocks: BlockNode[]): string {
   const parts: string[] = [];
-  let listCounter = 0;  // tracks consecutive numbered_list_item
+  let listCounter = 0; // tracks consecutive numbered_list_item
 
   for (const node of blocks) {
     // Track numbered list position
     if (node.block.type === 'numbered_list_item') {
       listCounter++;
     } else {
-      listCounter = 0;  // reset on any non-numbered block
+      listCounter = 0; // reset on any non-numbered block
     }
 
     // Recursively render children first
-    const childrenMd = node.children.length > 0
-      ? renderBlockTree(node.children)
-      : '';
+    const childrenMd =
+      node.children.length > 0 ? renderBlockTree(node.children) : '';
 
     const md = blockToMd(node.block, {
-      listNumber: node.block.type === 'numbered_list_item' ? listCounter : undefined,
+      listNumber:
+        node.block.type === 'numbered_list_item' ? listCounter : undefined,
       childrenMd: childrenMd || undefined,
     });
 

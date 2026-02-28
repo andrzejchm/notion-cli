@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { richTextToMd } from '../../src/blocks/rich-text.js';
 import type { RichTextItemResponse } from '@notionhq/client/build/src/api-endpoints.js';
+import { describe, expect, it } from 'vitest';
+import { richTextToMd } from '../../src/blocks/rich-text.js';
 
 // Helper to build a text segment with default annotations
 function textSegment(
@@ -14,7 +14,7 @@ function textSegment(
     color: string;
     link: { url: string } | null;
     href: string | null;
-  }> = {}
+  }> = {},
 ): RichTextItemResponse {
   return {
     type: 'text',
@@ -28,7 +28,8 @@ function textSegment(
       strikethrough: overrides.strikethrough ?? false,
       underline: overrides.underline ?? false,
       code: overrides.code ?? false,
-      color: (overrides.color ?? 'default') as RichTextItemResponse['annotations']['color'],
+      color: (overrides.color ??
+        'default') as RichTextItemResponse['annotations']['color'],
     },
     plain_text: content,
     href: overrides.href !== undefined ? overrides.href : null,
@@ -50,56 +51,77 @@ describe('richTextToMd', () => {
 
   describe('bold', () => {
     it('wraps bold text with **', () => {
-      expect(richTextToMd([textSegment('hello', { bold: true })])).toBe('**hello**');
+      expect(richTextToMd([textSegment('hello', { bold: true })])).toBe(
+        '**hello**',
+      );
     });
   });
 
   describe('italic', () => {
     it('wraps italic text with _', () => {
-      expect(richTextToMd([textSegment('hello', { italic: true })])).toBe('_hello_');
+      expect(richTextToMd([textSegment('hello', { italic: true })])).toBe(
+        '_hello_',
+      );
     });
   });
 
   describe('bold + italic', () => {
     it('wraps bold+italic text with **_..._**', () => {
-      expect(richTextToMd([textSegment('hello', { bold: true, italic: true })])).toBe('**_hello_**');
+      expect(
+        richTextToMd([textSegment('hello', { bold: true, italic: true })]),
+      ).toBe('**_hello_**');
     });
   });
 
   describe('inline code', () => {
     it('wraps code text with backticks', () => {
-      expect(richTextToMd([textSegment('hello', { code: true })])).toBe('`hello`');
+      expect(richTextToMd([textSegment('hello', { code: true })])).toBe(
+        '`hello`',
+      );
     });
   });
 
   describe('strikethrough', () => {
     it('wraps strikethrough text with ~~', () => {
-      expect(richTextToMd([textSegment('hello', { strikethrough: true })])).toBe('~~hello~~');
+      expect(
+        richTextToMd([textSegment('hello', { strikethrough: true })]),
+      ).toBe('~~hello~~');
     });
   });
 
   describe('underline', () => {
     it('outputs plain text for underline (no markdown equivalent)', () => {
-      expect(richTextToMd([textSegment('hello', { underline: true })])).toBe('hello');
+      expect(richTextToMd([textSegment('hello', { underline: true })])).toBe(
+        'hello',
+      );
     });
   });
 
   describe('color', () => {
     it('outputs plain text for non-default color (no markdown equivalent)', () => {
-      expect(richTextToMd([textSegment('hello', { color: 'red' })])).toBe('hello');
+      expect(richTextToMd([textSegment('hello', { color: 'red' })])).toBe(
+        'hello',
+      );
     });
   });
 
   describe('link', () => {
     it('wraps linked text as [text](url)', () => {
       expect(
-        richTextToMd([textSegment('hello', { link: { url: 'https://example.com' } })])
+        richTextToMd([
+          textSegment('hello', { link: { url: 'https://example.com' } }),
+        ]),
       ).toBe('[hello](https://example.com)');
     });
 
     it('wraps bold linked text as [**text**](url)', () => {
       expect(
-        richTextToMd([textSegment('hello', { bold: true, link: { url: 'https://example.com' } })])
+        richTextToMd([
+          textSegment('hello', {
+            bold: true,
+            link: { url: 'https://example.com' },
+          }),
+        ]),
       ).toBe('[**hello**](https://example.com)');
     });
   });
@@ -110,7 +132,7 @@ describe('richTextToMd', () => {
         richTextToMd([
           textSegment('hello', { bold: true }),
           textSegment(' world'),
-        ])
+        ]),
       ).toBe('**hello** world');
     });
   });
@@ -149,7 +171,9 @@ describe('richTextToMd', () => {
         plain_text: 'My Page',
         href: 'https://notion.so/my-page',
       };
-      expect(richTextToMd([segment])).toBe('[My Page](https://notion.so/my-page)');
+      expect(richTextToMd([segment])).toBe(
+        '[My Page](https://notion.so/my-page)',
+      );
     });
   });
 

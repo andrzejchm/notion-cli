@@ -1,7 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import type {
+  BlockObjectResponse,
+  RichTextItemResponse,
+} from '@notionhq/client/build/src/api-endpoints.js';
+import { describe, expect, it } from 'vitest';
 import { blockToMd } from '../../src/blocks/converters.js';
-import type { BlockObjectResponse } from '@notionhq/client/build/src/api-endpoints.js';
-import type { RichTextItemResponse } from '@notionhq/client/build/src/api-endpoints.js';
 
 // Helper to build a minimal rich text array with plain text
 function rt(content: string): RichTextItemResponse[] {
@@ -24,7 +26,11 @@ function rt(content: string): RichTextItemResponse[] {
 }
 
 // Helper to build a minimal block fixture
-function makeBlock(type: string, typeData: unknown, extra?: unknown): BlockObjectResponse {
+function makeBlock(
+  type: string,
+  typeData: unknown,
+  extra?: unknown,
+): BlockObjectResponse {
   return {
     object: 'block',
     id: 'test-id',
@@ -45,7 +51,10 @@ function makeBlock(type: string, typeData: unknown, extra?: unknown): BlockObjec
 describe('blockToMd', () => {
   // paragraph
   it('renders paragraph as text + newline', () => {
-    const block = makeBlock('paragraph', { rich_text: rt('Hello world'), color: 'default' });
+    const block = makeBlock('paragraph', {
+      rich_text: rt('Hello world'),
+      color: 'default',
+    });
     expect(blockToMd(block)).toBe('Hello world\n');
   });
 
@@ -94,7 +103,9 @@ describe('blockToMd', () => {
       rich_text: rt('Item'),
       color: 'default',
     });
-    expect(blockToMd(block, { childrenMd: '- Child\n' })).toBe('- Item\n  - Child\n');
+    expect(blockToMd(block, { childrenMd: '- Child\n' })).toBe(
+      '- Item\n  - Child\n',
+    );
   });
 
   // numbered_list_item with ctx.listNumber
@@ -206,7 +217,7 @@ describe('blockToMd', () => {
       color: 'default',
     });
     expect(blockToMd(block, { childrenMd: 'Child content\n' })).toBe(
-      '**Toggle title**\nChild content\n'
+      '**Toggle title**\nChild content\n',
     );
   });
 
@@ -241,7 +252,7 @@ describe('blockToMd', () => {
       caption: [],
     });
     expect(blockToMd(block)).toBe(
-      '![](https://notion.so/signed/...) <!-- expires: 2026-02-27T00:00:00.000Z -->\n'
+      '![](https://notion.so/signed/...) <!-- expires: 2026-02-27T00:00:00.000Z -->\n',
     );
   });
 
@@ -251,7 +262,9 @@ describe('blockToMd', () => {
       url: 'https://example.com',
       caption: [],
     });
-    expect(blockToMd(block)).toBe('[https://example.com](https://example.com)\n');
+    expect(blockToMd(block)).toBe(
+      '[https://example.com](https://example.com)\n',
+    );
   });
 
   // bookmark with caption
@@ -284,6 +297,8 @@ describe('blockToMd', () => {
   // completely novel type
   it('renders completely novel block type as HTML comment placeholder', () => {
     const block = makeBlock('some_future_type', {});
-    expect(blockToMd(block)).toBe('<!-- unsupported block: some_future_type -->\n');
+    expect(blockToMd(block)).toBe(
+      '<!-- unsupported block: some_future_type -->\n',
+    );
   });
 });

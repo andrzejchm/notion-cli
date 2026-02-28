@@ -17,17 +17,41 @@ const _d = (parts: string[]) =>
   Buffer.from(parts.join(''), 'base64')
     .toString()
     .split('')
-    .map(c => String.fromCharCode(c.charCodeAt(0) ^ _k))
+    .map((c) => String.fromCharCode(c.charCodeAt(0) ^ _k))
     .join('');
 
 const OAUTH_CLIENT_ID = _d([
-  'aWtu', 'PmJt', 'aDh3', 'b2Nu', 'OXdi', 'a2I+',
-  'd2I5', 'amh3', 'ampp', 'bTtj', 'Pm44', 'P2s8',
+  'aWtu',
+  'PmJt',
+  'aDh3',
+  'b2Nu',
+  'OXdi',
+  'a2I+',
+  'd2I5',
+  'amh3',
+  'ampp',
+  'bTtj',
+  'Pm44',
+  'P2s8',
 ]);
 const OAUTH_CLIENT_SECRET = _d([
-  'KT85', 'KD8u', 'BWMM', 'axcx', 'P28P', 'ahYp',
-  'MCti', 'MQtt', 'Hj4V', 'NywV', 'I2sp', 'bzlv',
-  'ECIK', 'NTAx', 'IGwA', 'ETU7', 'ahU=',
+  'KT85',
+  'KD8u',
+  'BWMM',
+  'axcx',
+  'P28P',
+  'ahYp',
+  'MCti',
+  'MQtt',
+  'Hj4V',
+  'NywV',
+  'I2sp',
+  'bzlv',
+  'ECIK',
+  'NTAx',
+  'IGwA',
+  'ETU7',
+  'ahU=',
 ]);
 
 export const OAUTH_REDIRECT_URI = 'http://localhost:54321/oauth/callback';
@@ -60,7 +84,9 @@ export function buildAuthUrl(state: string): string {
 }
 
 function basicAuth(): string {
-  return Buffer.from(`${OAUTH_CLIENT_ID}:${OAUTH_CLIENT_SECRET}`).toString('base64');
+  return Buffer.from(`${OAUTH_CLIENT_ID}:${OAUTH_CLIENT_SECRET}`).toString(
+    'base64',
+  );
 }
 
 /**
@@ -74,7 +100,7 @@ export async function exchangeCode(
   const response = await fetch('https://api.notion.com/v1/oauth/token', {
     method: 'POST',
     headers: {
-      'Authorization': `Basic ${basicAuth()}`,
+      Authorization: `Basic ${basicAuth()}`,
       'Content-Type': 'application/json',
       'Notion-Version': '2022-06-28',
     },
@@ -88,7 +114,10 @@ export async function exchangeCode(
   if (!response.ok) {
     let errorMessage = `OAuth token exchange failed (HTTP ${response.status})`;
     try {
-      const body = (await response.json()) as { error?: string; error_description?: string };
+      const body = (await response.json()) as {
+        error?: string;
+        error_description?: string;
+      };
       if (body.error_description) errorMessage = body.error_description;
       else if (body.error) errorMessage = body.error;
     } catch {
@@ -110,11 +139,13 @@ export async function exchangeCode(
  * Returns new OAuthTokenResponse on success.
  * Throws CliError(AUTH_INVALID) if refresh fails (token revoked).
  */
-export async function refreshAccessToken(refreshToken: string): Promise<OAuthTokenResponse> {
+export async function refreshAccessToken(
+  refreshToken: string,
+): Promise<OAuthTokenResponse> {
   const response = await fetch('https://api.notion.com/v1/oauth/token', {
     method: 'POST',
     headers: {
-      'Authorization': `Basic ${basicAuth()}`,
+      Authorization: `Basic ${basicAuth()}`,
       'Content-Type': 'application/json',
       'Notion-Version': '2022-06-28',
     },
@@ -127,7 +158,10 @@ export async function refreshAccessToken(refreshToken: string): Promise<OAuthTok
   if (!response.ok) {
     let errorMessage = `OAuth token refresh failed (HTTP ${response.status})`;
     try {
-      const body = (await response.json()) as { error?: string; error_description?: string };
+      const body = (await response.json()) as {
+        error?: string;
+        error_description?: string;
+      };
       if (body.error_description) errorMessage = body.error_description;
       else if (body.error) errorMessage = body.error;
     } catch {

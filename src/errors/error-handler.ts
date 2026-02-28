@@ -14,14 +14,16 @@ function mapNotionErrorCode(code: string): string {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function withErrorHandling<T extends (...args: any[]) => Promise<void>>(fn: T): T {
+// biome-ignore lint/suspicious/noExplicitAny: generic wrapper must accept any argument list
+export function withErrorHandling<T extends (...args: any[]) => Promise<void>>(
+  fn: T,
+): T {
   return (async (...args: Parameters<T>) => {
     try {
       await fn(...args);
     } catch (error) {
       if (error instanceof CliError) {
-        process.stderr.write(error.format() + '\n');
+        process.stderr.write(`${error.format()}\n`);
         process.exit(1);
       }
 
@@ -36,7 +38,7 @@ export function withErrorHandling<T extends (...args: any[]) => Promise<void>>(f
             ? 'Run "notion init" to reconfigure your integration token'
             : undefined,
         );
-        process.stderr.write(mappedError.format() + '\n');
+        process.stderr.write(`${mappedError.format()}\n`);
         process.exit(1);
       }
 

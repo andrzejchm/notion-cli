@@ -16,12 +16,14 @@ function segmentToMd(segment: RichTextItemResponse): string {
 
   // type === 'text'
   const annotated = applyAnnotations(segment.text.content, segment.annotations);
-  return segment.text.link ? `[${annotated}](${segment.text.link.url})` : annotated;
+  return segment.text.link
+    ? `[${annotated}](${segment.text.link.url})`
+    : annotated;
 }
 
 function applyAnnotations(
   text: string,
-  annotations: RichTextItemResponse['annotations']
+  annotations: RichTextItemResponse['annotations'],
 ): string {
   let result = text;
 

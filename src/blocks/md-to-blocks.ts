@@ -1,11 +1,12 @@
-import type {
-  BlockObjectRequest,
-  RichTextItemRequest,
-} from '@notionhq/client/build/src/api-endpoints.js';
+import type { BlockObjectRequest } from '@notionhq/client/build/src/api-endpoints.js';
+
+// RichTextItemRequest is not exported by the SDK; derive it from the public type
+type ParagraphBlock = Extract<BlockObjectRequest, { type?: 'paragraph' }>;
+type RichTextItemRequest = ParagraphBlock['paragraph']['rich_text'][number];
 
 // Inline regex: captures bold, italic (both * and _), inline code, links, and plain text
 const INLINE_RE =
-  /(\*\*[^*]+\*\*|_[^_]+_|\*[^*]+\*|`[^`]+`|\[[^\]]+\]\([^)]+\)|[^*_`\[]+)/g;
+  /(\*\*[^*]+\*\*|_[^_]+_|\*[^*]+\*|`[^`]+`|\[[^\]]+\]\([^)]+\)|[^*_`[]+)/g;
 
 export function parseInlineMarkdown(text: string): RichTextItemRequest[] {
   const result: RichTextItemRequest[] = [];
@@ -13,6 +14,7 @@ export function parseInlineMarkdown(text: string): RichTextItemRequest[] {
 
   INLINE_RE.lastIndex = 0;
 
+  // biome-ignore lint/suspicious/noAssignInExpressions: idiomatic regex loop pattern
   while ((match = INLINE_RE.exec(text)) !== null) {
     const segment = match[0];
 
@@ -22,7 +24,14 @@ export function parseInlineMarkdown(text: string): RichTextItemRequest[] {
       result.push({
         type: 'text',
         text: { content, link: null },
-        annotations: { bold: true, italic: false, strikethrough: false, underline: false, code: false, color: 'default' },
+        annotations: {
+          bold: true,
+          italic: false,
+          strikethrough: false,
+          underline: false,
+          code: false,
+          color: 'default',
+        },
       } as RichTextItemRequest);
       continue;
     }
@@ -36,7 +45,14 @@ export function parseInlineMarkdown(text: string): RichTextItemRequest[] {
       result.push({
         type: 'text',
         text: { content, link: null },
-        annotations: { bold: false, italic: true, strikethrough: false, underline: false, code: false, color: 'default' },
+        annotations: {
+          bold: false,
+          italic: true,
+          strikethrough: false,
+          underline: false,
+          code: false,
+          color: 'default',
+        },
       } as RichTextItemRequest);
       continue;
     }
@@ -47,7 +63,14 @@ export function parseInlineMarkdown(text: string): RichTextItemRequest[] {
       result.push({
         type: 'text',
         text: { content, link: null },
-        annotations: { bold: false, italic: false, strikethrough: false, underline: false, code: true, color: 'default' },
+        annotations: {
+          bold: false,
+          italic: false,
+          strikethrough: false,
+          underline: false,
+          code: true,
+          color: 'default',
+        },
       } as RichTextItemRequest);
       continue;
     }
@@ -59,7 +82,14 @@ export function parseInlineMarkdown(text: string): RichTextItemRequest[] {
       result.push({
         type: 'text',
         text: { content: label, link: { url } },
-        annotations: { bold: false, italic: false, strikethrough: false, underline: false, code: false, color: 'default' },
+        annotations: {
+          bold: false,
+          italic: false,
+          strikethrough: false,
+          underline: false,
+          code: false,
+          color: 'default',
+        },
       } as RichTextItemRequest);
       continue;
     }
@@ -68,7 +98,14 @@ export function parseInlineMarkdown(text: string): RichTextItemRequest[] {
     result.push({
       type: 'text',
       text: { content: segment, link: null },
-      annotations: { bold: false, italic: false, strikethrough: false, underline: false, code: false, color: 'default' },
+      annotations: {
+        bold: false,
+        italic: false,
+        strikethrough: false,
+        underline: false,
+        code: false,
+        color: 'default',
+      },
     } as RichTextItemRequest);
   }
 
@@ -109,10 +146,17 @@ export function mdToBlocks(md: string): BlockObjectRequest[] {
               {
                 type: 'text',
                 text: { content, link: null },
-                annotations: { bold: false, italic: false, strikethrough: false, underline: false, code: false, color: 'default' },
+                annotations: {
+                  bold: false,
+                  italic: false,
+                  strikethrough: false,
+                  underline: false,
+                  code: false,
+                  color: 'default',
+                },
               } as RichTextItemRequest,
             ],
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // biome-ignore lint/suspicious/noExplicitAny: Notion SDK language type is too narrow
             language: fenceLang as any,
           },
         } as BlockObjectRequest);
@@ -205,10 +249,17 @@ export function mdToBlocks(md: string): BlockObjectRequest[] {
           {
             type: 'text',
             text: { content, link: null },
-            annotations: { bold: false, italic: false, strikethrough: false, underline: false, code: false, color: 'default' },
+            annotations: {
+              bold: false,
+              italic: false,
+              strikethrough: false,
+              underline: false,
+              code: false,
+              color: 'default',
+            },
           } as RichTextItemRequest,
         ],
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // biome-ignore lint/suspicious/noExplicitAny: Notion SDK language type is too narrow
         language: fenceLang as any,
       },
     } as BlockObjectRequest);

@@ -1,0 +1,26 @@
+name: CI checks
+description: Install deps, typecheck, lint/format, and test
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+      shell: bash
+
+    - name: Typecheck
+      run: npm run typecheck
+      shell: bash
+
+    - name: Lint & format check
+      run: npm run check
+      shell: bash
+
+    - name: Test
+      run: npm test
+      shell: bash

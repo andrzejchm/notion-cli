@@ -1,8 +1,8 @@
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { parse, stringify } from 'yaml';
-import type { GlobalConfig } from '../types/config.js';
 import { CliError } from '../errors/cli-error.js';
 import { ErrorCodes } from '../errors/codes.js';
+import type { GlobalConfig } from '../types/config.js';
 import { getConfigDir, getConfigPath } from './paths.js';
 
 /**

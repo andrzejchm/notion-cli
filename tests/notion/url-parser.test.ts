@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest';
-import { parseNotionId, toUuid } from '../../src/notion/url-parser.js';
+import { describe, expect, it } from 'vitest';
 import { CliError } from '../../src/errors/cli-error.js';
 import { ErrorCodes } from '../../src/errors/codes.js';
+import { parseNotionId, toUuid } from '../../src/notion/url-parser.js';
 
 const SAMPLE_ID = 'b55c9c91384d452b81dbd1ef79372b75';
 const SAMPLE_UUID = 'b55c9c91-384d-452b-81db-d1ef79372b75';
@@ -13,7 +13,9 @@ describe('parseNotionId', () => {
     });
 
     it('handles lowercase hex ID', () => {
-      expect(parseNotionId('a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4')).toBe('a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4');
+      expect(parseNotionId('a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4')).toBe(
+        'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4',
+      );
     });
   });
 
@@ -23,35 +25,53 @@ describe('parseNotionId', () => {
     });
 
     it('handles lowercase UUID', () => {
-      expect(parseNotionId('a1b2c3d4-e5f6-a1b2-c3d4-e5f6a1b2c3d4')).toBe('a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4');
+      expect(parseNotionId('a1b2c3d4-e5f6-a1b2-c3d4-e5f6a1b2c3d4')).toBe(
+        'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4',
+      );
     });
   });
 
   describe('notion.so URLs', () => {
     it('parses notion.so URL with workspace and page title', () => {
-      expect(parseNotionId(`https://www.notion.so/workspace/Page-Title-${SAMPLE_ID}`)).toBe(SAMPLE_ID);
+      expect(
+        parseNotionId(
+          `https://www.notion.so/workspace/Page-Title-${SAMPLE_ID}`,
+        ),
+      ).toBe(SAMPLE_ID);
     });
 
     it('parses bare notion.so URL with just the ID', () => {
-      expect(parseNotionId(`https://www.notion.so/${SAMPLE_ID}`)).toBe(SAMPLE_ID);
+      expect(parseNotionId(`https://www.notion.so/${SAMPLE_ID}`)).toBe(
+        SAMPLE_ID,
+      );
     });
 
     it('parses notion.so URL with query parameters', () => {
-      expect(parseNotionId(`https://www.notion.so/workspace/${SAMPLE_ID}?v=abc123`)).toBe(SAMPLE_ID);
+      expect(
+        parseNotionId(`https://www.notion.so/workspace/${SAMPLE_ID}?v=abc123`),
+      ).toBe(SAMPLE_ID);
     });
 
     it('parses notion.so URL without www', () => {
-      expect(parseNotionId(`https://notion.so/Page-Title-${SAMPLE_ID}`)).toBe(SAMPLE_ID);
+      expect(parseNotionId(`https://notion.so/Page-Title-${SAMPLE_ID}`)).toBe(
+        SAMPLE_ID,
+      );
     });
 
     it('parses notion.so URL with query params and fragment', () => {
-      expect(parseNotionId(`https://www.notion.so/workspace/123abc-${SAMPLE_ID}?v=def#section`)).toBe(SAMPLE_ID);
+      expect(
+        parseNotionId(
+          `https://www.notion.so/workspace/123abc-${SAMPLE_ID}?v=def#section`,
+        ),
+      ).toBe(SAMPLE_ID);
     });
   });
 
   describe('notion.site URLs', () => {
     it('parses notion.site URL with subdomain', () => {
-      expect(parseNotionId(`https://myworkspace.notion.site/Page-${SAMPLE_ID}`)).toBe(SAMPLE_ID);
+      expect(
+        parseNotionId(`https://myworkspace.notion.site/Page-${SAMPLE_ID}`),
+      ).toBe(SAMPLE_ID);
     });
   });
 

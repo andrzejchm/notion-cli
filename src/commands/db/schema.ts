@@ -1,10 +1,10 @@
 import { Command } from 'commander';
-import { withErrorHandling } from '../../errors/error-handler.js';
 import { resolveToken } from '../../config/token.js';
+import { withErrorHandling } from '../../errors/error-handler.js';
 import { createNotionClient } from '../../notion/client.js';
 import { parseNotionId } from '../../notion/url-parser.js';
+import { formatJSON, formatTable } from '../../output/format.js';
 import { fetchDatabaseSchema } from '../../services/database.service.js';
-import { formatTable, formatJSON, isHumanMode } from '../../output/format.js';
 
 export function dbSchemaCommand(): Command {
   return new Command('schema')
@@ -19,7 +19,7 @@ export function dbSchemaCommand(): Command {
         const schema = await fetchDatabaseSchema(client, dbId);
 
         if (options.json) {
-          process.stdout.write(formatJSON(schema) + '\n');
+          process.stdout.write(`${formatJSON(schema)}\n`);
           return;
         }
 
@@ -30,7 +30,7 @@ export function dbSchemaCommand(): Command {
           prop.type,
           prop.options ? prop.options.map((o) => o.name).join(', ') : '',
         ]);
-        process.stdout.write(formatTable(rows, headers) + '\n');
+        process.stdout.write(`${formatTable(rows, headers)}\n`);
       }),
     );
 }

@@ -1,4 +1,8 @@
-import { Client, collectPaginatedAPI, isFullBlock } from '@notionhq/client';
+import {
+  type Client,
+  collectPaginatedAPI,
+  isFullBlock,
+} from '@notionhq/client';
 import type {
   BlockObjectResponse,
   PageObjectResponse,
@@ -39,9 +43,10 @@ async function fetchBlockTree(
     const batch = blocks.slice(i, i + MAX_CONCURRENT_REQUESTS);
     const batchNodes = await Promise.all(
       batch.map(async (block) => {
-        const children = block.has_children && !SKIP_RECURSE.has(block.type)
-          ? await fetchBlockTree(client, block.id, depth + 1, maxDepth)
-          : [];
+        const children =
+          block.has_children && !SKIP_RECURSE.has(block.type)
+            ? await fetchBlockTree(client, block.id, depth + 1, maxDepth)
+            : [];
         return { block, children };
       }),
     );
@@ -55,7 +60,9 @@ export async function fetchPageWithBlocks(
   client: Client,
   pageId: string,
 ): Promise<PageWithBlocks> {
-  const page = (await client.pages.retrieve({ page_id: pageId })) as PageObjectResponse;
+  const page = (await client.pages.retrieve({
+    page_id: pageId,
+  })) as PageObjectResponse;
   const blocks = await fetchBlockTree(client, pageId, 0, 10);
   return { page, blocks };
 }

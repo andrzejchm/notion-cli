@@ -1,10 +1,10 @@
-import type { ProfileConfig, TokenResult } from '../types/config.js';
 import { CliError } from '../errors/cli-error.js';
 import { ErrorCodes } from '../errors/codes.js';
-import { readGlobalConfig } from './config.js';
-import { readLocalConfig } from './local-config.js';
 import { refreshAccessToken } from '../oauth/oauth-client.js';
 import { clearOAuthTokens, saveOAuthTokens } from '../oauth/token-store.js';
+import type { ProfileConfig, TokenResult } from '../types/config.js';
+import { readGlobalConfig } from './config.js';
+import { readLocalConfig } from './local-config.js';
 
 /**
  * Returns true when an OAuth access token is present but past its expiry timestamp.
@@ -68,7 +68,7 @@ async function resolveOAuthToken(
  */
 export async function resolveToken(): Promise<TokenResult> {
   // 1. Check env var first
-  const envToken = process.env['NOTION_API_TOKEN'];
+  const envToken = process.env.NOTION_API_TOKEN;
   if (envToken) {
     return { token: envToken, source: 'NOTION_API_TOKEN' };
   }
@@ -88,12 +88,18 @@ export async function resolveToken(): Promise<TokenResult> {
       const profile = globalConfig.profiles?.[localConfig.profile];
       if (profile) {
         // Prefer OAuth access token over internal integration token
-        const oauthToken = await resolveOAuthToken(localConfig.profile, profile);
+        const oauthToken = await resolveOAuthToken(
+          localConfig.profile,
+          profile,
+        );
         if (oauthToken) {
           return { token: oauthToken, source: 'oauth' };
         }
         if (profile.token) {
-          return { token: profile.token, source: `profile: ${localConfig.profile}` };
+          return {
+            token: profile.token,
+            source: `profile: ${localConfig.profile}`,
+          };
         }
       }
     }
@@ -105,12 +111,18 @@ export async function resolveToken(): Promise<TokenResult> {
     const profile = globalConfig.profiles?.[globalConfig.active_profile];
     if (profile) {
       // Prefer OAuth access token over internal integration token
-      const oauthToken = await resolveOAuthToken(globalConfig.active_profile, profile);
+      const oauthToken = await resolveOAuthToken(
+        globalConfig.active_profile,
+        profile,
+      );
       if (oauthToken) {
         return { token: oauthToken, source: 'oauth' };
       }
       if (profile.token) {
-        return { token: profile.token, source: `profile: ${globalConfig.active_profile}` };
+        return {
+          token: profile.token,
+          source: `profile: ${globalConfig.active_profile}`,
+        };
       }
     }
   }

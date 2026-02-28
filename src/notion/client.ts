@@ -1,4 +1,4 @@
-import { Client, APIErrorCode, isNotionClientError } from '@notionhq/client';
+import { APIErrorCode, Client, isNotionClientError } from '@notionhq/client';
 import { CliError } from '../errors/cli-error.js';
 import { ErrorCodes } from '../errors/codes.js';
 
@@ -28,7 +28,10 @@ export async function validateToken(token: string): Promise<WorkspaceInfo> {
 
     return { workspaceName, workspaceId };
   } catch (error) {
-    if (isNotionClientError(error) && error.code === APIErrorCode.Unauthorized) {
+    if (
+      isNotionClientError(error) &&
+      error.code === APIErrorCode.Unauthorized
+    ) {
       throw new CliError(
         ErrorCodes.AUTH_INVALID,
         'Invalid integration token.',

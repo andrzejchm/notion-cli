@@ -1,12 +1,12 @@
+import { confirm, input, password } from '@inquirer/prompts';
 import { Command } from 'commander';
-import { input, password, confirm } from '@inquirer/prompts';
+import { readGlobalConfig, writeGlobalConfig } from '../config/config.js';
 import { CliError } from '../errors/cli-error.js';
 import { ErrorCodes } from '../errors/codes.js';
-import { readGlobalConfig, writeGlobalConfig } from '../config/config.js';
-import { validateToken, createNotionClient } from '../notion/client.js';
-import { stderrWrite } from '../output/stderr.js';
-import { success, bold, dim } from '../output/color.js';
 import { withErrorHandling } from '../errors/error-handler.js';
+import { createNotionClient, validateToken } from '../notion/client.js';
+import { bold, dim, success } from '../output/color.js';
+import { stderrWrite } from '../output/stderr.js';
 
 /**
  * Pure flow function: prompt for integration token, validate, save profile.
@@ -21,7 +21,8 @@ export async function runInitFlow(): Promise<void> {
 
   // Prompt for token
   const token = await password({
-    message: 'Integration token (from notion.so/profile/integrations/internal):',
+    message:
+      'Integration token (from notion.so/profile/integrations/internal):',
     mask: '*',
   });
 
@@ -77,29 +78,44 @@ export async function runInitFlow(): Promise<void> {
       stderrWrite(`     3. Choose "${workspaceName}"`);
       stderrWrite('   Then re-run any notion command to confirm access.');
     } else {
-      stderrWrite(success(`✓ Integration has access to content in ${bold(workspaceName)}.`));
+      stderrWrite(
+        success(
+          `✓ Integration has access to content in ${bold(workspaceName)}.`,
+        ),
+      );
     }
   } catch {
     // Non-fatal — don't block init if the probe fails for any reason
-    stderrWrite(dim('(Could not verify integration access — run `notion ls` to check)'));
+    stderrWrite(
+      dim('(Could not verify integration access — run `notion ls` to check)'),
+    );
   }
 
   stderrWrite('');
-  stderrWrite(dim('Write commands (comment, append, create-page) require additional'));
+  stderrWrite(
+    dim('Write commands (comment, append, create-page) require additional'),
+  );
   stderrWrite(dim('capabilities in your integration settings:'));
-  stderrWrite(dim('  notion.so/profile/integrations/internal → your integration →'));
-  stderrWrite(dim('  Capabilities: enable "Read content", "Insert content", "Read comments", "Insert comments"'));
+  stderrWrite(
+    dim('  notion.so/profile/integrations/internal → your integration →'),
+  );
+  stderrWrite(
+    dim(
+      '  Capabilities: enable "Read content", "Insert content", "Read comments", "Insert comments"',
+    ),
+  );
   stderrWrite('');
-  stderrWrite(dim('To post comments and create pages attributed to your user account:'));
+  stderrWrite(
+    dim('To post comments and create pages attributed to your user account:'),
+  );
   stderrWrite(dim('  notion auth login'));
 }
 
 export function initCommand(): Command {
   const cmd = new Command('init');
 
-  cmd
-    .description('authenticate with Notion and save a profile')
-    .action(withErrorHandling(async () => {
+  cmd.description('authenticate with Notion and save a profile').action(
+    withErrorHandling(async () => {
       // Non-TTY check
       if (!process.stdin.isTTY) {
         throw new CliError(
@@ -110,7 +126,8 @@ export function initCommand(): Command {
       }
 
       await runInitFlow();
-    }));
+    }),
+  );
 
   return cmd;
 }

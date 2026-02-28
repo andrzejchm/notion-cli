@@ -36,7 +36,14 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome lint .",
+    "format": "biome format .",
+    "format:write": "biome format --write .",
+    "check": "biome check .",
+    "check:write": "biome check --write .",
+    "ci": "npm run typecheck && npm run check"
   },
   "dependencies": {
     "@inquirer/prompts": "^8.3.0",
@@ -46,6 +53,7 @@
     "yaml": "^2.8.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.4",
     "@commander-js/extra-typings": "^14.0.0",
     "@types/node": "^22",
     "tsup": "^8.5.0",

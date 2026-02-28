@@ -1,20 +1,21 @@
 import { Command } from 'commander';
 import { readGlobalConfig } from '../../config/config.js';
-import { bold, dim } from '../../output/color.js';
 import { withErrorHandling } from '../../errors/error-handler.js';
+import { bold, dim } from '../../output/color.js';
 
 export function profileListCommand(): Command {
   const cmd = new Command('list');
 
-  cmd
-    .description('list all authentication profiles')
-    .action(withErrorHandling(async () => {
+  cmd.description('list all authentication profiles').action(
+    withErrorHandling(async () => {
       const config = await readGlobalConfig();
       const profiles = config.profiles ?? {};
       const profileNames = Object.keys(profiles);
 
       if (profileNames.length === 0) {
-        process.stdout.write('No profiles configured. Run `notion auth login` to get started.\n');
+        process.stdout.write(
+          'No profiles configured. Run `notion auth login` to get started.\n',
+        );
         return;
       }
 
@@ -23,11 +24,16 @@ export function profileListCommand(): Command {
         const isActive = config.active_profile === name;
         const marker = isActive ? bold('* ') : '  ';
         const activeLabel = isActive ? ' (active)' : '';
-        const workspaceInfo = profile.workspace_name ? dim(` — ${profile.workspace_name}`) : '';
+        const workspaceInfo = profile.workspace_name
+          ? dim(` — ${profile.workspace_name}`)
+          : '';
 
-        process.stdout.write(`${marker}${name}${activeLabel}${workspaceInfo}\n`);
+        process.stdout.write(
+          `${marker}${name}${activeLabel}${workspaceInfo}\n`,
+        );
       }
-    }));
+    }),
+  );
 
   return cmd;
 }

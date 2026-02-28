@@ -1,4 +1,4 @@
-import { Client } from '@notionhq/client';
+import type { Client } from '@notionhq/client';
 import type { BlockObjectRequest } from '@notionhq/client/build/src/api-endpoints.js';
 
 export async function addComment(

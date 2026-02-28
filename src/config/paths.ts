@@ -6,7 +6,7 @@ import { join } from 'node:path';
  * Uses $XDG_CONFIG_HOME if set, otherwise falls back to ~/.config/notion-cli.
  */
 export function getConfigDir(): string {
-  const xdgConfigHome = process.env['XDG_CONFIG_HOME'];
+  const xdgConfigHome = process.env.XDG_CONFIG_HOME;
   const base = xdgConfigHome ? xdgConfigHome : join(homedir(), '.config');
   return join(base, 'notion-cli');
 }

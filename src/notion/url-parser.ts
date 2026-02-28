@@ -5,7 +5,8 @@ import { ErrorCodes } from '../errors/codes.js';
 const NOTION_ID_REGEX = /^[0-9a-f]{32}$/i;
 
 /** Matches a UUID with dashes (8-4-4-4-12) */
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Matches a 32-char hex ID embedded in a Notion URL path.
@@ -13,7 +14,8 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
  * query parameters, and fragments.
  * Uses lazy matching to find the first 32-char hex ID in the path.
  */
-const NOTION_URL_REGEX = /https?:\/\/(?:[a-zA-Z0-9-]+\.)?notion\.(?:so|site)\/.*?([0-9a-f]{32})(?:[?#]|$)/i;
+const NOTION_URL_REGEX =
+  /https?:\/\/(?:[a-zA-Z0-9-]+\.)?notion\.(?:so|site)\/.*?([0-9a-f]{32})(?:[?#]|$)/i;
 
 function throwInvalidId(input: string): never {
   throw new CliError(

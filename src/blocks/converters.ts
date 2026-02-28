@@ -2,18 +2,21 @@ import type { BlockObjectResponse } from '@notionhq/client/build/src/api-endpoin
 import { richTextToMd } from './rich-text.js';
 
 export interface BlockConverterContext {
-  listNumber?: number;    // For numbered_list_item: the 1-based position in the list
-  childrenMd?: string;    // Pre-rendered children markdown (render.ts provides this)
+  listNumber?: number; // For numbered_list_item: the 1-based position in the list
+  childrenMd?: string; // Pre-rendered children markdown (render.ts provides this)
 }
 
-type BlockConverter = (block: BlockObjectResponse, ctx?: BlockConverterContext) => string;
+type BlockConverter = (
+  block: BlockObjectResponse,
+  ctx?: BlockConverterContext,
+) => string;
 
 function indentChildren(childrenMd: string): string {
-  return childrenMd
+  return `${childrenMd
     .split('\n')
     .filter(Boolean)
-    .map(line => '  ' + line)
-    .join('\n') + '\n';
+    .map((line) => `  ${line}`)
+    .join('\n')}\n`;
 }
 
 const converters: Record<string, BlockConverter> = {
@@ -38,7 +41,10 @@ const converters: Record<string, BlockConverter> = {
   },
 
   bulleted_list_item(block, ctx) {
-    const b = block as Extract<BlockObjectResponse, { type: 'bulleted_list_item' }>;
+    const b = block as Extract<
+      BlockObjectResponse,
+      { type: 'bulleted_list_item' }
+    >;
     const text = richTextToMd(b.bulleted_list_item.rich_text);
     const header = `- ${text}\n`;
     if (ctx?.childrenMd) {
@@ -48,7 +54,10 @@ const converters: Record<string, BlockConverter> = {
   },
 
   numbered_list_item(block, ctx) {
-    const b = block as Extract<BlockObjectResponse, { type: 'numbered_list_item' }>;
+    const b = block as Extract<
+      BlockObjectResponse,
+      { type: 'numbered_list_item' }
+    >;
     const num = ctx?.listNumber ?? 1;
     return `${num}. ${richTextToMd(b.numbered_list_item.rich_text)}\n`;
   },
@@ -129,7 +138,10 @@ const converters: Record<string, BlockConverter> = {
   },
 };
 
-export function blockToMd(block: BlockObjectResponse, ctx?: BlockConverterContext): string {
+export function blockToMd(
+  block: BlockObjectResponse,
+  ctx?: BlockConverterContext,
+): string {
   const converter = converters[block.type];
   if (converter) {
     return converter(block, ctx);

@@ -2,7 +2,10 @@ import type { PageObjectResponse } from '@notionhq/client/build/src/api-endpoint
 
 type PropertyValue = PageObjectResponse['properties'][string];
 
-export function formatPropertyValue(name: string, prop: PropertyValue): string {
+export function formatPropertyValue(
+  _name: string,
+  prop: PropertyValue,
+): string {
   switch (prop.type) {
     case 'title':
       return prop.title.map((rt) => rt.plain_text).join('');
@@ -24,7 +27,9 @@ export function formatPropertyValue(name: string, prop: PropertyValue): string {
 
     case 'date':
       if (!prop.date) return '';
-      return prop.date.end ? `${prop.date.start} → ${prop.date.end}` : prop.date.start;
+      return prop.date.end
+        ? `${prop.date.start} → ${prop.date.end}`
+        : prop.date.start;
 
     case 'checkbox':
       return prop.checkbox ? 'true' : 'false';
@@ -98,8 +103,9 @@ export function formatPropertyValue(name: string, prop: PropertyValue): string {
 }
 
 export function extractPageTitle(page: PageObjectResponse): string {
-  const titleProp = Object.values(page.properties).find((p) => p.type === 'title');
+  const titleProp = Object.values(page.properties).find(
+    (p) => p.type === 'title',
+  );
   if (!titleProp || titleProp.type !== 'title') return page.id;
   return titleProp.title.map((rt) => rt.plain_text).join('') || page.id;
 }
-

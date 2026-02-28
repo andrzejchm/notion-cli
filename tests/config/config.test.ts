@@ -1,7 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mkdtemp, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // We need to control the paths module so we can redirect to temp dirs
 vi.mock('../../src/config/paths.js', () => ({
@@ -9,8 +9,11 @@ vi.mock('../../src/config/paths.js', () => ({
   getConfigPath: vi.fn(),
 }));
 
+import {
+  readGlobalConfig,
+  writeGlobalConfig,
+} from '../../src/config/config.js';
 import { getConfigDir, getConfigPath } from '../../src/config/paths.js';
-import { readGlobalConfig, writeGlobalConfig } from '../../src/config/config.js';
 
 const mockGetConfigDir = vi.mocked(getConfigDir);
 const mockGetConfigPath = vi.mocked(getConfigPath);
@@ -42,7 +45,7 @@ describe('readGlobalConfig', () => {
     );
     const config = await readGlobalConfig();
     expect(config.active_profile).toBe('work');
-    expect(config.profiles?.['work']?.token).toBe('secret');
+    expect(config.profiles?.work?.token).toBe('secret');
   });
 
   it('throws CONFIG_READ_ERROR on invalid YAML', async () => {
@@ -78,7 +81,7 @@ describe('writeGlobalConfig + readGlobalConfig round-trip', () => {
     await writeGlobalConfig(config);
     const result = await readGlobalConfig();
     expect(result.active_profile).toBe('personal');
-    expect(result.profiles?.['personal']?.token).toBe('my-token');
+    expect(result.profiles?.personal?.token).toBe('my-token');
   });
 
   it('writes file with 0600 permissions', async () => {
@@ -106,7 +109,9 @@ describe('readLocalConfig', () => {
   });
 
   it('returns null when .notion.yaml does not exist', async () => {
-    const { readLocalConfig } = await import('../../src/config/local-config.js');
+    const { readLocalConfig } = await import(
+      '../../src/config/local-config.js'
+    );
     const result = await readLocalConfig();
     expect(result).toBeNull();
   });

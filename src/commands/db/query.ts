@@ -1,16 +1,16 @@
 import { Command } from 'commander';
-import { withErrorHandling } from '../../errors/error-handler.js';
 import { resolveToken } from '../../config/token.js';
+import { withErrorHandling } from '../../errors/error-handler.js';
 import { createNotionClient } from '../../notion/client.js';
 import { parseNotionId } from '../../notion/url-parser.js';
+import { formatJSON, formatTable } from '../../output/format.js';
 import {
-  DatabaseSchema,
-  fetchDatabaseSchema,
-  queryDatabase,
   buildFilter,
   buildSorts,
+  type DatabaseSchema,
+  fetchDatabaseSchema,
+  queryDatabase,
 } from '../../services/database.service.js';
-import { formatTable, formatJSON, isHumanMode } from '../../output/format.js';
 
 // Types that produce poor table output — skip in auto-column selection
 const SKIP_TYPES_IN_AUTO = new Set(['relation', 'rich_text', 'people']);
@@ -20,7 +20,10 @@ const SKIP_TYPES_IN_AUTO = new Set(['relation', 'rich_text', 'people']);
  * - Skips relation/rich_text/people by default (noisy in tables)
  * - Stops adding columns once estimated width would exceed terminal width
  */
-function autoSelectColumns(schema: DatabaseSchema, entries: { properties: Record<string, string> }[]): string[] {
+function autoSelectColumns(
+  schema: DatabaseSchema,
+  entries: { properties: Record<string, string> }[],
+): string[] {
   const termWidth = process.stdout.columns || 120;
   const COL_SEP = 2; // two spaces between columns
 
@@ -32,7 +35,10 @@ function autoSelectColumns(schema: DatabaseSchema, entries: { properties: Record
   // Estimate each column's display width (max of header vs data)
   const widths = candidates.map((col) => {
     const header = col.toUpperCase().length;
-    const maxData = entries.reduce((max, e) => Math.max(max, (e.properties[col] ?? '').length), 0);
+    const maxData = entries.reduce(
+      (max, e) => Math.max(max, (e.properties[col] ?? '').length),
+      0,
+    );
     return Math.min(Math.max(header, maxData), 40); // respect DEFAULT_MAX_COL_WIDTH
   });
 
@@ -58,15 +64,33 @@ export function dbQueryCommand(): Command {
   return new Command('query')
     .description('Query database entries with optional filtering and sorting')
     .argument('<id>', 'Notion database ID or URL')
-    .option('--filter <filter>', 'Filter entries (repeatable): --filter "Status=Done"', collect, [])
-    .option('--sort <sort>', 'Sort entries (repeatable): --sort "Name:asc"', collect, [])
-    .option('--columns <columns>', 'Comma-separated list of columns to display: --columns "Title,Status"')
+    .option(
+      '--filter <filter>',
+      'Filter entries (repeatable): --filter "Status=Done"',
+      collect,
+      [],
+    )
+    .option(
+      '--sort <sort>',
+      'Sort entries (repeatable): --sort "Name:asc"',
+      collect,
+      [],
+    )
+    .option(
+      '--columns <columns>',
+      'Comma-separated list of columns to display: --columns "Title,Status"',
+    )
     .option('--json', 'Output raw JSON')
     .action(
       withErrorHandling(
         async (
           id: string,
-          options: { filter: string[]; sort: string[]; columns?: string; json?: boolean },
+          options: {
+            filter: string[];
+            sort: string[];
+            columns?: string;
+            json?: boolean;
+          },
         ) => {
           const { token } = await resolveToken();
           const client = createNotionClient(token);
@@ -83,12 +107,18 @@ export function dbQueryCommand(): Command {
             ? buildFilter(options.filter, schema)
             : undefined;
 
-          const sorts = options.sort.length ? buildSorts(options.sort) : undefined;
+          const sorts = options.sort.length
+            ? buildSorts(options.sort)
+            : undefined;
 
-          const entries = await queryDatabase(client, dbId, { filter, sorts, columns });
+          const entries = await queryDatabase(client, dbId, {
+            filter,
+            sorts,
+            columns,
+          });
 
           if (options.json) {
-            process.stdout.write(formatJSON(entries.map((e) => e.raw)) + '\n');
+            process.stdout.write(`${formatJSON(entries.map((e) => e.raw))}\n`);
             return;
           }
 
@@ -104,7 +134,7 @@ export function dbQueryCommand(): Command {
           const rows = entries.map((entry) =>
             displayColumns.map((col) => entry.properties[col] ?? ''),
           );
-          process.stdout.write(formatTable(rows, headers) + '\n');
+          process.stdout.write(`${formatTable(rows, headers)}\n`);
           process.stderr.write(`${entries.length} entries\n`);
         },
       ),

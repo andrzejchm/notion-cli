@@ -31,7 +31,7 @@ export function renderMarkdown(md: string): string {
       const header = fenceLang ? c.dim(`[${fenceLang}]`) : '';
       if (header) out.push(header);
       for (const fl of fenceLines) {
-        out.push(c.green('  ' + fl));
+        out.push(c.green(`  ${fl}`));
       }
       out.push('');
       continue;
@@ -54,16 +54,28 @@ export function renderMarkdown(md: string): string {
 
     // --- Headings ---
     const h1 = line.match(/^# (.+)/);
-    if (h1) { out.push('\n' + c.bold.cyan(h1[1])); continue; }
+    if (h1) {
+      out.push(`\n${c.bold.cyan(h1[1])}`);
+      continue;
+    }
 
     const h2 = line.match(/^## (.+)/);
-    if (h2) { out.push('\n' + c.bold.blue(h2[1])); continue; }
+    if (h2) {
+      out.push(`\n${c.bold.blue(h2[1])}`);
+      continue;
+    }
 
     const h3 = line.match(/^### (.+)/);
-    if (h3) { out.push('\n' + c.bold(h3[1])); continue; }
+    if (h3) {
+      out.push(`\n${c.bold(h3[1])}`);
+      continue;
+    }
 
     const h4 = line.match(/^#### (.+)/);
-    if (h4) { out.push(c.bold.underline(h4[1])); continue; }
+    if (h4) {
+      out.push(c.bold.underline(h4[1]));
+      continue;
+    }
 
     // --- Blockquotes / callouts ---
     if (line.startsWith('> ')) {
@@ -80,7 +92,7 @@ export function renderMarkdown(md: string): string {
     // --- Frontmatter properties (key: value) ---
     const propMatch = line.match(/^([A-Za-z_][A-Za-z0-9_ ]*): (.+)$/);
     if (propMatch) {
-      out.push(c.dim(propMatch[1] + ': ') + c.white(propMatch[2]));
+      out.push(c.dim(`${propMatch[1]}: `) + c.white(propMatch[2]));
       continue;
     }
 
@@ -93,9 +105,9 @@ export function renderMarkdown(md: string): string {
       if (checkbox) {
         const checked = checkbox.trim() === '[x]';
         const box = checked ? c.green('☑') : c.dim('☐');
-        out.push(indent + box + ' ' + renderInline(text));
+        out.push(`${indent + box} ${renderInline(text)}`);
       } else {
-        out.push(indent + c.cyan('•') + ' ' + renderInline(text));
+        out.push(`${indent + c.cyan('•')} ${renderInline(text)}`);
       }
       continue;
     }
@@ -106,7 +118,7 @@ export function renderMarkdown(md: string): string {
       const indent = numMatch[1] ?? '';
       const num = numMatch[2] ?? '';
       const text = numMatch[3] ?? '';
-      out.push(indent + c.cyan(num + '.') + ' ' + renderInline(text));
+      out.push(`${indent + c.cyan(`${num}.`)} ${renderInline(text)}`);
       continue;
     }
 
@@ -114,7 +126,7 @@ export function renderMarkdown(md: string): string {
     out.push(renderInline(line));
   }
 
-  return out.join('\n') + '\n';
+  return `${out.join('\n')}\n`;
 }
 
 /** Apply inline markdown styles: bold, italic, code, strikethrough, links */
@@ -128,9 +140,14 @@ function renderInline(text: string): string {
 
   result = result
     // images (before links, since ![...] would match link pattern)
-    .replace(/!\[([^\]]*)\]\([^)]+\)/g, (_, alt) => alt ? c.dim(`[image: ${alt}]`) : c.dim('[image]'))
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, (_, alt) =>
+      alt ? c.dim(`[image: ${alt}]`) : c.dim('[image]'),
+    )
     // links [text](url)
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, t, url) => c.cyan.underline(t) + c.dim(` (${url})`))
+    .replace(
+      /\[([^\]]+)\]\(([^)]+)\)/g,
+      (_, t, url) => c.cyan.underline(t) + c.dim(` (${url})`),
+    )
     // bold+italic
     .replace(/\*\*\*(.+?)\*\*\*/g, (_, t) => c.bold.italic(t))
     // bold
@@ -141,8 +158,12 @@ function renderInline(text: string): string {
     // strikethrough
     .replace(/~~(.+?)~~/g, (_, t) => c.strikethrough(t));
 
-  // Restore code spans
-  result = result.replace(/\x00CODE(\d+)\x00/g, (_, i) => codeSpans[Number(i)] ?? '');
+  // Restore code spans — \x00 is used intentionally as a sentinel character
+  result = result.replace(
+    // biome-ignore lint/suspicious/noControlCharactersInRegex: sentinel chars are intentional
+    /\x00CODE(\d+)\x00/g,
+    (_, i) => codeSpans[Number(i)] ?? '',
+  );
 
   return result;
 }

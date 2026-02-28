@@ -20,4 +20,4 @@ export const ErrorCodes = {
   UNKNOWN: 'UNKNOWN',
 } as const;
 
-export type ErrorCode = typeof ErrorCodes[keyof typeof ErrorCodes];
+export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];

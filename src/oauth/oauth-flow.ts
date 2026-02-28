@@ -1,6 +1,6 @@
-import { createServer } from 'node:http';
-import { randomBytes } from 'node:crypto';
 import { spawn } from 'node:child_process';
+import { randomBytes } from 'node:crypto';
+import { createServer } from 'node:http';
 import { createInterface } from 'node:readline';
 import { CliError } from '../errors/cli-error.js';
 import { ErrorCodes } from '../errors/codes.js';
@@ -131,7 +131,9 @@ async function manualFlow(url: string): Promise<OAuthFlowResult> {
  *   - Notion returns ?error=access_denied
  *   - Timeout after 120 seconds with no callback
  */
-export async function runOAuthFlow(options?: { manual?: boolean }): Promise<OAuthFlowResult> {
+export async function runOAuthFlow(options?: {
+  manual?: boolean;
+}): Promise<OAuthFlowResult> {
   const state = randomBytes(16).toString('hex');
   const authUrl = buildAuthUrl(state);
 
@@ -147,7 +149,9 @@ export async function runOAuthFlow(options?: { manual?: boolean }): Promise<OAut
     const server = createServer((req, res) => {
       if (settled) {
         res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end('<html><body><h1>Already handled. You can close this tab.</h1></body></html>');
+        res.end(
+          '<html><body><h1>Already handled. You can close this tab.</h1></body></html>',
+        );
         return;
       }
 
@@ -179,7 +183,9 @@ export async function runOAuthFlow(options?: { manual?: boolean }): Promise<OAut
         if (!code || !returnedState) {
           // Probably a favicon request or other unrelated GET — ignore
           res.writeHead(200, { 'Content-Type': 'text/html' });
-          res.end('<html><body><p>Waiting for OAuth callback...</p></body></html>');
+          res.end(
+            '<html><body><p>Waiting for OAuth callback...</p></body></html>',
+          );
           return;
         }
 

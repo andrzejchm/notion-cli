@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { parse } from 'yaml';
-import type { LocalConfig } from '../types/config.js';
 import { CliError } from '../errors/cli-error.js';
 import { ErrorCodes } from '../errors/codes.js';
+import type { LocalConfig } from '../types/config.js';
 
 /**
  * Reads the local .notion.yaml file from the current working directory.

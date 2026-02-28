@@ -1,8 +1,8 @@
 import { Command } from 'commander';
-import { withErrorHandling } from '../../errors/error-handler.js';
 import { readGlobalConfig } from '../../config/config.js';
+import { withErrorHandling } from '../../errors/error-handler.js';
+import { error as colorError, dim, success } from '../../output/color.js';
 import { stderrWrite } from '../../output/stderr.js';
-import { success, error as colorError, dim } from '../../output/color.js';
 
 interface StatusOptions {
   profile?: string;
@@ -28,7 +28,9 @@ export function statusCommand(): Command {
         stderrWrite(`Profile: ${profileName}`);
 
         if (!profile) {
-          stderrWrite(`  ${colorError('✗')} No profile found (run 'notion init' to create one)`);
+          stderrWrite(
+            `  ${colorError('✗')} No profile found (run 'notion init' to create one)`,
+          );
           return;
         }
 
@@ -36,7 +38,9 @@ export function statusCommand(): Command {
         if (profile.oauth_access_token) {
           const userName = profile.oauth_user_name ?? 'unknown';
           const userId = profile.oauth_user_id ?? 'unknown';
-          stderrWrite(`  OAuth: ${success('✓')} Logged in as ${userName} (user: ${userId})`);
+          stderrWrite(
+            `  OAuth: ${success('✓')} Logged in as ${userName} (user: ${userId})`,
+          );
 
           if (profile.oauth_expiry_ms != null) {
             const expiryDate = new Date(profile.oauth_expiry_ms).toISOString();
@@ -50,8 +54,10 @@ export function statusCommand(): Command {
 
         // Internal token status
         if (profile.token) {
-          const tokenPreview = profile.token.substring(0, 10) + '...';
-          stderrWrite(`  Internal token: ${success('✓')} Configured (${tokenPreview})`);
+          const tokenPreview = `${profile.token.substring(0, 10)}...`;
+          stderrWrite(
+            `  Internal token: ${success('✓')} Configured (${tokenPreview})`,
+          );
         } else {
           stderrWrite(`  Internal token: ${colorError('✗')} Not configured`);
         }
@@ -60,10 +66,14 @@ export function statusCommand(): Command {
         if (profile.oauth_access_token) {
           stderrWrite(`  Active method: OAuth (user-attributed)`);
         } else if (profile.token) {
-          stderrWrite(`  Active method: Internal integration token (bot-attributed)`);
+          stderrWrite(
+            `  Active method: Internal integration token (bot-attributed)`,
+          );
         } else {
           stderrWrite(
-            dim(`  Active method: None (run 'notion auth login' or 'notion init')`),
+            dim(
+              `  Active method: None (run 'notion auth login' or 'notion init')`,
+            ),
           );
         }
       }),

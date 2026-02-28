@@ -1,4 +1,4 @@
-import { Client, isFullPage } from '@notionhq/client';
+import { type Client, isFullPage } from '@notionhq/client';
 import type {
   PageObjectResponse,
   QueryDataSourceParameters,
@@ -175,7 +175,10 @@ export function buildSorts(
       return { property: raw.trim(), direction: 'ascending' as const };
     }
     const property = raw.slice(0, colonIdx).trim();
-    const dir = raw.slice(colonIdx + 1).trim().toLowerCase();
+    const dir = raw
+      .slice(colonIdx + 1)
+      .trim()
+      .toLowerCase();
     return {
       property,
       direction:
@@ -191,9 +194,15 @@ export function displayPropertyValue(
 ): string {
   switch (prop.type) {
     case 'title':
-      return prop.title.map((r) => r.plain_text).join('').replace(/\n/g, ' ');
+      return prop.title
+        .map((r) => r.plain_text)
+        .join('')
+        .replace(/\n/g, ' ');
     case 'rich_text':
-      return prop.rich_text.map((r) => r.plain_text).join('').replace(/\n/g, ' ');
+      return prop.rich_text
+        .map((r) => r.plain_text)
+        .join('')
+        .replace(/\n/g, ' ');
     case 'number':
       return prop.number !== null && prop.number !== undefined
         ? String(prop.number)

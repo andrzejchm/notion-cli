@@ -23,8 +23,12 @@ export async function saveOAuthTokens(
     oauth_expiry_ms: Date.now() + OAUTH_EXPIRY_DURATION_MS,
     workspace_id: response.workspace_id,
     workspace_name: response.workspace_name,
-    ...(response.owner?.user?.id != null && { oauth_user_id: response.owner.user.id }),
-    ...(response.owner?.user?.name != null && { oauth_user_name: response.owner.user.name }),
+    ...(response.owner?.user?.id != null && {
+      oauth_user_id: response.owner.user.id,
+    }),
+    ...(response.owner?.user?.name != null && {
+      oauth_user_name: response.owner.user.name,
+    }),
   };
 
   config.profiles = {

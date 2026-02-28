@@ -112,25 +112,27 @@ export function completionCommand(): Command {
   cmd
     .description('output shell completion script')
     .argument('<shell>', 'shell type (bash, zsh, fish)')
-    .action(withErrorHandling(async (shell: string) => {
-      switch (shell) {
-        case 'bash':
-          process.stdout.write(BASH_COMPLETION);
-          break;
-        case 'zsh':
-          process.stdout.write(ZSH_COMPLETION);
-          break;
-        case 'fish':
-          process.stdout.write(FISH_COMPLETION);
-          break;
-        default:
-          throw new CliError(
-            ErrorCodes.UNKNOWN,
-            `Unknown shell: "${shell}".`,
-            'Supported shells: bash, zsh, fish',
-          );
-      }
-    }));
+    .action(
+      withErrorHandling(async (shell: string) => {
+        switch (shell) {
+          case 'bash':
+            process.stdout.write(BASH_COMPLETION);
+            break;
+          case 'zsh':
+            process.stdout.write(ZSH_COMPLETION);
+            break;
+          case 'fish':
+            process.stdout.write(FISH_COMPLETION);
+            break;
+          default:
+            throw new CliError(
+              ErrorCodes.UNKNOWN,
+              `Unknown shell: "${shell}".`,
+              'Supported shells: bash, zsh, fish',
+            );
+        }
+      }),
+    );
 
   return cmd;
 }

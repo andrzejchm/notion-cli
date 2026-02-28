@@ -32,44 +32,56 @@ describe('resolveToken', () => {
   });
 
   it('returns env token with NOTION_API_TOKEN source when env var is set', async () => {
-    process.env['NOTION_API_TOKEN'] = 'env-token-123';
+    process.env.NOTION_API_TOKEN = 'env-token-123';
     const result = await resolveToken();
-    expect(result).toEqual({ token: 'env-token-123', source: 'NOTION_API_TOKEN' });
+    expect(result).toEqual({
+      token: 'env-token-123',
+      source: 'NOTION_API_TOKEN',
+    });
     // Should not read any config files
     expect(mockReadLocalConfig).not.toHaveBeenCalled();
     expect(mockReadGlobalConfig).not.toHaveBeenCalled();
   });
 
   it('returns token from .notion.yaml with .notion.yaml source', async () => {
-    delete process.env['NOTION_API_TOKEN'];
+    delete process.env.NOTION_API_TOKEN;
     mockReadLocalConfig.mockResolvedValue({ token: 'local-token-456' });
     const result = await resolveToken();
-    expect(result).toEqual({ token: 'local-token-456', source: '.notion.yaml' });
+    expect(result).toEqual({
+      token: 'local-token-456',
+      source: '.notion.yaml',
+    });
   });
 
   it('resolves profile from .notion.yaml profile field', async () => {
-    delete process.env['NOTION_API_TOKEN'];
+    delete process.env.NOTION_API_TOKEN;
     mockReadLocalConfig.mockResolvedValue({ profile: 'work' });
     mockReadGlobalConfig.mockResolvedValue({
       profiles: { work: { token: 'work-token-789' } },
     });
     const result = await resolveToken();
-    expect(result).toEqual({ token: 'work-token-789', source: 'profile: work' });
+    expect(result).toEqual({
+      token: 'work-token-789',
+      source: 'profile: work',
+    });
   });
 
   it('falls back to active_profile from global config', async () => {
-    delete process.env['NOTION_API_TOKEN'];
+    delete process.env.NOTION_API_TOKEN;
     mockReadLocalConfig.mockResolvedValue(null);
     mockReadGlobalConfig.mockResolvedValue({
       active_profile: 'personal',
       profiles: { personal: { token: 'personal-token' } },
     });
     const result = await resolveToken();
-    expect(result).toEqual({ token: 'personal-token', source: 'profile: personal' });
+    expect(result).toEqual({
+      token: 'personal-token',
+      source: 'profile: personal',
+    });
   });
 
   it('throws AUTH_NO_TOKEN when no token found anywhere', async () => {
-    delete process.env['NOTION_API_TOKEN'];
+    delete process.env.NOTION_API_TOKEN;
     mockReadLocalConfig.mockResolvedValue(null);
     mockReadGlobalConfig.mockResolvedValue({});
     await expect(resolveToken()).rejects.toMatchObject({
@@ -79,7 +91,7 @@ describe('resolveToken', () => {
   });
 
   it('env var takes precedence over .notion.yaml token', async () => {
-    process.env['NOTION_API_TOKEN'] = 'env-wins';
+    process.env.NOTION_API_TOKEN = 'env-wins';
     mockReadLocalConfig.mockResolvedValue({ token: 'local-token' });
     const result = await resolveToken();
     expect(result.source).toBe('NOTION_API_TOKEN');
@@ -87,7 +99,7 @@ describe('resolveToken', () => {
   });
 
   it('env var takes precedence over active_profile', async () => {
-    process.env['NOTION_API_TOKEN'] = 'env-wins-again';
+    process.env.NOTION_API_TOKEN = 'env-wins-again';
     mockReadGlobalConfig.mockResolvedValue({
       active_profile: 'work',
       profiles: { work: { token: 'work-token' } },
@@ -98,7 +110,7 @@ describe('resolveToken', () => {
   });
 
   it('.notion.yaml token takes precedence over active_profile', async () => {
-    delete process.env['NOTION_API_TOKEN'];
+    delete process.env.NOTION_API_TOKEN;
     mockReadLocalConfig.mockResolvedValue({ token: 'local-token' });
     mockReadGlobalConfig.mockResolvedValue({
       active_profile: 'work',
@@ -110,7 +122,7 @@ describe('resolveToken', () => {
   });
 
   it('throws AUTH_NO_TOKEN when .notion.yaml profile not found in global config', async () => {
-    delete process.env['NOTION_API_TOKEN'];
+    delete process.env.NOTION_API_TOKEN;
     mockReadLocalConfig.mockResolvedValue({ profile: 'nonexistent' });
     mockReadGlobalConfig.mockResolvedValue({
       profiles: { other: { token: 'other-token' } },

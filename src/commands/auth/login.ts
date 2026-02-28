@@ -1,14 +1,14 @@
-import { Command } from 'commander';
 import { select } from '@inquirer/prompts';
+import { Command } from 'commander';
+import { readGlobalConfig } from '../../config/config.js';
 import { CliError } from '../../errors/cli-error.js';
 import { ErrorCodes } from '../../errors/codes.js';
 import { withErrorHandling } from '../../errors/error-handler.js';
-import { readGlobalConfig } from '../../config/config.js';
 import { exchangeCode } from '../../oauth/oauth-client.js';
 import { runOAuthFlow } from '../../oauth/oauth-flow.js';
 import { saveOAuthTokens } from '../../oauth/token-store.js';
+import { dim, success } from '../../output/color.js';
 import { stderrWrite } from '../../output/stderr.js';
-import { success, dim } from '../../output/color.js';
 import { runInitFlow } from '../init.js';
 
 interface LoginOptions {
@@ -22,7 +22,10 @@ export function loginCommand(): Command {
   cmd
     .description('authenticate with Notion — choose OAuth or integration token')
     .option('--profile <name>', 'profile name to store credentials in')
-    .option('--manual', 'print auth URL instead of opening browser (for headless OAuth)')
+    .option(
+      '--manual',
+      'print auth URL instead of opening browser (for headless OAuth)',
+    )
     .action(
       withErrorHandling(async (opts: LoginOptions) => {
         if (!process.stdin.isTTY && !opts.manual) {
@@ -64,8 +67,14 @@ export function loginCommand(): Command {
 
           const userName = response.owner?.user?.name ?? 'unknown user';
           const workspaceName = response.workspace_name ?? 'unknown workspace';
-          stderrWrite(success(`✓ Logged in as ${userName} to workspace ${workspaceName}`));
-          stderrWrite(dim('Your comments and pages will now be attributed to your Notion account.'));
+          stderrWrite(
+            success(`✓ Logged in as ${userName} to workspace ${workspaceName}`),
+          );
+          stderrWrite(
+            dim(
+              'Your comments and pages will now be attributed to your Notion account.',
+            ),
+          );
         } else {
           await runInitFlow();
         }
