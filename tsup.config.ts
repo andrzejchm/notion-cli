@@ -1,4 +1,7 @@
 import { defineConfig } from 'tsup';
+import { config as loadDotenv } from 'dotenv';
+
+loadDotenv();
 
 export default defineConfig({
   entry: ['src/cli.ts'],
