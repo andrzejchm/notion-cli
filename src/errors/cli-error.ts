@@ -5,8 +5,9 @@ export class CliError extends Error {
     public readonly code: ErrorCode,
     message: string,
     public readonly suggestion?: string,
+    cause?: unknown,
   ) {
-    super(message);
+    super(message, { cause });
     this.name = 'CliError';
   }
 

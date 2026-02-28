@@ -32,10 +32,12 @@ export async function validateToken(token: string): Promise<WorkspaceInfo> {
       isNotionClientError(error) &&
       error.code === APIErrorCode.Unauthorized
     ) {
+      // biome-ignore lint/nursery/useErrorCause: cause passed as 4th positional arg to CliError
       throw new CliError(
         ErrorCodes.AUTH_INVALID,
         'Invalid integration token.',
         'Check your token at notion.so/profile/integrations/internal',
+        error,
       );
     }
     throw error;

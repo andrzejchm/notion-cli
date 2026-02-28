@@ -46,12 +46,14 @@ async function resolveOAuthToken(
     const refreshed = await refreshAccessToken(profile.oauth_refresh_token);
     await saveOAuthTokens(profileName, refreshed);
     return refreshed.access_token;
-  } catch {
+  } catch (err) {
     await clearOAuthTokens(profileName);
+    // biome-ignore lint/nursery/useErrorCause: cause passed as 4th positional arg to CliError
     throw new CliError(
       ErrorCodes.AUTH_NO_TOKEN,
       'OAuth session expired. Run "notion auth login" to re-authenticate.',
       'Your session was revoked or the refresh token has expired',
+      err,
     );
   }
 }

@@ -44,7 +44,7 @@ describe('resolveToken', () => {
   });
 
   it('returns token from .notion.yaml with .notion.yaml source', async () => {
-    delete process.env.NOTION_API_TOKEN;
+    process.env.NOTION_API_TOKEN = undefined;
     mockReadLocalConfig.mockResolvedValue({ token: 'local-token-456' });
     const result = await resolveToken();
     expect(result).toEqual({
@@ -54,7 +54,7 @@ describe('resolveToken', () => {
   });
 
   it('resolves profile from .notion.yaml profile field', async () => {
-    delete process.env.NOTION_API_TOKEN;
+    process.env.NOTION_API_TOKEN = undefined;
     mockReadLocalConfig.mockResolvedValue({ profile: 'work' });
     mockReadGlobalConfig.mockResolvedValue({
       profiles: { work: { token: 'work-token-789' } },
@@ -67,7 +67,7 @@ describe('resolveToken', () => {
   });
 
   it('falls back to active_profile from global config', async () => {
-    delete process.env.NOTION_API_TOKEN;
+    process.env.NOTION_API_TOKEN = undefined;
     mockReadLocalConfig.mockResolvedValue(null);
     mockReadGlobalConfig.mockResolvedValue({
       active_profile: 'personal',
@@ -81,7 +81,7 @@ describe('resolveToken', () => {
   });
 
   it('throws AUTH_NO_TOKEN when no token found anywhere', async () => {
-    delete process.env.NOTION_API_TOKEN;
+    process.env.NOTION_API_TOKEN = undefined;
     mockReadLocalConfig.mockResolvedValue(null);
     mockReadGlobalConfig.mockResolvedValue({});
     await expect(resolveToken()).rejects.toMatchObject({
@@ -110,7 +110,7 @@ describe('resolveToken', () => {
   });
 
   it('.notion.yaml token takes precedence over active_profile', async () => {
-    delete process.env.NOTION_API_TOKEN;
+    process.env.NOTION_API_TOKEN = undefined;
     mockReadLocalConfig.mockResolvedValue({ token: 'local-token' });
     mockReadGlobalConfig.mockResolvedValue({
       active_profile: 'work',
@@ -122,7 +122,7 @@ describe('resolveToken', () => {
   });
 
   it('throws AUTH_NO_TOKEN when .notion.yaml profile not found in global config', async () => {
-    delete process.env.NOTION_API_TOKEN;
+    process.env.NOTION_API_TOKEN = undefined;
     mockReadLocalConfig.mockResolvedValue({ profile: 'nonexistent' });
     mockReadGlobalConfig.mockResolvedValue({
       profiles: { other: { token: 'other-token' } },

@@ -20,21 +20,25 @@ export async function readLocalConfig(): Promise<LocalConfig | null> {
     if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
       return null;
     }
+    // biome-ignore lint/nursery/useErrorCause: cause passed as 4th positional arg to CliError
     throw new CliError(
       ErrorCodes.CONFIG_READ_ERROR,
       `Failed to read local config: ${localConfigPath}`,
       'Check file permissions',
+      err,
     );
   }
 
   let parsed: LocalConfig;
   try {
     parsed = (parse(raw) as LocalConfig) ?? {};
-  } catch {
+  } catch (err) {
+    // biome-ignore lint/nursery/useErrorCause: cause passed as 4th positional arg to CliError
     throw new CliError(
       ErrorCodes.CONFIG_INVALID,
       `Failed to parse .notion.yaml`,
       'Check that the file contains valid YAML',
+      err,
     );
   }
 

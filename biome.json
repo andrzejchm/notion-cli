@@ -16,7 +16,79 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "recommended": true,
+
+      "correctness": {
+        "recommended": true,
+        "noUnusedImports": "error",
+        "noUnusedVariables": "error",
+        "noUnusedFunctionParameters": "error",
+        "noUnusedPrivateClassMembers": "error",
+        "useExhaustiveDependencies": "off",
+        "noNodejsModules": "off"
+      },
+
+      "suspicious": {
+        "recommended": true,
+        "noExplicitAny": "error",
+        "noConsole": "warn"
+      },
+
+      "style": {
+        "recommended": true,
+        "useImportType": "error",
+        "useNodejsImportProtocol": "error",
+        "useNumberNamespace": "error",
+        "useThrowNewError": "error",
+        "useThrowOnlyError": "error",
+        "noNonNullAssertion": "error",
+        "useConst": "error",
+        "useDefaultParameterLast": "error",
+        "noParameterAssign": "error",
+        "useShorthandAssign": "error",
+        "noCommonJs": "error",
+        "useExportType": "error",
+        "useConsistentTypeDefinitions": "error",
+        "useEnumInitializers": "error",
+        "useSelfClosingElements": "off",
+        "noDefaultExport": "off",
+        "noEnum": "off",
+        "noProcessEnv": "off"
+      },
+
+      "complexity": {
+        "recommended": true,
+        "noForEach": "warn",
+        "useOptionalChain": "error",
+        "noUselessUndefinedInitialization": "error",
+        "noUselessStringConcat": "error",
+        "noExcessiveCognitiveComplexity": {
+          "level": "warn",
+          "options": { "maxAllowedComplexity": 25 }
+        },
+        "useArrowFunction": "error"
+      },
+
+      "performance": {
+        "recommended": true,
+        "noAccumulatingSpread": "warn",
+        "noDelete": "error"
+      },
+
+      "security": {
+        "recommended": true,
+        "noGlobalEval": "error"
+      },
+
+      "nursery": {
+        "noFloatingPromises": "warn",
+        "useExplicitType": "off",
+        "noShadow": "warn",
+        "noUselessReturn": "warn",
+        "useAwaitThenable": "warn",
+        "useErrorCause": "error",
+        "useFind": "warn"
+      }
     }
   },
   "javascript": {

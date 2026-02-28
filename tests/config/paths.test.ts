@@ -7,8 +7,9 @@ describe('getConfigDir', () => {
   const originalXdg = process.env.XDG_CONFIG_HOME;
 
   afterEach(() => {
-    // Restore env
+    // Restore env — delete is required here; = undefined coerces to string "undefined" in process.env
     if (originalXdg === undefined) {
+      // biome-ignore lint/performance/noDelete: process.env requires delete to truly unset a variable
       delete process.env.XDG_CONFIG_HOME;
     } else {
       process.env.XDG_CONFIG_HOME = originalXdg;
@@ -21,11 +22,13 @@ describe('getConfigDir', () => {
   });
 
   it('falls back to ~/.config/notion-cli when XDG_CONFIG_HOME is not set', () => {
+    // biome-ignore lint/performance/noDelete: process.env requires delete to truly unset a variable
     delete process.env.XDG_CONFIG_HOME;
     expect(getConfigDir()).toBe(join(homedir(), '.config', 'notion-cli'));
   });
 
   it('getConfigPath appends config.yaml to config dir', () => {
+    // biome-ignore lint/performance/noDelete: process.env requires delete to truly unset a variable
     delete process.env.XDG_CONFIG_HOME;
     expect(getConfigPath()).toBe(join(getConfigDir(), 'config.yaml'));
   });
