@@ -19,11 +19,13 @@ jobs:
     needs: ci
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write  # needed to create GitHub releases
       id-token: write  # for npm provenance
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # full history needed for changelog generation
 
       - uses: actions/setup-node@v4
         with:
@@ -41,3 +43,60 @@ jobs:
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          CURRENT_TAG="${GITHUB_REF_NAME}"
+          PREV_TAG=$(git tag --sort=-version:refname | grep -v "^${CURRENT_TAG}$" | head -1)
+
+          if [ -z "$PREV_TAG" ]; then
+            COMMITS=$(git log --pretty=format:"%s" HEAD)
+          else
+            COMMITS=$(git log --pretty=format:"%s" "${PREV_TAG}..HEAD")
+          fi
+
+          declare -A sections
+          sections[feat]="### Features"
+          sections[fix]="### Bug Fixes"
+          sections[perf]="### Performance"
+          sections[refactor]="### Refactoring"
+          sections[docs]="### Documentation"
+          sections[chore]="### Chores"
+          sections[ci]="### CI"
+          sections[test]="### Tests"
+
+          NOTES=""
+          for type in feat fix perf refactor docs chore ci test; do
+            HEADER="${sections[$type]}"
+            LINES=$(echo "$COMMITS" | grep -E "^${type}(\(.+\))?(!)?:" | sed "s/^${type}\(.*\): /- /" || true)
+            if [ -n "$LINES" ]; then
+              NOTES="${NOTES}${HEADER}\n${LINES}\n\n"
+            fi
+          done
+
+          # Uncategorized commits
+          UNCATEGORIZED=$(echo "$COMMITS" | grep -vE "^(feat|fix|perf|refactor|docs|chore|ci|test)(\(.+\))?(!)?:" || true)
+          if [ -n "$UNCATEGORIZED" ]; then
+            NOTES="${NOTES}### Other\n$(echo "$UNCATEGORIZED" | sed 's/^/- /')\n\n"
+          fi
+
+          if [ -z "$NOTES" ]; then
+            NOTES="No notable changes."
+          fi
+
+          if [ -n "$PREV_TAG" ]; then
+            COMPARE_URL="https://github.com/${{ github.repository }}/compare/${PREV_TAG}...${CURRENT_TAG}"
+            NOTES="${NOTES}**Full diff:** ${COMPARE_URL}"
+          fi
+
+          printf '%s' "$NOTES" > /tmp/release-notes.md
+          echo "prev_tag=$PREV_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --notes-file /tmp/release-notes.md
