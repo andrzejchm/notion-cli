@@ -125,6 +125,15 @@ interface CallbackContext {
   resolve: (result: OAuthFlowResult) => void;
   reject: (err: unknown) => void;
   server: ReturnType<typeof createServer>;
+  sockets: Set<import('node:net').Socket>;
+}
+
+function closeServer(ctx: CallbackContext, cb: () => void): void {
+  for (const socket of ctx.sockets) {
+    socket.destroy();
+  }
+  ctx.sockets.clear();
+  ctx.server.close(cb);
 }
 
 function handleCallbackRequest(
@@ -153,7 +162,7 @@ function handleCallbackRequest(
         '<html><body><h1>Access Denied</h1><p>You cancelled the Notion OAuth request. You can close this tab.</p></body></html>',
       );
       if (ctx.timeoutHandle) clearTimeout(ctx.timeoutHandle);
-      ctx.server.close(() => {
+      closeServer(ctx, () => {
         ctx.reject(
           new CliError(
             ErrorCodes.AUTH_INVALID,
@@ -179,7 +188,7 @@ function handleCallbackRequest(
         '<html><body><h1>Security Error</h1><p>State mismatch — possible CSRF attempt. You can close this tab.</p></body></html>',
       );
       if (ctx.timeoutHandle) clearTimeout(ctx.timeoutHandle);
-      ctx.server.close(() => {
+      closeServer(ctx, () => {
         ctx.reject(
           new CliError(
             ErrorCodes.AUTH_INVALID,
@@ -198,7 +207,7 @@ function handleCallbackRequest(
       '<html><body><h1>Authenticated!</h1><p>You can close this tab and return to the terminal.</p></body></html>',
     );
     if (ctx.timeoutHandle) clearTimeout(ctx.timeoutHandle);
-    ctx.server.close(() => {
+    closeServer(ctx, () => {
       ctx.resolve({ code, state: returnedState });
     });
   } catch {
@@ -243,12 +252,18 @@ export async function runOAuthFlow(options?: {
       reject,
       // assigned below after server is created
       server: null as unknown as ReturnType<typeof createServer>,
+      sockets: new Set(),
     };
 
     const server = createServer((req, res) =>
       handleCallbackRequest(req, res, ctx),
     );
     ctx.server = server;
+
+    server.on('connection', (socket) => {
+      ctx.sockets.add(socket);
+      socket.once('close', () => ctx.sockets.delete(socket));
+    });
 
     server.on('error', (err) => {
       if (ctx.settled) return;
@@ -281,7 +296,7 @@ export async function runOAuthFlow(options?: {
       ctx.timeoutHandle = setTimeout(() => {
         if (ctx.settled) return;
         ctx.settled = true;
-        server.close(() => {
+        closeServer(ctx, () => {
           reject(
             new CliError(
               ErrorCodes.AUTH_INVALID,
