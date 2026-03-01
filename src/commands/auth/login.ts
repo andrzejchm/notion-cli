@@ -66,10 +66,11 @@ export function loginCommand(): Command {
 
           let profileName = opts.profile;
           if (!profileName) {
-            const suggested = workspaceName
-              .toLowerCase()
-              .replace(/[^a-z0-9]+/g, '-')
-              .replace(/^-|-$/g, '') || 'default';
+            const suggested =
+              workspaceName
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-|-$/g, '') || 'default';
             profileName = await input({
               message: 'Profile name to save this account under:',
               default: suggested,
@@ -88,7 +89,10 @@ export function loginCommand(): Command {
           // Set as active if it's the first profile saved
           if (isFirst) {
             const updated = await readGlobalConfig();
-            await writeGlobalConfig({ ...updated, active_profile: profileName });
+            await writeGlobalConfig({
+              ...updated,
+              active_profile: profileName,
+            });
           }
 
           stderrWrite(
@@ -97,7 +101,9 @@ export function loginCommand(): Command {
           stderrWrite(dim(`Saved as profile "${profileName}".`));
           if (!isFirst && !isUpdate) {
             stderrWrite(
-              dim(`Run "notion auth use ${profileName}" to switch to this profile.`),
+              dim(
+                `Run "notion auth use ${profileName}" to switch to this profile.`,
+              ),
             );
           }
           stderrWrite(
