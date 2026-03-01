@@ -16,8 +16,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/andrzejchm/
 
 ```bash
 # Homebrew (recommended)
-brew tap andrzejchm/notion-cli
-brew install notion-cli
+brew update && brew tap andrzejchm/notion-cli && brew install notion-cli
 
 # npm (alternative)
 npm install -g @andrzejchm/notion-cli
