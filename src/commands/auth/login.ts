@@ -1,6 +1,6 @@
-import { select } from '@inquirer/prompts';
+import { input, select } from '@inquirer/prompts';
 import { Command } from 'commander';
-import { readGlobalConfig } from '../../config/config.js';
+import { readGlobalConfig, writeGlobalConfig } from '../../config/config.js';
 import { CliError } from '../../errors/cli-error.js';
 import { ErrorCodes } from '../../errors/codes.js';
 import { withErrorHandling } from '../../errors/error-handler.js';
@@ -55,21 +55,51 @@ export function loginCommand(): Command {
         });
 
         if (method === 'oauth') {
-          let profileName = opts.profile;
-          if (!profileName) {
-            const config = await readGlobalConfig();
-            profileName = config.active_profile ?? 'default';
-          }
-
           const result = await runOAuthFlow({ manual: opts.manual });
           const response = await exchangeCode(result.code);
-          await saveOAuthTokens(profileName, response);
 
           const userName = response.owner?.user?.name ?? 'unknown user';
           const workspaceName = response.workspace_name ?? 'unknown workspace';
+
+          const config = await readGlobalConfig();
+          const existingProfiles = config.profiles ?? {};
+
+          let profileName = opts.profile;
+          if (!profileName) {
+            const suggested = workspaceName
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/^-|-$/g, '') || 'default';
+            profileName = await input({
+              message: 'Profile name to save this account under:',
+              default: suggested,
+            });
+          }
+
+          const isUpdate = Boolean(existingProfiles[profileName]);
+          const isFirst = Object.keys(existingProfiles).length === 0;
+
+          if (isUpdate) {
+            stderrWrite(dim(`Updating existing profile "${profileName}"...`));
+          }
+
+          await saveOAuthTokens(profileName, response);
+
+          // Set as active if it's the first profile saved
+          if (isFirst) {
+            const updated = await readGlobalConfig();
+            await writeGlobalConfig({ ...updated, active_profile: profileName });
+          }
+
           stderrWrite(
             success(`✓ Logged in as ${userName} to workspace ${workspaceName}`),
           );
+          stderrWrite(dim(`Saved as profile "${profileName}".`));
+          if (!isFirst && !isUpdate) {
+            stderrWrite(
+              dim(`Run "notion auth use ${profileName}" to switch to this profile.`),
+            );
+          }
           stderrWrite(
             dim(
               'Your comments and pages will now be attributed to your Notion account.',

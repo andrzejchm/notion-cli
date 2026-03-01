@@ -60,6 +60,10 @@ Progress: [███████████████████████
 
 ## Accumulated Context
 
+### Roadmap Evolution
+
+- Phase 9 added: unify auth flow for the notion cli, should be a single command to start it, make explicit what are the downsides of each form
+
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
