@@ -56,41 +56,46 @@ jobs:
             COMMITS=$(git log --pretty=format:"%s" "${PREV_TAG}..HEAD")
           fi
 
-          declare -A sections
-          sections[feat]="### Features"
-          sections[fix]="### Bug Fixes"
-          sections[perf]="### Performance"
-          sections[refactor]="### Refactoring"
-          sections[docs]="### Documentation"
-          sections[chore]="### Chores"
-          sections[ci]="### CI"
-          sections[test]="### Tests"
+          OUT=/tmp/release-notes.md
+          > "$OUT"
 
-          NOTES=""
-          for type in feat fix perf refactor docs chore ci test; do
-            HEADER="${sections[$type]}"
-            LINES=$(echo "$COMMITS" | grep -E "^${type}(\(.+\))?(!)?:" | sed "s/^${type}\(.*\): /- /" || true)
-            if [ -n "$LINES" ]; then
-              NOTES="${NOTES}${HEADER}\n${LINES}\n\n"
+          write_section() {
+            local header="$1" type="$2"
+            local lines
+            lines=$(echo "$COMMITS" | grep -E "^${type}(\(.+\))?(!)?:" | sed "s/^${type}[^:]*: /- /" || true)
+            if [ -n "$lines" ]; then
+              echo "$header" >> "$OUT"
+              echo "$lines" >> "$OUT"
+              echo "" >> "$OUT"
             fi
-          done
+          }
+
+          write_section "### Features"      feat
+          write_section "### Bug Fixes"     fix
+          write_section "### Performance"   perf
+          write_section "### Refactoring"   refactor
+          write_section "### Documentation" docs
+          write_section "### Chores"        chore
+          write_section "### CI"            ci
+          write_section "### Tests"         test
 
           # Uncategorized commits
           UNCATEGORIZED=$(echo "$COMMITS" | grep -vE "^(feat|fix|perf|refactor|docs|chore|ci|test)(\(.+\))?(!)?:" || true)
           if [ -n "$UNCATEGORIZED" ]; then
-            NOTES="${NOTES}### Other\n$(echo "$UNCATEGORIZED" | sed 's/^/- /')\n\n"
+            echo "### Other" >> "$OUT"
+            echo "$UNCATEGORIZED" | sed 's/^/- /' >> "$OUT"
+            echo "" >> "$OUT"
           fi
 
-          if [ -z "$NOTES" ]; then
-            NOTES="No notable changes."
+          if [ ! -s "$OUT" ]; then
+            echo "No notable changes." >> "$OUT"
           fi
 
           if [ -n "$PREV_TAG" ]; then
             COMPARE_URL="https://github.com/${{ github.repository }}/compare/${PREV_TAG}...${CURRENT_TAG}"
-            NOTES="${NOTES}**Full diff:** ${COMPARE_URL}"
+            echo "**Full diff:** ${COMPARE_URL}" >> "$OUT"
           fi
 
-          printf '%s' "$NOTES" > /tmp/release-notes.md
           echo "prev_tag=$PREV_TAG" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub release
