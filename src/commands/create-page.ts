@@ -1,5 +1,4 @@
 import { Command } from 'commander';
-import { mdToBlocks } from '../blocks/md-to-blocks.js';
 import { resolveToken } from '../config/token.js';
 import { withErrorHandling } from '../errors/error-handler.js';
 import { createNotionClient } from '../notion/client.js';
@@ -40,9 +39,13 @@ export function createPageCommand(): Command {
             markdown = await readStdin();
           }
 
-          const blocks = mdToBlocks(markdown);
           const parentUuid = toUuid(parseNotionId(opts.parent));
-          const url = await createPage(client, parentUuid, opts.title, blocks);
+          const url = await createPage(
+            client,
+            parentUuid,
+            opts.title,
+            markdown,
+          );
 
           process.stdout.write(`${url}\n`);
         },

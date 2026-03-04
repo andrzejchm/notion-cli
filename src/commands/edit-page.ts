@@ -6,7 +6,7 @@ import { withErrorHandling } from '../errors/error-handler.js';
 import { createNotionClient } from '../notion/client.js';
 import { parseNotionId, toUuid } from '../notion/url-parser.js';
 import { reportTokenSource } from '../output/stderr.js';
-import { appendMarkdown } from '../services/write.service.js';
+import { replaceMarkdown } from '../services/write.service.js';
 
 async function readStdin(): Promise<string> {
   const chunks: Buffer[] = [];
@@ -16,13 +16,18 @@ async function readStdin(): Promise<string> {
   return Buffer.concat(chunks).toString('utf-8');
 }
 
-export function appendCommand(): Command {
-  const cmd = new Command('append');
+export function editPageCommand(): Command {
+  const cmd = new Command('edit-page');
 
   cmd
-    .description('append markdown content to a Notion page')
+    .description(
+      'replace the entire content of a Notion page with new markdown',
+    )
     .argument('<id/url>', 'Notion page ID or URL')
-    .option('-m, --message <markdown>', 'markdown content to append')
+    .option(
+      '-m, --message <markdown>',
+      'new markdown content for the page body',
+    )
     .action(
       withErrorHandling(async (idOrUrl: string, opts: { message?: string }) => {
         const { token, source } = await resolveToken();
@@ -34,25 +39,27 @@ export function appendCommand(): Command {
           markdown = opts.message;
         } else if (!process.stdin.isTTY) {
           markdown = await readStdin();
+          if (!markdown.trim()) {
+            throw new CliError(
+              ErrorCodes.INVALID_ARG,
+              'No content provided (stdin was empty).',
+              'Pass markdown via -m/--message or pipe non-empty content through stdin',
+            );
+          }
         } else {
           throw new CliError(
             ErrorCodes.INVALID_ARG,
-            'No content to append.',
+            'No content provided.',
             'Pass markdown via -m/--message or pipe it through stdin',
           );
-        }
-
-        if (!markdown.trim()) {
-          process.stdout.write('Nothing to append.\n');
-          return;
         }
 
         const pageId = parseNotionId(idOrUrl);
         const uuid = toUuid(pageId);
 
-        await appendMarkdown(client, uuid, markdown);
+        await replaceMarkdown(client, uuid, markdown);
 
-        process.stdout.write('Appended.\n');
+        process.stdout.write('Page content replaced.\n');
       }),
     );
 

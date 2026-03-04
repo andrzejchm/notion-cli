@@ -13,6 +13,7 @@ import { completionCommand } from './commands/completion.js';
 import { createPageCommand } from './commands/create-page.js';
 import { dbQueryCommand } from './commands/db/query.js';
 import { dbSchemaCommand } from './commands/db/schema.js';
+import { editPageCommand } from './commands/edit-page.js';
 import { initCommand } from './commands/init.js';
 import { lsCommand } from './commands/ls.js';
 import { openCommand } from './commands/open.js';
@@ -106,6 +107,7 @@ program.addCommand(readCommand());
 program.addCommand(commentAddCommand());
 program.addCommand(appendCommand());
 program.addCommand(createPageCommand());
+program.addCommand(editPageCommand());
 
 // --- Database ---
 const dbCmd = new Command('db').description('Database operations');
