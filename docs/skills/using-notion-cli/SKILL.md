@@ -25,6 +25,7 @@ Pages must be shared with your integration: open page → `⋯` → **Add connec
 **Integration capabilities** (set at notion.so/profile/integrations/internal → your integration → Capabilities):
 - Read-only commands: **Read content** only
 - `notion append`, `notion create-page`: also need **Insert content**
+- `notion edit-page`, `notion append --after`: also need **Update content** + **Insert content**
 - `notion comment`: also need **Read comments** + **Insert comments**
 
 ---
@@ -116,6 +117,29 @@ URL=$(notion create-page --parent <id|url> --title "Summary" -m "...")   # captu
 notion comment <id|url> -m "Reviewed and approved."      # add comment to a page
 ```
 
+#### Surgical Editing
+
+Insert content at a specific location or replace a targeted section instead of the whole page.
+
+```bash
+# Append after a matched section (inserts new blocks right after the match)
+notion append <id|url> -m "New content" --after "## Status...end of status"
+
+# Replace an entire page's content
+notion edit-page <id|url> -m "# Replacement\nNew full-page content"
+
+# Replace only a matched section (leaves the rest of the page intact)
+notion edit-page <id|url> -m "## Updated Section\nNew text" --range "## Old Section...old last line"
+
+# Replace a section that contains child pages/databases (requires explicit opt-in)
+notion edit-page <id|url> -m "## Clean Slate" --range "## Archive...end" --allow-deleting-content
+
+# Pipe replacement content from a file
+cat updated-section.md | notion edit-page <id|url> --range "## Notes...end of notes"
+```
+
+> **Ellipsis selector format:** Both `--after` and `--range` use the same selector syntax: `"start text...end text"`. Provide ~10 characters from the beginning of the target content, three dots (`...`), then ~10 characters from the end. The selector matches the first contiguous range of blocks whose text starts with the prefix and ends with the suffix. Run `notion read <id>` first to see the exact content and pick accurate selectors.
+
 ---
 
 ## ID Formats
@@ -155,6 +179,19 @@ echo "Created: $URL"
 
 # Pipe command output into a new page
 my-report-command | notion create-page --parent "$PAGE_ID" --title "Auto Report"
+
+# Surgically update a specific section of a page
+# 1. Read the page to find the section boundaries
+notion read "$PAGE_ID"
+# 2. Identify a selector from the output, e.g. the section starts with "## Status"
+#    and ends with "Blocked: none" — build the ellipsis selector from those
+# 3. Replace just that section
+notion edit-page "$PAGE_ID" -m "## Status\nAll tasks complete.\nBlocked: none" \
+  --range "## Status...Blocked: none"
+
+# Insert a new sub-section after an existing section
+notion append "$PAGE_ID" -m "## New Sub-section\nContent here" \
+  --after "## Existing Section...last line of section"
 ```
 
 ---
@@ -174,3 +211,7 @@ my-report-command | notion create-page --parent "$PAGE_ID" --title "Auto Report"
 **`notion comment` returns "Insufficient permissions"** — Enable **Read comments** + **Insert comments** in integration capabilities: notion.so/profile/integrations/internal → your integration → Capabilities.
 
 **`notion append` / `notion create-page` returns "Insufficient permissions"** — Enable **Insert content** in integration capabilities.
+
+**`notion edit-page` returns "Insufficient permissions"** — Enable **Update content** in integration capabilities.
+
+**`--range` / `--after` selector not found** — Run `notion read <id>` to see the exact page content. The selector must match real text: `"start...end"` with ~10 chars from the beginning and end of the target range.
