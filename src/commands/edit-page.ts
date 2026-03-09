@@ -3,7 +3,10 @@ import { resolveToken } from '../config/token.js';
 import { CliError } from '../errors/cli-error.js';
 import { ErrorCodes } from '../errors/codes.js';
 import { withErrorHandling } from '../errors/error-handler.js';
-import { isNotionValidationError } from '../errors/notion-errors.js';
+import {
+  isNotionValidationError,
+  SELECTOR_HINT,
+} from '../errors/notion-errors.js';
 import { createNotionClient } from '../notion/client.js';
 import { parseNotionId, toUuid } from '../notion/url-parser.js';
 import { reportTokenSource } from '../output/stderr.js';
@@ -87,7 +90,7 @@ export function editPageCommand(): Command {
             throw new CliError(
               ErrorCodes.INVALID_ARG,
               `Selector not found: "${opts.range}". ${(error as Error).message}`,
-              'Use an ellipsis selector matching page content, e.g. "## Section...end of section". Run `notion read <id>` to see the page content.',
+              SELECTOR_HINT,
               error,
             );
           }
