@@ -1,5 +1,17 @@
 import type { Client } from '@notionhq/client';
 
+export interface AppendOptions {
+  /** Insert after this content selector instead of appending to the end. */
+  after?: string;
+}
+
+export interface ReplaceOptions {
+  /** Use this content_range instead of auto-building one from the full page. */
+  range?: string;
+  /** Allow deleting content. Defaults to true for full-page, false for partial. */
+  allowDeletingContent?: boolean;
+}
+
 export async function addComment(
   client: Client,
   pageId: string,
@@ -29,16 +41,23 @@ export async function addComment(
 /**
  * Appends markdown content to an existing Notion page using the native
  * PATCH /v1/pages/:id/markdown endpoint (insert_content mode).
+ *
+ * When `options.after` is provided, content is inserted after the matched
+ * selector instead of at the end of the page.
  */
 export async function appendMarkdown(
   client: Client,
   pageId: string,
   markdown: string,
+  options?: AppendOptions,
 ): Promise<void> {
   await client.pages.updateMarkdown({
     page_id: pageId,
     type: 'insert_content',
-    insert_content: { content: markdown },
+    insert_content: {
+      content: markdown,
+      ...(options?.after != null && { after: options.after }),
+    },
   });
 }
 
@@ -87,22 +106,29 @@ function buildContentRange(content: string): string {
 }
 
 /**
- * Replaces the entire content of a Notion page with the given markdown.
+ * Replaces page content with the given markdown.
  *
- * replace_content_range requires a content_range selector, so we first fetch
- * the current markdown to build a selector that spans the full document.
- * If the page is empty we fall back to insert_content instead.
+ * When called without options, replaces the entire page (existing behavior).
+ * When `options.range` is provided, uses it as the content_range for a
+ * surgical partial replace.
+ *
+ * `allow_deleting_content` defaults to `true` for full-page replaces and
+ * `false` for partial (range-scoped) replaces, but can be overridden via
+ * `options.allowDeletingContent`.
+ *
+ * If the page is empty, falls back to insert_content regardless of options.
  */
 export async function replaceMarkdown(
   client: Client,
   pageId: string,
   newMarkdown: string,
+  options?: ReplaceOptions,
 ): Promise<void> {
   const current = await client.pages.retrieveMarkdown({ page_id: pageId });
   const currentContent = current.markdown.trim();
 
   if (!currentContent) {
-    // Empty page — just insert
+    // Empty page — just insert (range is irrelevant)
     if (newMarkdown.trim()) {
       await client.pages.updateMarkdown({
         page_id: pageId,
@@ -113,13 +139,17 @@ export async function replaceMarkdown(
     return;
   }
 
+  const contentRange = options?.range ?? buildContentRange(currentContent);
+  const allowDeletingContent =
+    options?.allowDeletingContent ?? options?.range == null;
+
   await client.pages.updateMarkdown({
     page_id: pageId,
     type: 'replace_content_range',
     replace_content_range: {
       content: newMarkdown,
-      content_range: buildContentRange(currentContent),
-      allow_deleting_content: true,
+      content_range: contentRange,
+      allow_deleting_content: allowDeletingContent,
     },
   });
 }
