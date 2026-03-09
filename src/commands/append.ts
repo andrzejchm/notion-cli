@@ -16,6 +16,15 @@ async function readStdin(): Promise<string> {
   return Buffer.concat(chunks).toString('utf-8');
 }
 
+function isValidationError(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { code: unknown }).code === 'validation_error'
+  );
+}
+
 export function appendCommand(): Command {
   const cmd = new Command('append');
 
@@ -23,37 +32,58 @@ export function appendCommand(): Command {
     .description('append markdown content to a Notion page')
     .argument('<id/url>', 'Notion page ID or URL')
     .option('-m, --message <markdown>', 'markdown content to append')
+    .option(
+      '--after <selector>',
+      'insert after matched content — ellipsis selector, e.g. "## Section...end of section"',
+    )
     .action(
-      withErrorHandling(async (idOrUrl: string, opts: { message?: string }) => {
-        const { token, source } = await resolveToken();
-        reportTokenSource(source);
-        const client = createNotionClient(token);
+      withErrorHandling(
+        async (idOrUrl: string, opts: { message?: string; after?: string }) => {
+          const { token, source } = await resolveToken();
+          reportTokenSource(source);
+          const client = createNotionClient(token);
 
-        let markdown = '';
-        if (opts.message) {
-          markdown = opts.message;
-        } else if (!process.stdin.isTTY) {
-          markdown = await readStdin();
-        } else {
-          throw new CliError(
-            ErrorCodes.INVALID_ARG,
-            'No content to append.',
-            'Pass markdown via -m/--message or pipe it through stdin',
-          );
-        }
+          let markdown = '';
+          if (opts.message) {
+            markdown = opts.message;
+          } else if (!process.stdin.isTTY) {
+            markdown = await readStdin();
+          } else {
+            throw new CliError(
+              ErrorCodes.INVALID_ARG,
+              'No content to append.',
+              'Pass markdown via -m/--message or pipe it through stdin',
+            );
+          }
 
-        if (!markdown.trim()) {
-          process.stdout.write('Nothing to append.\n');
-          return;
-        }
+          if (!markdown.trim()) {
+            process.stdout.write('Nothing to append.\n');
+            return;
+          }
 
-        const pageId = parseNotionId(idOrUrl);
-        const uuid = toUuid(pageId);
+          const pageId = parseNotionId(idOrUrl);
+          const uuid = toUuid(pageId);
 
-        await appendMarkdown(client, uuid, markdown);
+          try {
+            await appendMarkdown(client, uuid, markdown, {
+              ...(opts.after != null && { after: opts.after }),
+            });
+          } catch (error) {
+            if (opts.after && isValidationError(error)) {
+              // biome-ignore lint/nursery/useErrorCause: cause passed as 4th positional arg to CliError
+              throw new CliError(
+                ErrorCodes.INVALID_ARG,
+                `Selector not found: "${opts.after}"`,
+                'Use an ellipsis selector matching page content, e.g. "## Section Title...last line of section". Run `notion read <id>` to see the page content.',
+                error,
+              );
+            }
+            throw error;
+          }
 
-        process.stdout.write('Appended.\n');
-      }),
+          process.stdout.write('Appended.\n');
+        },
+      ),
     );
 
   return cmd;
