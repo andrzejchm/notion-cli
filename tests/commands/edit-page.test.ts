@@ -279,6 +279,27 @@ describe('editPageCommand', () => {
       expect(stderrOutput).toContain('No content provided');
     });
 
+    it('reads content from stdin when not TTY and no -m', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: false,
+        configurable: true,
+      });
+      mockReadStdin.mockResolvedValueOnce('# From stdin');
+
+      const cmd = editPageCommand();
+      await cmd.parseAsync([
+        'node',
+        'test',
+        'b55c9c91384d452b81dbd1ef79372b75',
+      ]);
+
+      expect(mockReplaceMarkdown).toHaveBeenCalledWith(
+        expect.anything(),
+        'b55c9c91-384d-452b-81db-d1ef79372b75',
+        '# From stdin',
+      );
+    });
+
     it('throws CliError when no -m and stdin is empty', async () => {
       Object.defineProperty(process.stdin, 'isTTY', {
         value: false,

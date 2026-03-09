@@ -1,4 +1,6 @@
 import type { Client } from '@notionhq/client';
+import { CliError } from '../errors/cli-error.js';
+import { ErrorCodes } from '../errors/codes.js';
 
 export interface AppendOptions {
   /** Insert after this content selector instead of appending to the end. */
@@ -128,6 +130,14 @@ export async function replaceMarkdown(
   const current = await client.pages.retrieveMarkdown({ page_id: pageId });
   const currentContent = current.markdown.trim();
 
+  if (current.truncated && !options?.range) {
+    throw new CliError(
+      ErrorCodes.API_ERROR,
+      'Page content is too large for full-page replace (markdown was truncated by the API).',
+      'Use --range to replace a specific section instead.',
+    );
+  }
+
   if (!currentContent) {
     // Empty page — just insert (range is irrelevant)
     if (options?.range) {
@@ -180,5 +190,6 @@ export async function createPage(
     },
     ...(markdown.trim() ? { markdown } : {}),
   });
-  return (response as { url: string }).url;
+  const url = 'url' in response ? response.url : response.id;
+  return url;
 }

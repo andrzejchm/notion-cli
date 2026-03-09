@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { mockAppendMarkdown } = vi.hoisted(() => ({
+const { mockAppendMarkdown, mockReadStdin } = vi.hoisted(() => ({
   mockAppendMarkdown: vi.fn(),
+  mockReadStdin: vi.fn(),
 }));
 
 vi.mock('../../src/config/token.js', () => ({
@@ -20,6 +21,10 @@ vi.mock('../../src/services/write.service.js', () => ({
 
 vi.mock('../../src/output/stderr.js', () => ({
   reportTokenSource: vi.fn(),
+}));
+
+vi.mock('../../src/utils/stdin.js', () => ({
+  readStdin: mockReadStdin,
 }));
 
 import { appendCommand } from '../../src/commands/append.js';
@@ -120,6 +125,24 @@ describe('append command', () => {
     expect(stderrOutput).toContain('Selector not found');
     expect(stderrOutput).toContain('ellipsis');
     expect(stderrOutput).toContain('notion read');
+  });
+
+  it('reads content from stdin when not TTY and no -m', async () => {
+    Object.defineProperty(process.stdin, 'isTTY', {
+      value: false,
+      configurable: true,
+    });
+    mockReadStdin.mockResolvedValueOnce('# From stdin');
+
+    const cmd = appendCommand();
+    await cmd.parseAsync(['node', 'test', VALID_PAGE_ID]);
+
+    expect(mockAppendMarkdown).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.any(String),
+      '# From stdin',
+      undefined,
+    );
   });
 
   it('lets validation_error without --after pass through to withErrorHandling', async () => {

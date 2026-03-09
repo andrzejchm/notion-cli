@@ -1,5 +1,6 @@
 import type { Client } from '@notionhq/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { CliError } from '../../src/errors/cli-error.js';
 import {
   addComment,
   appendMarkdown,
@@ -204,6 +205,38 @@ describe('replaceMarkdown', () => {
     expect(stderrSpy).not.toHaveBeenCalled();
   });
 
+  it('throws CliError when content is truncated and no range is provided', async () => {
+    vi.mocked(client.pages.retrieveMarkdown).mockResolvedValue({
+      markdown: 'Some content',
+      truncated: true,
+    } as never);
+
+    await expect(
+      replaceMarkdown(client, 'page-id', '# New content'),
+    ).rejects.toThrow(CliError);
+
+    await expect(
+      replaceMarkdown(client, 'page-id', '# New content'),
+    ).rejects.toThrow('too large for full-page replace');
+  });
+
+  it('does not throw when content is truncated but range is provided', async () => {
+    vi.mocked(client.pages.retrieveMarkdown).mockResolvedValue({
+      markdown: 'Some content',
+      truncated: true,
+    } as never);
+
+    await replaceMarkdown(client, 'page-id', '# Updated section', {
+      range: '## Section...end',
+    });
+
+    expect(client.pages.updateMarkdown).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'replace_content_range',
+      }),
+    );
+  });
+
   it('does nothing on empty page when new markdown is also empty', async () => {
     vi.mocked(client.pages.retrieveMarkdown).mockResolvedValue({
       markdown: '',
@@ -212,6 +245,47 @@ describe('replaceMarkdown', () => {
     await replaceMarkdown(client, 'page-id', '   ');
 
     expect(client.pages.updateMarkdown).not.toHaveBeenCalled();
+  });
+
+  it('uses full content as range when content is shorter than START_LEN * 2 (30 chars)', async () => {
+    const shortContent = 'abcdefghijklmnopqrstuvwxyz012';
+    vi.mocked(client.pages.retrieveMarkdown).mockResolvedValue({
+      markdown: shortContent,
+    } as never);
+
+    await replaceMarkdown(client, 'page-id', '# New content');
+
+    const call = vi.mocked(client.pages.updateMarkdown).mock.calls[0][0] as {
+      replace_content_range: { content_range: string };
+    };
+    expect(call.replace_content_range.content_range).toBe(shortContent);
+  });
+
+  it('grows end snippet to disambiguate repetitive suffixes', async () => {
+    const content = '# Title\n\nHello world. End. End. End.';
+    vi.mocked(client.pages.retrieveMarkdown).mockResolvedValue({
+      markdown: content,
+    } as never);
+
+    await replaceMarkdown(client, 'page-id', '# New content');
+
+    const call = vi.mocked(client.pages.updateMarkdown).mock.calls[0][0] as {
+      replace_content_range: { content_range: string };
+    };
+    const range = call.replace_content_range.content_range;
+    // Range must start with the first 15 chars
+    expect(range.startsWith('# Title\n\nHello')).toBe(true);
+    // Range must contain the ellipsis separator
+    expect(range).toContain('...');
+    // The end snippet must be unique in the content (appears exactly once)
+    const endSnippet = range.split('...').slice(1).join('...');
+    let count = 0;
+    let pos = content.indexOf(endSnippet, 0);
+    while (pos !== -1) {
+      count++;
+      pos = content.indexOf(endSnippet, pos + endSnippet.length);
+    }
+    expect(count).toBe(1);
   });
 });
 
@@ -278,6 +352,12 @@ describe('createPage', () => {
         markdown: '# Content',
       }),
     );
+  });
+
+  it('omits markdown field when content is whitespace-only', async () => {
+    await createPage(client, 'parent-id', 'My Page', '   ');
+    const call = vi.mocked(client.pages.create).mock.calls[0][0];
+    expect(call).not.toHaveProperty('markdown');
   });
 
   it('returns the page URL from the response', async () => {
