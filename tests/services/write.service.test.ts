@@ -35,6 +35,16 @@ describe('appendMarkdown', () => {
     });
   });
 
+  it('calls SDK with no after field when called with empty options', async () => {
+    await appendMarkdown(client, 'page-id', '# Hello', {});
+
+    expect(client.pages.updateMarkdown).toHaveBeenCalledWith({
+      page_id: 'page-id',
+      type: 'insert_content',
+      insert_content: { content: '# Hello' },
+    });
+  });
+
   it('calls SDK with insert_content.after when after option is provided', async () => {
     await appendMarkdown(client, 'page-id', '# Hello', {
       after: 'foo...bar',
@@ -50,12 +60,17 @@ describe('appendMarkdown', () => {
 
 describe('replaceMarkdown', () => {
   let client: Client;
+  let stderrSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     client = createMockClient();
+    stderrSpy = vi
+      .spyOn(process.stderr, 'write')
+      .mockImplementation(() => true);
   });
 
   afterEach(() => {
+    stderrSpy.mockRestore();
     vi.clearAllMocks();
   });
 
@@ -157,6 +172,30 @@ describe('replaceMarkdown', () => {
       type: 'insert_content',
       insert_content: { content: '# New content' },
     });
+  });
+
+  it('warns to stderr when --range is ignored on empty page', async () => {
+    vi.mocked(client.pages.retrieveMarkdown).mockResolvedValue({
+      markdown: '   ',
+    } as never);
+
+    await replaceMarkdown(client, 'page-id', '# New content', {
+      range: '## Section...end',
+    });
+
+    expect(stderrSpy).toHaveBeenCalledWith(
+      'Warning: page is empty, --range ignored, content inserted as-is.\n',
+    );
+  });
+
+  it('does not warn to stderr on empty page when no range is provided', async () => {
+    vi.mocked(client.pages.retrieveMarkdown).mockResolvedValue({
+      markdown: '',
+    } as never);
+
+    await replaceMarkdown(client, 'page-id', '# New content');
+
+    expect(stderrSpy).not.toHaveBeenCalled();
   });
 
   it('does nothing on empty page when new markdown is also empty', async () => {

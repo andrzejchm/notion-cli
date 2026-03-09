@@ -129,6 +129,11 @@ export async function replaceMarkdown(
 
   if (!currentContent) {
     // Empty page — just insert (range is irrelevant)
+    if (options?.range) {
+      process.stderr.write(
+        'Warning: page is empty, --range ignored, content inserted as-is.\n',
+      );
+    }
     if (newMarkdown.trim()) {
       await client.pages.updateMarkdown({
         page_id: pageId,

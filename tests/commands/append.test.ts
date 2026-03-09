@@ -1,6 +1,8 @@
-import type { Client } from '@notionhq/client';
-import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+const { mockAppendMarkdown } = vi.hoisted(() => ({
+  mockAppendMarkdown: vi.fn(),
+}));
 
 vi.mock('../../src/config/token.js', () => ({
   resolveToken: vi
@@ -9,11 +11,11 @@ vi.mock('../../src/config/token.js', () => ({
 }));
 
 vi.mock('../../src/notion/client.js', () => ({
-  createNotionClient: vi.fn(),
+  createNotionClient: vi.fn(() => ({})),
 }));
 
 vi.mock('../../src/services/write.service.js', () => ({
-  appendMarkdown: vi.fn().mockResolvedValue(undefined),
+  appendMarkdown: mockAppendMarkdown,
 }));
 
 vi.mock('../../src/output/stderr.js', () => ({
@@ -21,55 +23,27 @@ vi.mock('../../src/output/stderr.js', () => ({
 }));
 
 import { appendCommand } from '../../src/commands/append.js';
-import { createNotionClient } from '../../src/notion/client.js';
-import { appendMarkdown } from '../../src/services/write.service.js';
 
 const VALID_PAGE_ID = 'aabbccddaabbccddaabbccddaabbccdd';
 
-function createMockClient() {
-  return {
-    pages: {
-      updateMarkdown: vi.fn().mockResolvedValue({}),
-    },
-  } as unknown as Client;
-}
-
-/**
- * Runs the append command programmatically and captures output/errors.
- * Commander calls process.exit on errors, so we override exitOverride.
- */
-async function runAppend(args: string[]): Promise<{ stdout: string }> {
-  const cmd = appendCommand();
-  const parent = new Command();
-  parent.addCommand(cmd);
-
-  // Capture stdout
-  let stdout = '';
-  const originalWrite = process.stdout.write;
-  process.stdout.write = ((chunk: string) => {
-    stdout += chunk;
-    return true;
-  }) as typeof process.stdout.write;
-
-  // Prevent Commander from calling process.exit
-  parent.exitOverride();
-
-  try {
-    await parent.parseAsync(['node', 'test', 'append', ...args]);
-  } finally {
-    process.stdout.write = originalWrite;
-  }
-
-  return { stdout };
-}
-
 describe('append command', () => {
-  let mockClient: Client;
+  let stdoutSpy: ReturnType<typeof vi.spyOn>;
+  let stderrSpy: ReturnType<typeof vi.spyOn>;
+  let exitSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    mockClient = createMockClient();
-    vi.mocked(createNotionClient).mockReturnValue(mockClient);
-    // Simulate non-TTY so stdin path isn't triggered unexpectedly
+    vi.clearAllMocks();
+    mockAppendMarkdown.mockResolvedValue(undefined);
+    stdoutSpy = vi
+      .spyOn(process.stdout, 'write')
+      .mockImplementation(() => true);
+    stderrSpy = vi
+      .spyOn(process.stderr, 'write')
+      .mockImplementation(() => true);
+    exitSpy = vi
+      .spyOn(process, 'exit')
+      .mockImplementation(() => undefined as never);
+    // Simulate TTY so stdin path isn't triggered unexpectedly
     Object.defineProperty(process.stdin, 'isTTY', {
       value: true,
       configurable: true,
@@ -77,22 +51,28 @@ describe('append command', () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    stdoutSpy.mockRestore();
+    stderrSpy.mockRestore();
+    exitSpy.mockRestore();
   });
 
   it('appends without --after (no regression)', async () => {
-    await runAppend([VALID_PAGE_ID, '-m', 'hello world']);
+    const cmd = appendCommand();
+    await cmd.parseAsync(['node', 'test', VALID_PAGE_ID, '-m', 'hello world']);
 
-    expect(appendMarkdown).toHaveBeenCalledWith(
-      mockClient,
+    expect(mockAppendMarkdown).toHaveBeenCalledWith(
+      expect.anything(),
       expect.any(String),
       'hello world',
-      {},
+      undefined,
     );
   });
 
   it('passes after option to appendMarkdown when --after is provided', async () => {
-    await runAppend([
+    const cmd = appendCommand();
+    await cmd.parseAsync([
+      'node',
+      'test',
       VALID_PAGE_ID,
       '-m',
       'new content',
@@ -100,8 +80,8 @@ describe('append command', () => {
       '## Section...end of section',
     ]);
 
-    expect(appendMarkdown).toHaveBeenCalledWith(
-      mockClient,
+    expect(mockAppendMarkdown).toHaveBeenCalledWith(
+      expect.anything(),
       expect.any(String),
       'new content',
       { after: '## Section...end of section' },
@@ -121,38 +101,41 @@ describe('append command', () => {
       new Error('Could not find content matching selector'),
       { code: 'validation_error' },
     );
-    vi.mocked(appendMarkdown).mockRejectedValueOnce(validationError);
+    mockAppendMarkdown.mockRejectedValueOnce(validationError);
 
-    // withErrorHandling calls process.exit, so we need to intercept
-    const stderrChunks: string[] = [];
-    const originalStderrWrite = process.stderr.write;
-    const originalExit = process.exit;
-    process.stderr.write = ((chunk: string) => {
-      stderrChunks.push(chunk);
-      return true;
-    }) as typeof process.stderr.write;
-    process.exit = (() => {
-      throw new Error('EXIT');
-    }) as typeof process.exit;
+    const cmd = appendCommand();
+    await cmd.parseAsync([
+      'node',
+      'test',
+      VALID_PAGE_ID,
+      '-m',
+      'content',
+      '--after',
+      'bad...selector',
+    ]);
 
-    try {
-      await runAppend([
-        VALID_PAGE_ID,
-        '-m',
-        'content',
-        '--after',
-        'bad...selector',
-      ]);
-    } catch {
-      // Expected — either Commander exitOverride or our process.exit mock
-    } finally {
-      process.stderr.write = originalStderrWrite;
-      process.exit = originalExit;
-    }
-
-    const stderrOutput = stderrChunks.join('');
+    expect(exitSpy).toHaveBeenCalledWith(1);
+    const stderrOutput = stderrSpy.mock.calls.map((c) => String(c[0])).join('');
     expect(stderrOutput).toContain('INVALID_ARG');
+    expect(stderrOutput).toContain('Selector not found');
     expect(stderrOutput).toContain('ellipsis');
     expect(stderrOutput).toContain('notion read');
+  });
+
+  it('lets validation_error without --after pass through to withErrorHandling', async () => {
+    const validationError = Object.assign(new Error('Some validation error'), {
+      code: 'validation_error',
+    });
+    mockAppendMarkdown.mockRejectedValueOnce(validationError);
+
+    const cmd = appendCommand();
+    await cmd.parseAsync(['node', 'test', VALID_PAGE_ID, '-m', 'content']);
+
+    expect(exitSpy).toHaveBeenCalledWith(1);
+    const stderrOutput = stderrSpy.mock.calls.map((c) => String(c[0])).join('');
+    // Should NOT contain our custom selector-specific message
+    expect(stderrOutput).not.toContain('Selector not found');
+    // Should contain the raw error message from withErrorHandling
+    expect(stderrOutput).toContain('Some validation error');
   });
 });

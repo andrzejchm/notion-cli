@@ -3,27 +3,12 @@ import { resolveToken } from '../config/token.js';
 import { CliError } from '../errors/cli-error.js';
 import { ErrorCodes } from '../errors/codes.js';
 import { withErrorHandling } from '../errors/error-handler.js';
+import { isNotionValidationError } from '../errors/notion-errors.js';
 import { createNotionClient } from '../notion/client.js';
 import { parseNotionId, toUuid } from '../notion/url-parser.js';
 import { reportTokenSource } from '../output/stderr.js';
 import { appendMarkdown } from '../services/write.service.js';
-
-async function readStdin(): Promise<string> {
-  const chunks: Buffer[] = [];
-  for await (const chunk of process.stdin) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-  }
-  return Buffer.concat(chunks).toString('utf-8');
-}
-
-function isValidationError(error: unknown): boolean {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    (error as { code: unknown }).code === 'validation_error'
-  );
-}
+import { readStdin } from '../utils/stdin.js';
 
 export function appendCommand(): Command {
   const cmd = new Command('append');
@@ -65,16 +50,19 @@ export function appendCommand(): Command {
           const uuid = toUuid(pageId);
 
           try {
-            await appendMarkdown(client, uuid, markdown, {
-              ...(opts.after != null && { after: opts.after }),
-            });
+            await appendMarkdown(
+              client,
+              uuid,
+              markdown,
+              opts.after ? { after: opts.after } : undefined,
+            );
           } catch (error) {
-            if (opts.after && isValidationError(error)) {
+            if (opts.after && isNotionValidationError(error)) {
               // biome-ignore lint/nursery/useErrorCause: cause passed as 4th positional arg to CliError
               throw new CliError(
                 ErrorCodes.INVALID_ARG,
-                `Selector not found: "${opts.after}"`,
-                'Use an ellipsis selector matching page content, e.g. "## Section Title...last line of section". Run `notion read <id>` to see the page content.',
+                `Selector not found: "${opts.after}". ${(error as Error).message}`,
+                'Use an ellipsis selector matching page content, e.g. "## Section...end of section". Run `notion read <id>` to see the page content.',
                 error,
               );
             }

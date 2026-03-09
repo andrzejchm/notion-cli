@@ -3,31 +3,17 @@ import { resolveToken } from '../config/token.js';
 import { CliError } from '../errors/cli-error.js';
 import { ErrorCodes } from '../errors/codes.js';
 import { withErrorHandling } from '../errors/error-handler.js';
+import { isNotionValidationError } from '../errors/notion-errors.js';
 import { createNotionClient } from '../notion/client.js';
 import { parseNotionId, toUuid } from '../notion/url-parser.js';
 import { reportTokenSource } from '../output/stderr.js';
 import { replaceMarkdown } from '../services/write.service.js';
-
-async function readStdin(): Promise<string> {
-  const chunks: Buffer[] = [];
-  for await (const chunk of process.stdin) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-  }
-  return Buffer.concat(chunks).toString('utf-8');
-}
+import { readStdin } from '../utils/stdin.js';
 
 interface EditPageOpts {
   message?: string;
   range?: string;
-  allowDeletingContent?: true;
-}
-
-function isValidationError(error: unknown): boolean {
-  return (
-    error instanceof Error &&
-    'code' in error &&
-    (error as { code: unknown }).code === 'validation_error'
-  );
+  allowDeletingContent?: boolean;
 }
 
 export function editPageCommand(): Command {
@@ -79,27 +65,26 @@ export function editPageCommand(): Command {
         const pageId = parseNotionId(idOrUrl);
         const uuid = toUuid(pageId);
 
-        if (opts.range) {
-          try {
+        try {
+          if (opts.range) {
             await replaceMarkdown(client, uuid, markdown, {
               range: opts.range,
               allowDeletingContent: opts.allowDeletingContent ?? false,
             });
-          } catch (error) {
-            if (isValidationError(error)) {
-              // biome-ignore lint/nursery/useErrorCause: cause passed as 4th positional arg to CliError
-              throw new CliError(
-                ErrorCodes.API_ERROR,
-                (error as Error).message,
-                'The --range selector must use the ellipsis format: "start text...end text". ' +
-                  'Run `notion read <id>` to inspect the page content and find the correct selector.',
-                error,
-              );
-            }
-            throw error;
+          } else {
+            await replaceMarkdown(client, uuid, markdown);
           }
-        } else {
-          await replaceMarkdown(client, uuid, markdown);
+        } catch (error) {
+          if (opts.range && isNotionValidationError(error)) {
+            // biome-ignore lint/nursery/useErrorCause: cause passed as 4th positional arg to CliError
+            throw new CliError(
+              ErrorCodes.INVALID_ARG,
+              `Selector not found: "${opts.range}". ${(error as Error).message}`,
+              'Use an ellipsis selector matching page content, e.g. "## Section...end of section". Run `notion read <id>` to see the page content.',
+              error,
+            );
+          }
+          throw error;
         }
 
         process.stdout.write('Page content replaced.\n');

@@ -165,12 +165,13 @@ describe('editPageCommand', () => {
       const stderrOutput = stderrSpy.mock.calls
         .map((c) => String(c[0]))
         .join('');
-      expect(stderrOutput).toContain('API_ERROR');
+      expect(stderrOutput).toContain('INVALID_ARG');
+      expect(stderrOutput).toContain('Selector not found');
       expect(stderrOutput).toContain(
         'Could not find content matching selector',
       );
       expect(stderrOutput).toContain('notion read');
-      expect(stderrOutput).toContain('...');
+      expect(stderrOutput).toContain('ellipsis');
     });
 
     it('lets non-validation errors pass through to withErrorHandling', async () => {

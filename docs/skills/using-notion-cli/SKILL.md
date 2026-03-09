@@ -24,8 +24,8 @@ Pages must be shared with your integration: open page → `⋯` → **Add connec
 
 **Integration capabilities** (set at notion.so/profile/integrations/internal → your integration → Capabilities):
 - Read-only commands: **Read content** only
-- `notion append`, `notion create-page`: also need **Insert content**
-- `notion edit-page`, `notion append --after`: also need **Update content** + **Insert content**
+- `notion append`, `notion append --after`, `notion create-page`: also need **Insert content**
+- `notion edit-page`: also need **Update content** + **Insert content**
 - `notion comment`: also need **Read comments** + **Insert comments**
 
 ---
