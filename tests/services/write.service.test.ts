@@ -1,7 +1,9 @@
 import type { Client } from '@notionhq/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  addComment,
   appendMarkdown,
+  createPage,
   replaceMarkdown,
 } from '../../src/services/write.service.js';
 
@@ -10,6 +12,10 @@ function createMockClient() {
     pages: {
       updateMarkdown: vi.fn().mockResolvedValue({}),
       retrieveMarkdown: vi.fn().mockResolvedValue({ markdown: '' }),
+      create: vi.fn().mockResolvedValue({ url: 'https://notion.so/new-page' }),
+    },
+    comments: {
+      create: vi.fn().mockResolvedValue({}),
     },
   } as unknown as Client;
 }
@@ -206,5 +212,81 @@ describe('replaceMarkdown', () => {
     await replaceMarkdown(client, 'page-id', '   ');
 
     expect(client.pages.updateMarkdown).not.toHaveBeenCalled();
+  });
+});
+
+describe('addComment', () => {
+  let client: Client;
+
+  beforeEach(() => {
+    client = createMockClient();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('calls client.comments.create with correct page_id and text content', async () => {
+    await addComment(client, 'page-id', 'Hello world');
+
+    expect(client.comments.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        parent: { page_id: 'page-id' },
+        rich_text: [
+          expect.objectContaining({
+            type: 'text',
+            text: { content: 'Hello world', link: null },
+          }),
+        ],
+      }),
+    );
+  });
+
+  it('includes display_name when asUser option is provided', async () => {
+    await addComment(client, 'page-id', 'User comment', { asUser: true });
+
+    expect(client.comments.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        display_name: { type: 'user' },
+      }),
+    );
+  });
+});
+
+describe('createPage', () => {
+  let client: Client;
+
+  beforeEach(() => {
+    client = createMockClient();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('calls client.pages.create with parent, title, and markdown', async () => {
+    await createPage(client, 'parent-id', 'My Page', '# Content');
+
+    expect(client.pages.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        parent: { type: 'page_id', page_id: 'parent-id' },
+        properties: {
+          title: {
+            title: [{ type: 'text', text: { content: 'My Page', link: null } }],
+          },
+        },
+        markdown: '# Content',
+      }),
+    );
+  });
+
+  it('returns the page URL from the response', async () => {
+    vi.mocked(client.pages.create).mockResolvedValue({
+      url: 'https://notion.so/my-page-123',
+    } as never);
+
+    const url = await createPage(client, 'parent-id', 'My Page', '# Content');
+
+    expect(url).toBe('https://notion.so/my-page-123');
   });
 });

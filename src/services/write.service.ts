@@ -65,11 +65,12 @@ export async function appendMarkdown(
  * Returns the number of non-overlapping occurrences of `sub` in `text`.
  */
 function countOccurrences(text: string, sub: string): number {
+  if (!sub) return 0;
   let count = 0;
   let pos = text.indexOf(sub, 0);
   while (pos !== -1) {
     count++;
-    pos = text.indexOf(sub, pos + 1);
+    pos = text.indexOf(sub, pos + sub.length);
   }
   return count;
 }

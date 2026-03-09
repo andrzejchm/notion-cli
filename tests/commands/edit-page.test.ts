@@ -143,6 +143,24 @@ describe('editPageCommand', () => {
     });
   });
 
+  describe('--allow-deleting-content without --range', () => {
+    it('warns to stderr that the flag has no effect', async () => {
+      const cmd = editPageCommand();
+      await cmd.parseAsync([
+        'node',
+        'test',
+        'b55c9c91384d452b81dbd1ef79372b75',
+        '-m',
+        '# New content',
+        '--allow-deleting-content',
+      ]);
+
+      expect(stderrSpy).toHaveBeenCalledWith(
+        'Warning: --allow-deleting-content has no effect without --range (full-page replace always allows deletion).\n',
+      );
+    });
+  });
+
   describe('validation_error handling', () => {
     it('surfaces validation_error as CliError with selector format hint', async () => {
       const notionError = new Error('Could not find content matching selector');

@@ -42,10 +42,17 @@ export function editPageCommand(): Command {
         reportTokenSource(source);
         const client = createNotionClient(token);
 
+        if (opts.allowDeletingContent && !opts.range) {
+          process.stderr.write(
+            'Warning: --allow-deleting-content has no effect without --range (full-page replace always allows deletion).\n',
+          );
+        }
+
         let markdown = '';
         if (opts.message) {
           markdown = opts.message;
         } else if (!process.stdin.isTTY) {
+          // Stricter than `append` — empty content would wipe the page, so we reject it.
           markdown = await readStdin();
           if (!markdown.trim()) {
             throw new CliError(
