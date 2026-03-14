@@ -227,3 +227,26 @@ If no integration test files exist yet, the command succeeds with "no test suite
 | `404 Not Found` for a fixture | Verify the page/database ID is correct and the root page is shared with the integration |
 | Tests time out | Default timeout is 30s per test. Check your network connection. |
 | `NOTION_API_TOKEN` not set errors | Make sure you're using `npx dotenv -e .env.test --` before the npm command |
+
+## CI Configuration
+
+Integration tests run automatically on **pull requests** via the `integration` job in `.github/workflows/ci.yml`. They do not run on push events, so pushes to `main` are never blocked by integration test failures.
+
+The job depends on the `ci` job (typecheck, lint, unit tests) passing first, then builds the CLI and runs `npm run test:integration`.
+
+### Required GitHub Actions Secrets
+
+Configure these secrets in your repository under **Settings → Secrets and variables → Actions**:
+
+| Secret | Description |
+|---|---|
+| `NOTION_TEST_TOKEN` | Internal integration token (starts with `ntn_`) |
+| `NOTION_TEST_ROOT_PAGE_ID` | ID of the `notion-cli-test-fixtures` root page |
+| `NOTION_FIXTURE_RICH_PAGE_ID` | ID of the `Test: Rich Content` page |
+| `NOTION_FIXTURE_SIMPLE_PAGE_ID` | ID of the `Test: Simple Page` page |
+| `NOTION_FIXTURE_EMPTY_PAGE_ID` | ID of the `Test: Empty Page` page |
+| `NOTION_FIXTURE_TASK_DB_ID` | ID of the `Test: Task Database` database |
+| `NOTION_FIXTURE_EMPTY_DB_ID` | ID of the `Test: Empty Database` database |
+| `NOTION_FIXTURE_COMMENTS_PAGE_ID` | ID of the `Test: Comments Page` page |
+
+These are the same values from your `.env.test` file (see [section 5](#5-configure-envtest) above). Each secret maps to the corresponding environment variable that the test runner expects.
