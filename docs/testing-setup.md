@@ -216,8 +216,6 @@ This command:
 2. Runs `vitest run --config vitest.config.integration.ts`
 3. Vitest picks up test files from `tests/integration/**/*.test.ts`
 
-If no integration test files exist yet, the command succeeds with "no test suites found" (the vitest config uses `passWithNoTests` behavior by default).
-
 ### Troubleshooting
 
 | Problem | Solution |
