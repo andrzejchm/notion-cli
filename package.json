@@ -43,7 +43,8 @@
     "format:write": "biome format --write .",
     "check": "biome check .",
     "check:write": "biome check --write .",
-    "ci": "npm run typecheck && npm run check"
+    "ci": "npm run typecheck && npm run check",
+    "test:integration": "vitest run --config vitest.config.integration.ts"
   },
   "dependencies": {
     "@inquirer/prompts": "^8.3.0",
@@ -56,6 +57,7 @@
     "@biomejs/biome": "^2.4.4",
     "@commander-js/extra-typings": "^14.0.0",
     "@types/node": "^22",
+    "dotenv-cli": "^11.0.0",
     "tsup": "^8.5.0",
     "typescript": "~5.9.0",
     "vitest": "^4.0.0"
