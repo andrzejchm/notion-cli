@@ -208,6 +208,12 @@ Write commands require additional capabilities — enable in your integration se
 
 ---
 
+## Roadmap & Feature Parity
+
+See [docs/FEATURE-PARITY.md](docs/FEATURE-PARITY.md) for a detailed comparison of this CLI's capabilities against the official Notion MCP server, with prioritized gaps and planned additions.
+
+---
+
 ## License
 
 MIT © [Andrzej Chmielewski](https://github.com/andrzejchm)
