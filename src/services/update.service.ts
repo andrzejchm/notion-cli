@@ -104,19 +104,34 @@ export function buildPropertyUpdate(
   }
 }
 
+/** A minimal property schema entry — just needs a `type` field. */
+export interface PropertySchema {
+  type: string;
+}
+
 /**
- * Parses all `--prop "Name=Value"` strings against the page property schema
- * and returns a Notion API `properties` object ready for pages.update().
+ * Parses all `--prop "Name=Value"` strings against a property schema
+ * and returns a Notion API `properties` object ready for pages.update() or pages.create().
+ *
+ * Accepts either a PageObjectResponse (for backward compat) or a plain schema map.
  *
  * Throws CliError(INVALID_ARG) when:
  * - a prop string has no "=" separator
- * - the property name is not found in the page schema
+ * - the property name is not found in the schema
  * - the property type is unsupported
  */
 export function buildPropertiesPayload(
   propStrings: string[],
-  page: PageObjectResponse,
+  schemaOrPage: Record<string, PropertySchema> | PageObjectResponse,
 ): Record<string, unknown> {
+  // Normalize: extract .properties if it's a PageObjectResponse
+  const isPage =
+    'object' in schemaOrPage &&
+    (schemaOrPage as PageObjectResponse).object === 'page';
+  const schema: Record<string, PropertySchema> = isPage
+    ? (schemaOrPage as PageObjectResponse).properties
+    : (schemaOrPage as Record<string, PropertySchema>);
+
   const result: Record<string, unknown> = {};
 
   for (const propString of propStrings) {
@@ -132,9 +147,9 @@ export function buildPropertiesPayload(
     const propName = propString.slice(0, eqIdx).trim();
     const value = propString.slice(eqIdx + 1);
 
-    const schemaProp = page.properties[propName];
+    const schemaProp = schema[propName];
     if (!schemaProp) {
-      const available = Object.keys(page.properties).join(', ');
+      const available = Object.keys(schema).join(', ');
       throw new CliError(
         ErrorCodes.INVALID_ARG,
         `Property "${propName}" not found on this page.`,

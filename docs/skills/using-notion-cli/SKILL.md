@@ -24,7 +24,8 @@ Pages must be shared with your integration: open page → `⋯` → **Add connec
 
 **Integration capabilities** (set at notion.so/profile/integrations/internal → your integration → Capabilities):
 - Read-only commands: **Read content** only
-- `notion append`, `notion append --after`, `notion create-page`: also need **Insert content**
+- `notion append`, `notion append --after`, `notion create-page` (page parent): also need **Insert content**
+- `notion create-page --parent <db>`: also need **Insert content** + database must be shared with integration
 - `notion edit-page`: also need **Update content** + **Insert content**
 - `notion comment`: also need **Read comments** + **Insert comments**
 
@@ -109,13 +110,37 @@ notion db query <id|url> --json | jq '.[] | .properties'
 notion append <id|url> -m "## Heading\nParagraph text"   # append markdown blocks to a page
 notion append <id|url> -m "$(cat notes.md)"              # append file contents
 
-notion create-page --parent <id|url> --title "Title"               # title-only page
-notion create-page --parent <id|url> --title "Title" -m "# Hello"  # with markdown body
-echo "# Content" | notion create-page --parent <id|url> --title "Title"  # from stdin
+notion create-page --parent <page-id|url> --title "Title"               # child page under a page
+notion create-page --parent <page-id|url> --title "Title" -m "# Hello"  # with markdown body
+echo "# Content" | notion create-page --parent <page-id|url> --title "Title"  # from stdin
+
+# Create entry in a database (auto-detected from parent ID)
+notion create-page --parent <db-id|url> --title "New Task"
+notion create-page --parent <db-id|url> --title "Task" --prop "Status=To Do" --prop "Priority=High"
+notion create-page --parent <db-id|url> --title "Task" --prop "Due=2026-04-01" -m "# Details"
+
+# Icon and cover
+notion create-page --parent <id|url> --title "Page" --icon "🚀"
+notion create-page --parent <id|url> --title "Page" --cover "https://example.com/img.jpg"
+
 URL=$(notion create-page --parent <id|url> --title "Summary" -m "...")   # capture URL
 
 notion comment <id|url> -m "Reviewed and approved."      # add comment to a page
 ```
+
+#### Updating Page Properties
+
+```bash
+notion update <id|url> --prop "Status=Done"                      # set a single property
+notion update <id|url> --prop "Status=Done" --prop "Priority=1"  # multiple properties
+notion update <id|url> --title "New Title"                       # set the title
+notion update <id|url> --prop "Due=2026-04-01"                   # set a date
+notion update <id|url> --prop "Tags=bug,urgent"                  # multi-select (comma-separated)
+notion update <id|url> --prop "Done=true"                        # checkbox (true/yes/false/no)
+notion update <id|url> --prop "Status="                          # clear a property (empty value)
+```
+
+Supported types: title, rich_text, select, status, multi_select, number, checkbox, url, email, phone_number, date.
 
 #### Surgical Editing
 
@@ -196,6 +221,12 @@ notion edit-page "$PAGE_ID" --find "Status: In Progress" --replace "Status: Done
 notion edit-page "$PAGE_ID" \
   --find "Status: In Progress" --replace "Status: Done" \
   --find "Blocked: yes" --replace "Blocked: none"
+
+# Create a database entry with properties
+DB_ID=$(notion search "Tasks" --type database | jq -r '.[0].id')
+notion db schema "$DB_ID"   # check property names and valid values first
+notion create-page --parent "$DB_ID" --title "Fix login bug" \
+  --prop "Status=To Do" --prop "Priority=High" --prop "Due=2026-04-15"
 
 # Insert a new sub-section after an existing section
 notion append "$PAGE_ID" -m "## New Sub-section\nContent here" \
