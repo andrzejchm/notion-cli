@@ -9,6 +9,8 @@ import { paginateResults } from '../output/paginate.js';
 
 export interface DatabaseSchema {
   id: string;
+  /** The parent database page ID (needed for pages.create API). */
+  databaseId: string;
   title: string;
   // Property configs from schema — maps prop name to its type and options
   properties: Record<string, DatabasePropertyConfig>;
@@ -70,7 +72,17 @@ export async function fetchDatabaseSchema(
     }
   }
 
-  return { id: dbId, title, properties };
+  // The data source's parent contains the actual database page ID needed for
+  // the pages.create API endpoint (database_id ≠ data_source_id in SDK v5).
+  const databaseId =
+    'parent' in ds &&
+    ds.parent &&
+    typeof ds.parent === 'object' &&
+    'database_id' in ds.parent
+      ? (ds.parent as { database_id: string }).database_id
+      : dbId;
+
+  return { id: dbId, databaseId, title, properties };
 }
 
 export async function queryDatabase(

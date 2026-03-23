@@ -101,6 +101,7 @@ describe('createPageCommand', () => {
   it('creates a page in a database when parent is a database', async () => {
     mockFetchDatabaseSchema.mockResolvedValue({
       id: 'db-id',
+      databaseId: 'actual-database-page-id',
       title: 'Tasks',
       properties: {
         'Task Name': { id: 'title', name: 'Task Name', type: 'title' },
@@ -129,7 +130,7 @@ describe('createPageCommand', () => {
     );
     expect(mockCreatePageInDatabase).toHaveBeenCalledWith(
       expect.anything(),
-      'b55c9c91-384d-452b-81db-d1ef79372b75',
+      'actual-database-page-id',
       'Task Name',
       'My Task',
       { Status: { select: { name: 'Done' } } },
@@ -185,6 +186,7 @@ describe('createPageCommand', () => {
   it('passes icon and cover to createPageInDatabase for database parent', async () => {
     mockFetchDatabaseSchema.mockResolvedValue({
       id: 'db-id',
+      databaseId: 'actual-database-page-id',
       title: 'Tasks',
       properties: {
         Name: { id: 'title', name: 'Name', type: 'title' },
@@ -219,6 +221,7 @@ describe('createPageCommand', () => {
   it('creates a database page without --prop flags (title only)', async () => {
     mockFetchDatabaseSchema.mockResolvedValue({
       id: 'db-id',
+      databaseId: 'actual-database-page-id',
       title: 'Tasks',
       properties: {
         Name: { id: 'title', name: 'Name', type: 'title' },

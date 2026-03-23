@@ -517,7 +517,7 @@ describe('createPage', () => {
     expect(url).toBe('https://notion.so/my-page-123');
   });
 
-  it('passes emoji icon when icon is a single character', async () => {
+  it('passes emoji icon when icon is a simple emoji', async () => {
     await createPage(client, 'parent-id', 'My Page', '', {
       icon: '🚀',
     });
@@ -529,7 +529,43 @@ describe('createPage', () => {
     );
   });
 
-  it('passes external icon when icon is a URL', async () => {
+  it('passes emoji icon when icon is a flag emoji (multi-codepoint)', async () => {
+    await createPage(client, 'parent-id', 'My Page', '', {
+      icon: '🇺🇸',
+    });
+
+    expect(client.pages.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        icon: { type: 'emoji', emoji: '🇺🇸' },
+      }),
+    );
+  });
+
+  it('passes emoji icon when icon is a skin-toned emoji', async () => {
+    await createPage(client, 'parent-id', 'My Page', '', {
+      icon: '👋🏽',
+    });
+
+    expect(client.pages.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        icon: { type: 'emoji', emoji: '👋🏽' },
+      }),
+    );
+  });
+
+  it('passes emoji icon when icon is a ZWJ sequence emoji', async () => {
+    await createPage(client, 'parent-id', 'My Page', '', {
+      icon: '👨‍👩‍👧‍👦',
+    });
+
+    expect(client.pages.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        icon: { type: 'emoji', emoji: '👨‍👩‍👧‍👦' },
+      }),
+    );
+  });
+
+  it('passes external icon when icon is an https URL', async () => {
     await createPage(client, 'parent-id', 'My Page', '', {
       icon: 'https://example.com/icon.png',
     });
@@ -539,6 +575,21 @@ describe('createPage', () => {
         icon: {
           type: 'external',
           external: { url: 'https://example.com/icon.png' },
+        },
+      }),
+    );
+  });
+
+  it('passes external icon when icon is an http URL', async () => {
+    await createPage(client, 'parent-id', 'My Page', '', {
+      icon: 'http://example.com/icon.png',
+    });
+
+    expect(client.pages.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        icon: {
+          type: 'external',
+          external: { url: 'http://example.com/icon.png' },
         },
       }),
     );

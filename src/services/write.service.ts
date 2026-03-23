@@ -229,11 +229,11 @@ export interface IconCoverOptions {
 function buildIconCover(options?: IconCoverOptions): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   if (options?.icon) {
-    // Single character or emoji → emoji type; otherwise treat as external URL
-    if ([...options.icon].length === 1) {
-      result.icon = { type: 'emoji', emoji: options.icon };
-    } else {
+    const isUrl = /^https?:\/\//i.test(options.icon);
+    if (isUrl) {
       result.icon = { type: 'external', external: { url: options.icon } };
+    } else {
+      result.icon = { type: 'emoji', emoji: options.icon };
     }
   }
   if (options?.cover) {

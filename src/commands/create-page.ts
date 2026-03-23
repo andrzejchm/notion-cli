@@ -101,7 +101,7 @@ export function createPageCommand(): Command {
 
           const url = await createPageInDatabase(
             client,
-            parentUuid,
+            dbSchema.databaseId,
             titlePropName,
             opts.title,
             extraProperties,
