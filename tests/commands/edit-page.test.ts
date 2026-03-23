@@ -258,6 +258,71 @@ describe('editPageCommand', () => {
     });
   });
 
+  describe('empty -m with --range (section deletion)', () => {
+    it('succeeds with empty -m when --range and --allow-deleting-content are set', async () => {
+      const cmd = editPageCommand();
+      await cmd.parseAsync([
+        'node',
+        'test',
+        'b55c9c91384d452b81dbd1ef79372b75',
+        '-m',
+        '',
+        '--range',
+        '## Old Section...end of old',
+        '--allow-deleting-content',
+      ]);
+
+      expect(mockReplaceMarkdown).toHaveBeenCalledWith(
+        expect.anything(),
+        'b55c9c91-384d-452b-81db-d1ef79372b75',
+        '',
+        { range: '## Old Section...end of old', allowDeletingContent: true },
+      );
+      expect(stdoutSpy).toHaveBeenCalledWith('Page content replaced.\n');
+    });
+
+    it('succeeds with empty -m when --range is set (without --allow-deleting-content)', async () => {
+      const cmd = editPageCommand();
+      await cmd.parseAsync([
+        'node',
+        'test',
+        'b55c9c91384d452b81dbd1ef79372b75',
+        '-m',
+        '',
+        '--range',
+        '## Old Section...end of old',
+      ]);
+
+      expect(mockReplaceMarkdown).toHaveBeenCalledWith(
+        expect.anything(),
+        'b55c9c91-384d-452b-81db-d1ef79372b75',
+        '',
+        { range: '## Old Section...end of old', allowDeletingContent: false },
+      );
+      expect(stdoutSpy).toHaveBeenCalledWith('Page content replaced.\n');
+    });
+
+    it('fails with empty -m when no --range is set (would wipe entire page)', async () => {
+      const cmd = editPageCommand();
+      await cmd.parseAsync([
+        'node',
+        'test',
+        'b55c9c91384d452b81dbd1ef79372b75',
+        '-m',
+        '',
+      ]);
+
+      expect(exitSpy).toHaveBeenCalledWith(1);
+      const stderrOutput = stderrSpy.mock.calls
+        .map((c) => String(c[0]))
+        .join('');
+      expect(stderrOutput).toContain(
+        'Empty content would wipe the entire page',
+      );
+      expect(mockReplaceMarkdown).not.toHaveBeenCalled();
+    });
+  });
+
   describe('stdin content', () => {
     it('throws CliError when no -m and stdin is TTY', async () => {
       Object.defineProperty(process.stdin, 'isTTY', {

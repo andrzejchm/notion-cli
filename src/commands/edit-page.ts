@@ -52,10 +52,9 @@ export function editPageCommand(): Command {
         }
 
         let markdown = '';
-        if (opts.message) {
+        if (opts.message !== undefined) {
           markdown = opts.message;
         } else if (!process.stdin.isTTY) {
-          // Stricter than `append` — empty content would wipe the page, so we reject it.
           markdown = await readStdin();
           if (!markdown.trim()) {
             throw new CliError(
@@ -69,6 +68,15 @@ export function editPageCommand(): Command {
             ErrorCodes.INVALID_ARG,
             'No content provided.',
             'Pass markdown via -m/--message or pipe it through stdin',
+          );
+        }
+
+        // Reject empty content for full-page replace (would wipe the page)
+        if (!markdown.trim() && !opts.range) {
+          throw new CliError(
+            ErrorCodes.INVALID_ARG,
+            'Empty content would wipe the entire page.',
+            'Use --range to target a specific section, or provide non-empty content',
           );
         }
 

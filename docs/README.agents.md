@@ -78,3 +78,37 @@ npm install -g @andrzejchm/notion-cli
 curl -fsSL https://raw.githubusercontent.com/andrzejchm/notion-cli/main/docs/skills/using-notion-cli/SKILL.md \
   -o ~/.config/opencode/skills/using-notion-cli/SKILL.md
 ```
+
+---
+
+## Editing Gotchas
+
+### Table selector gotcha
+
+Tables written as markdown (`| Col | Col |`) are returned by Notion as `<table>` HTML. When building `--range` selectors for table content, use the HTML form from `read` output, not the markdown form you wrote.
+
+```bash
+# Read the page to see actual format
+notion read $PAGE_ID
+# Selector must match the returned format:
+notion edit-page $PAGE_ID --range "## Data...</table>" -m "## Data\n\n| Name | Score |\n|------|-------|\n| Alice | 100 |"
+```
+
+### Code block selector gotcha
+
+Triple backticks (`` ``` ``) appear twice in every code block (opening + closing). A selector like `` ```python...``` `` will match multiple occurrences. Include content from inside the code block to disambiguate:
+
+```bash
+# BAD: matches 2+ occurrences
+notion edit-page $PAGE_ID --range '```python...```' -m '...'
+# GOOD: include unique content inside the block
+notion edit-page $PAGE_ID --range '```python\ndef hello...print("world")\n```' -m '...'
+```
+
+### Deleting a section
+
+Use empty `-m ""` with `--range` and `--allow-deleting-content`:
+
+```bash
+notion edit-page $PAGE_ID --range "## Old Section...end of old section" -m "" --allow-deleting-content
+```
