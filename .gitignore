@@ -3,6 +3,7 @@ dist/
 *.js.map
 .env
 .env.local
+.env.test
 *.tgz
 
 .opencode/

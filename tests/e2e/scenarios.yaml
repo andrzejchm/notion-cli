@@ -1,0 +1,63 @@
+scenarios:
+  - name: read-rich-content-page
+    description: Read a rich content page and verify markdown output contains expected structural elements
+    fixture: rich-content-page
+    setup:
+      - duplicate_fixture: rich-content-page
+    commands:
+      - run: "read {page_id}"
+        expect:
+          exit_code: 0
+          stdout_contains:
+            - "#"
+    cleanup:
+      - delete_page: "{page_id}"
+
+  - name: append-and-read-back
+    description: Append text to a simple page, then read it back and verify the appended content appears
+    fixture: simple-page
+    setup:
+      - duplicate_fixture: simple-page
+    commands:
+      - run: "append {page_id} -m \"e2e-append-marker-12345\""
+        expect:
+          exit_code: 0
+          stdout_contains:
+            - "Appended"
+      - run: "read {page_id}"
+        expect:
+          exit_code: 0
+          stdout_contains:
+            - "e2e-append-marker-12345"
+    cleanup:
+      - delete_page: "{page_id}"
+
+  - name: db-query-with-filter
+    description: Query the task database with a Status filter and verify matching rows appear while non-matching rows are excluded
+    fixture: task-database
+    setup:
+      - duplicate_fixture: task-database
+    commands:
+      - run: "db query {db_id} --filter \"Status=Done\""
+        expect:
+          exit_code: 0
+          stdout_contains:
+            - "Done"
+          stdout_not_contains:
+            - "No entries found"
+    cleanup:
+      - delete_page: "{db_id}"
+
+  - name: search-fixture-page
+    description: Search for a known fixture page by title and verify it appears in results
+    fixture: rich-content-page
+    setup:
+      - duplicate_fixture: rich-content-page
+    commands:
+      - run: "search \"{page_title}\""
+        expect:
+          exit_code: 0
+          stdout_contains:
+            - "{page_title}"
+    cleanup:
+      - delete_page: "{page_id}"
