@@ -109,7 +109,55 @@ function buildContentRange(content: string): string {
 }
 
 /**
- * Replaces page content with the given markdown.
+ * Search-and-replace content on a Notion page using the `update_content` API.
+ *
+ * Each update pairs an `oldStr` (text to find) with a `newStr` (replacement).
+ * When `replaceAll` is true, all occurrences of each `oldStr` are replaced.
+ */
+export async function searchAndReplace(
+  client: Client,
+  pageId: string,
+  updates: Array<{ oldStr: string; newStr: string }>,
+  options?: { replaceAll?: boolean; allowDeletingContent?: boolean },
+): Promise<void> {
+  await client.pages.updateMarkdown({
+    page_id: pageId,
+    type: 'update_content',
+    update_content: {
+      content_updates: updates.map((u) => ({
+        old_str: u.oldStr,
+        new_str: u.newStr,
+        ...(options?.replaceAll && { replace_all_matches: true }),
+      })),
+      ...(options?.allowDeletingContent && { allow_deleting_content: true }),
+    },
+  });
+}
+
+/**
+ * Replace the entire content of a Notion page using the `replace_content` API.
+ */
+export async function replacePageContent(
+  client: Client,
+  pageId: string,
+  newContent: string,
+  options?: { allowDeletingContent?: boolean },
+): Promise<void> {
+  await client.pages.updateMarkdown({
+    page_id: pageId,
+    type: 'replace_content',
+    replace_content: {
+      new_str: newContent,
+      ...(options?.allowDeletingContent && { allow_deleting_content: true }),
+    },
+  });
+}
+
+/**
+ * @deprecated Use `replacePageContent` for full-page replace or `searchAndReplace` for partial updates.
+ * Kept for backward compatibility with the `--range` flag.
+ *
+ * Replaces page content with the given markdown using the legacy `replace_content_range` API.
  *
  * When called without options, replaces the entire page (existing behavior).
  * When `options.range` is provided, uses it as the content_range for a

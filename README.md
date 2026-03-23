@@ -95,6 +95,8 @@ notion ls
 | `notion comments <id\|url>` | Read page comments |
 | `notion comment <id\|url> -m <text>` | Add a comment to a page |
 | `notion append <id\|url> -m <markdown>` | Append markdown blocks to a page |
+| `notion edit-page <id\|url> --find <old> --replace <new>` | Search-and-replace text on a page |
+| `notion edit-page <id\|url> -m <markdown>` | Replace entire page content |
 | `notion create-page --parent <id\|url> --title <title>` | Create a new page, prints URL |
 | `notion completion bash\|zsh\|fish` | Install shell tab completion |
 

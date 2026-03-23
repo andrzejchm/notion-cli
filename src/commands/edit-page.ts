@@ -10,11 +10,23 @@ import {
 import { createNotionClient } from '../notion/client.js';
 import { parseNotionId, toUuid } from '../notion/url-parser.js';
 import { reportTokenSource } from '../output/stderr.js';
-import { replaceMarkdown } from '../services/write.service.js';
+import {
+  replaceMarkdown,
+  replacePageContent,
+  searchAndReplace,
+} from '../services/write.service.js';
 import { readStdin } from '../utils/stdin.js';
+
+function collect(val: string, acc: string[]): string[] {
+  acc.push(val);
+  return acc;
+}
 
 interface EditPageOpts {
   message?: string;
+  find: string[];
+  replace: string[];
+  all?: boolean;
   range?: string;
   allowDeletingContent?: boolean;
 }
@@ -24,7 +36,7 @@ export function editPageCommand(): Command {
 
   cmd
     .description(
-      "replace a Notion page's content \u2014 full page or a targeted section",
+      "replace a Notion page's content — full page or a targeted section",
     )
     .argument('<id/url>', 'Notion page ID or URL')
     .option(
@@ -32,12 +44,25 @@ export function editPageCommand(): Command {
       'new markdown content for the page body',
     )
     .option(
+      '--find <text>',
+      'text to find (repeatable, pair with --replace)',
+      collect,
+      [],
+    )
+    .option(
+      '--replace <text>',
+      'replacement text (repeatable, pair with --find)',
+      collect,
+      [],
+    )
+    .option('--all', 'replace all matches of each --find pattern')
+    .option(
       '--range <selector>',
-      'ellipsis selector to replace only a section, e.g. "## My Section...last line"',
+      '[deprecated] ellipsis selector to replace only a section, e.g. "## My Section...last line"',
     )
     .option(
       '--allow-deleting-content',
-      'allow deletion when using --range (always true for full-page replace)',
+      'allow deletion of child pages/databases',
     )
     .action(
       withErrorHandling(async (idOrUrl: string, opts: EditPageOpts) => {
@@ -45,57 +70,81 @@ export function editPageCommand(): Command {
         reportTokenSource(source);
         const client = createNotionClient(token);
 
-        if (opts.allowDeletingContent && !opts.range) {
-          process.stderr.write(
-            'Warning: --allow-deleting-content has no effect without --range (full-page replace always allows deletion).\n',
-          );
+        const pageId = parseNotionId(idOrUrl);
+        const uuid = toUuid(pageId);
+
+        // Path 1: search-and-replace via --find/--replace
+        if (opts.find.length > 0) {
+          if (opts.find.length !== opts.replace.length) {
+            throw new CliError(
+              ErrorCodes.INVALID_ARG,
+              `Mismatched --find/--replace: got ${opts.find.length} --find and ${opts.replace.length} --replace flags.`,
+              'Provide the same number of --find and --replace flags, paired by position.',
+            );
+          }
+
+          const updates = opts.find.map((oldStr, i) => ({
+            oldStr,
+            newStr: opts.replace[i],
+          }));
+
+          await searchAndReplace(client, uuid, updates, {
+            replaceAll: opts.all ?? false,
+            allowDeletingContent: opts.allowDeletingContent ?? false,
+          });
+
+          process.stdout.write('Page content updated.\n');
+          return;
         }
 
+        // Resolve markdown content from -m or stdin
         let markdown = '';
         if (opts.message) {
           markdown = opts.message;
         } else if (!process.stdin.isTTY) {
-          // Stricter than `append` — empty content would wipe the page, so we reject it.
           markdown = await readStdin();
           if (!markdown.trim()) {
             throw new CliError(
               ErrorCodes.INVALID_ARG,
               'No content provided (stdin was empty).',
-              'Pass markdown via -m/--message or pipe non-empty content through stdin',
+              'Pass content via -m/--message for full replacement, --find/--replace for targeted edits, or pipe content through stdin',
             );
           }
         } else {
           throw new CliError(
             ErrorCodes.INVALID_ARG,
             'No content provided.',
-            'Pass markdown via -m/--message or pipe it through stdin',
+            'Pass content via -m/--message for full replacement, --find/--replace for targeted edits, or pipe content through stdin',
           );
         }
 
-        const pageId = parseNotionId(idOrUrl);
-        const uuid = toUuid(pageId);
-
-        try {
-          if (opts.range) {
+        // Path 2: deprecated --range (legacy replace_content_range)
+        if (opts.range) {
+          try {
             await replaceMarkdown(client, uuid, markdown, {
               range: opts.range,
               allowDeletingContent: opts.allowDeletingContent ?? false,
             });
-          } else {
-            await replaceMarkdown(client, uuid, markdown);
+          } catch (error) {
+            if (isNotionValidationError(error)) {
+              // biome-ignore lint/nursery/useErrorCause: cause passed as 4th positional arg to CliError
+              throw new CliError(
+                ErrorCodes.INVALID_ARG,
+                `Selector not found: "${opts.range}". ${(error as Error).message}`,
+                SELECTOR_HINT,
+                error,
+              );
+            }
+            throw error;
           }
-        } catch (error) {
-          if (opts.range && isNotionValidationError(error)) {
-            // biome-ignore lint/nursery/useErrorCause: cause passed as 4th positional arg to CliError
-            throw new CliError(
-              ErrorCodes.INVALID_ARG,
-              `Selector not found: "${opts.range}". ${(error as Error).message}`,
-              SELECTOR_HINT,
-              error,
-            );
-          }
-          throw error;
+          process.stdout.write('Page content replaced.\n');
+          return;
         }
+
+        // Path 3: full-page replace via replace_content
+        await replacePageContent(client, uuid, markdown, {
+          allowDeletingContent: opts.allowDeletingContent ?? false,
+        });
 
         process.stdout.write('Page content replaced.\n');
       }),
