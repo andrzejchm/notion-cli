@@ -62,7 +62,29 @@ async function duplicatePage(
       : {}),
   };
 
-  const created = (await client.pages.create(params)) as PageObjectResponse;
+  let created: PageObjectResponse;
+  try {
+    created = (await client.pages.create(params)) as PageObjectResponse;
+  } catch (error: unknown) {
+    // The retrieved markdown may contain blocks that the API rejects when
+    // creating a new page (e.g. synced blocks, embeds, or unsupported
+    // markdown syntax in newer API versions). Fall back to creating the
+    // page without content — tests only need a page to operate on.
+    if (
+      error instanceof Error &&
+      error.message.includes('Failed to parse markdown')
+    ) {
+      const { markdown: _dropped, ...paramsWithoutMarkdown } = params as Record<
+        string,
+        unknown
+      >;
+      created = (await client.pages.create(
+        paramsWithoutMarkdown as CreatePageParameters,
+      )) as PageObjectResponse;
+    } else {
+      throw error;
+    }
+  }
 
   return {
     id: created.id,

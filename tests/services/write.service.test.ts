@@ -6,6 +6,8 @@ import {
   appendMarkdown,
   createPage,
   replaceMarkdown,
+  replacePageContent,
+  searchAndReplace,
 } from '../../src/services/write.service.js';
 
 function createMockClient() {
@@ -286,6 +288,150 @@ describe('replaceMarkdown', () => {
       pos = content.indexOf(endSnippet, pos + endSnippet.length);
     }
     expect(count).toBe(1);
+  });
+});
+
+describe('searchAndReplace', () => {
+  let client: Client;
+
+  beforeEach(() => {
+    client = createMockClient();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('calls SDK with update_content for a single update', async () => {
+    await searchAndReplace(client, 'page-id', [
+      { oldStr: 'hello', newStr: 'world' },
+    ]);
+
+    expect(client.pages.updateMarkdown).toHaveBeenCalledWith({
+      page_id: 'page-id',
+      type: 'update_content',
+      update_content: {
+        content_updates: [{ old_str: 'hello', new_str: 'world' }],
+      },
+    });
+  });
+
+  it('calls SDK with update_content for multiple updates', async () => {
+    await searchAndReplace(client, 'page-id', [
+      { oldStr: 'foo', newStr: 'bar' },
+      { oldStr: 'baz', newStr: 'qux' },
+    ]);
+
+    expect(client.pages.updateMarkdown).toHaveBeenCalledWith({
+      page_id: 'page-id',
+      type: 'update_content',
+      update_content: {
+        content_updates: [
+          { old_str: 'foo', new_str: 'bar' },
+          { old_str: 'baz', new_str: 'qux' },
+        ],
+      },
+    });
+  });
+
+  it('sets replace_all_matches when replaceAll is true', async () => {
+    await searchAndReplace(
+      client,
+      'page-id',
+      [{ oldStr: 'hello', newStr: 'world' }],
+      { replaceAll: true },
+    );
+
+    expect(client.pages.updateMarkdown).toHaveBeenCalledWith({
+      page_id: 'page-id',
+      type: 'update_content',
+      update_content: {
+        content_updates: [
+          { old_str: 'hello', new_str: 'world', replace_all_matches: true },
+        ],
+      },
+    });
+  });
+
+  it('sets allow_deleting_content when allowDeletingContent is true', async () => {
+    await searchAndReplace(
+      client,
+      'page-id',
+      [{ oldStr: 'hello', newStr: 'world' }],
+      { allowDeletingContent: true },
+    );
+
+    expect(client.pages.updateMarkdown).toHaveBeenCalledWith({
+      page_id: 'page-id',
+      type: 'update_content',
+      update_content: {
+        content_updates: [{ old_str: 'hello', new_str: 'world' }],
+        allow_deleting_content: true,
+      },
+    });
+  });
+
+  it('does not include replace_all_matches when replaceAll is false', async () => {
+    await searchAndReplace(
+      client,
+      'page-id',
+      [{ oldStr: 'hello', newStr: 'world' }],
+      { replaceAll: false },
+    );
+
+    expect(client.pages.updateMarkdown).toHaveBeenCalledWith({
+      page_id: 'page-id',
+      type: 'update_content',
+      update_content: {
+        content_updates: [{ old_str: 'hello', new_str: 'world' }],
+      },
+    });
+  });
+});
+
+describe('replacePageContent', () => {
+  let client: Client;
+
+  beforeEach(() => {
+    client = createMockClient();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('calls SDK with replace_content and new content', async () => {
+    await replacePageContent(client, 'page-id', '# New content');
+
+    expect(client.pages.updateMarkdown).toHaveBeenCalledWith({
+      page_id: 'page-id',
+      type: 'replace_content',
+      replace_content: {
+        new_str: '# New content',
+      },
+    });
+  });
+
+  it('sets allow_deleting_content when allowDeletingContent is true', async () => {
+    await replacePageContent(client, 'page-id', '# New content', {
+      allowDeletingContent: true,
+    });
+
+    expect(client.pages.updateMarkdown).toHaveBeenCalledWith({
+      page_id: 'page-id',
+      type: 'replace_content',
+      replace_content: {
+        new_str: '# New content',
+        allow_deleting_content: true,
+      },
+    });
+  });
+
+  it('does not include allow_deleting_content when not specified', async () => {
+    await replacePageContent(client, 'page-id', '# New content');
+
+    const call = vi.mocked(client.pages.updateMarkdown).mock.calls[0][0];
+    expect(call).not.toHaveProperty('replace_content.allow_deleting_content');
   });
 });
 

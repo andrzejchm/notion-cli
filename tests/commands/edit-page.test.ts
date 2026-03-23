@@ -1,7 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { mockReplaceMarkdown, mockReadStdin } = vi.hoisted(() => ({
+const {
+  mockReplaceMarkdown,
+  mockSearchAndReplace,
+  mockReplacePageContent,
+  mockReadStdin,
+} = vi.hoisted(() => ({
   mockReplaceMarkdown: vi.fn(),
+  mockSearchAndReplace: vi.fn(),
+  mockReplacePageContent: vi.fn(),
   mockReadStdin: vi.fn(),
 }));
 
@@ -21,6 +28,8 @@ vi.mock('../../src/notion/client.js', () => ({
 
 vi.mock('../../src/services/write.service.js', () => ({
   replaceMarkdown: mockReplaceMarkdown,
+  searchAndReplace: mockSearchAndReplace,
+  replacePageContent: mockReplacePageContent,
 }));
 
 vi.mock('../../src/utils/stdin.js', () => ({
@@ -37,6 +46,8 @@ describe('editPageCommand', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockReplaceMarkdown.mockResolvedValue(undefined);
+    mockSearchAndReplace.mockResolvedValue(undefined);
+    mockReplacePageContent.mockResolvedValue(undefined);
     stdoutSpy = vi
       .spyOn(process.stdout, 'write')
       .mockImplementation(() => true);
@@ -86,7 +97,7 @@ describe('editPageCommand', () => {
   });
 
   describe('full-page replace (no --range)', () => {
-    it('calls replaceMarkdown without options (preserving existing behavior)', async () => {
+    it('calls replacePageContent when only -m is provided', async () => {
       const cmd = editPageCommand();
       await cmd.parseAsync([
         'node',
@@ -96,13 +107,12 @@ describe('editPageCommand', () => {
         '# New content',
       ]);
 
-      expect(mockReplaceMarkdown).toHaveBeenCalledWith(
+      expect(mockReplacePageContent).toHaveBeenCalledWith(
         expect.anything(),
         'b55c9c91-384d-452b-81db-d1ef79372b75',
         '# New content',
+        { allowDeletingContent: false },
       );
-      // No options object passed — preserves existing behavior
-      expect(mockReplaceMarkdown.mock.calls[0]).toHaveLength(3);
       expect(stdoutSpy).toHaveBeenCalledWith('Page content replaced.\n');
     });
   });
@@ -154,7 +164,7 @@ describe('editPageCommand', () => {
   });
 
   describe('--allow-deleting-content without --range', () => {
-    it('warns to stderr that the flag has no effect', async () => {
+    it('passes allowDeletingContent to replacePageContent', async () => {
       const cmd = editPageCommand();
       await cmd.parseAsync([
         'node',
@@ -165,12 +175,12 @@ describe('editPageCommand', () => {
         '--allow-deleting-content',
       ]);
 
-      expect(stderrSpy).toHaveBeenCalledWith(
-        'Warning: --allow-deleting-content has no effect without --range (full-page replace always allows deletion).\n',
+      expect(mockReplacePageContent).toHaveBeenCalledWith(
+        expect.anything(),
+        'b55c9c91-384d-452b-81db-d1ef79372b75',
+        '# New content',
+        { allowDeletingContent: true },
       );
-      // Operation still proceeds despite the warning
-      expect(mockReplaceMarkdown).toHaveBeenCalled();
-      expect(mockReplaceMarkdown.mock.calls[0]).toHaveLength(3);
     });
   });
 
@@ -236,7 +246,7 @@ describe('editPageCommand', () => {
         new Error('Some validation error'),
         { code: 'validation_error' },
       );
-      mockReplaceMarkdown.mockRejectedValueOnce(validationError);
+      mockReplacePageContent.mockRejectedValueOnce(validationError);
 
       const cmd = editPageCommand();
       await cmd.parseAsync([
@@ -258,8 +268,202 @@ describe('editPageCommand', () => {
     });
   });
 
+  describe('--find/--replace (search-and-replace)', () => {
+    it('calls searchAndReplace with a single find/replace pair', async () => {
+      const cmd = editPageCommand();
+      await cmd.parseAsync([
+        'node',
+        'test',
+        'b55c9c91384d452b81dbd1ef79372b75',
+        '--find',
+        'old text',
+        '--replace',
+        'new text',
+      ]);
+
+      expect(mockSearchAndReplace).toHaveBeenCalledWith(
+        expect.anything(),
+        'b55c9c91-384d-452b-81db-d1ef79372b75',
+        [{ oldStr: 'old text', newStr: 'new text' }],
+        { replaceAll: false, allowDeletingContent: false },
+      );
+      expect(stdoutSpy).toHaveBeenCalledWith('Page content updated.\n');
+    });
+
+    it('calls searchAndReplace with multiple find/replace pairs', async () => {
+      const cmd = editPageCommand();
+      await cmd.parseAsync([
+        'node',
+        'test',
+        'b55c9c91384d452b81dbd1ef79372b75',
+        '--find',
+        'old1',
+        '--replace',
+        'new1',
+        '--find',
+        'old2',
+        '--replace',
+        'new2',
+      ]);
+
+      expect(mockSearchAndReplace).toHaveBeenCalledWith(
+        expect.anything(),
+        'b55c9c91-384d-452b-81db-d1ef79372b75',
+        [
+          { oldStr: 'old1', newStr: 'new1' },
+          { oldStr: 'old2', newStr: 'new2' },
+        ],
+        { replaceAll: false, allowDeletingContent: false },
+      );
+    });
+
+    it('passes --all flag as replaceAll option', async () => {
+      const cmd = editPageCommand();
+      await cmd.parseAsync([
+        'node',
+        'test',
+        'b55c9c91384d452b81dbd1ef79372b75',
+        '--find',
+        'old text',
+        '--replace',
+        'new text',
+        '--all',
+      ]);
+
+      expect(mockSearchAndReplace).toHaveBeenCalledWith(
+        expect.anything(),
+        'b55c9c91-384d-452b-81db-d1ef79372b75',
+        [{ oldStr: 'old text', newStr: 'new text' }],
+        { replaceAll: true, allowDeletingContent: false },
+      );
+    });
+
+    it('passes --allow-deleting-content flag', async () => {
+      const cmd = editPageCommand();
+      await cmd.parseAsync([
+        'node',
+        'test',
+        'b55c9c91384d452b81dbd1ef79372b75',
+        '--find',
+        'old text',
+        '--replace',
+        'new text',
+        '--allow-deleting-content',
+      ]);
+
+      expect(mockSearchAndReplace).toHaveBeenCalledWith(
+        expect.anything(),
+        'b55c9c91-384d-452b-81db-d1ef79372b75',
+        [{ oldStr: 'old text', newStr: 'new text' }],
+        { replaceAll: false, allowDeletingContent: true },
+      );
+    });
+
+    it('errors when --find and --replace counts do not match', async () => {
+      const cmd = editPageCommand();
+      await cmd.parseAsync([
+        'node',
+        'test',
+        'b55c9c91384d452b81dbd1ef79372b75',
+        '--find',
+        'old1',
+        '--find',
+        'old2',
+        '--replace',
+        'new1',
+      ]);
+
+      expect(exitSpy).toHaveBeenCalledWith(1);
+      const stderrOutput = stderrSpy.mock.calls
+        .map((c) => String(c[0]))
+        .join('');
+      expect(stderrOutput).toContain('--find');
+      expect(stderrOutput).toContain('--replace');
+    });
+
+    it('does not call replaceMarkdown or replacePageContent', async () => {
+      const cmd = editPageCommand();
+      await cmd.parseAsync([
+        'node',
+        'test',
+        'b55c9c91384d452b81dbd1ef79372b75',
+        '--find',
+        'old',
+        '--replace',
+        'new',
+      ]);
+
+      expect(mockReplaceMarkdown).not.toHaveBeenCalled();
+      expect(mockReplacePageContent).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('full-page replace with -m (no --find, no --range)', () => {
+    it('calls replacePageContent when only -m is provided', async () => {
+      const cmd = editPageCommand();
+      await cmd.parseAsync([
+        'node',
+        'test',
+        'b55c9c91384d452b81dbd1ef79372b75',
+        '-m',
+        '# New content',
+      ]);
+
+      expect(mockReplacePageContent).toHaveBeenCalledWith(
+        expect.anything(),
+        'b55c9c91-384d-452b-81db-d1ef79372b75',
+        '# New content',
+        { allowDeletingContent: false },
+      );
+      expect(stdoutSpy).toHaveBeenCalledWith('Page content replaced.\n');
+    });
+
+    it('passes --allow-deleting-content to replacePageContent', async () => {
+      const cmd = editPageCommand();
+      await cmd.parseAsync([
+        'node',
+        'test',
+        'b55c9c91384d452b81dbd1ef79372b75',
+        '-m',
+        '# New content',
+        '--allow-deleting-content',
+      ]);
+
+      expect(mockReplacePageContent).toHaveBeenCalledWith(
+        expect.anything(),
+        'b55c9c91-384d-452b-81db-d1ef79372b75',
+        '# New content',
+        { allowDeletingContent: true },
+      );
+    });
+  });
+
+  describe('--range flag (deprecated path)', () => {
+    it('calls replaceMarkdown with range options', async () => {
+      const cmd = editPageCommand();
+      await cmd.parseAsync([
+        'node',
+        'test',
+        'b55c9c91384d452b81dbd1ef79372b75',
+        '-m',
+        '# Updated section',
+        '--range',
+        '## Section...end',
+      ]);
+
+      expect(mockReplaceMarkdown).toHaveBeenCalledWith(
+        expect.anything(),
+        'b55c9c91-384d-452b-81db-d1ef79372b75',
+        '# Updated section',
+        { range: '## Section...end', allowDeletingContent: false },
+      );
+      expect(mockReplacePageContent).not.toHaveBeenCalled();
+      expect(mockSearchAndReplace).not.toHaveBeenCalled();
+    });
+  });
+
   describe('stdin content', () => {
-    it('throws CliError when no -m and stdin is TTY', async () => {
+    it('throws CliError when no -m, no --find, and stdin is TTY', async () => {
       Object.defineProperty(process.stdin, 'isTTY', {
         value: true,
         configurable: true,
@@ -279,7 +483,7 @@ describe('editPageCommand', () => {
       expect(stderrOutput).toContain('No content provided');
     });
 
-    it('reads content from stdin when not TTY and no -m', async () => {
+    it('reads content from stdin for full-page replace when not TTY and no -m', async () => {
       Object.defineProperty(process.stdin, 'isTTY', {
         value: false,
         configurable: true,
@@ -293,10 +497,11 @@ describe('editPageCommand', () => {
         'b55c9c91384d452b81dbd1ef79372b75',
       ]);
 
-      expect(mockReplaceMarkdown).toHaveBeenCalledWith(
+      expect(mockReplacePageContent).toHaveBeenCalledWith(
         expect.anything(),
         'b55c9c91-384d-452b-81db-d1ef79372b75',
         '# From stdin',
+        { allowDeletingContent: false },
       );
     });
 

@@ -119,26 +119,32 @@ notion comment <id|url> -m "Reviewed and approved."      # add comment to a page
 
 #### Surgical Editing
 
-Insert content at a specific location or replace a targeted section instead of the whole page.
+Search-and-replace specific text, replace the full page, or insert content at a specific location.
 
 ```bash
-# Append after a matched section (inserts new blocks right after the match)
-notion append <id|url> -m "New content" --after "## Status...end of status"
+# Search-and-replace: find text and replace it
+notion edit-page <id|url> --find "old text" --replace "new text"
+
+# Multiple search-and-replace operations in one call
+notion edit-page <id|url> --find "old1" --replace "new1" --find "old2" --replace "new2"
+
+# Replace all occurrences (not just the first match)
+notion edit-page <id|url> --find "TODO" --replace "DONE" --all
 
 # Replace an entire page's content
 notion edit-page <id|url> -m "# Replacement\nNew full-page content"
 
-# Replace only a matched section (leaves the rest of the page intact)
-notion edit-page <id|url> -m "## Updated Section\nNew text" --range "## Old Section...old last line"
-
-# Replace a section that contains child pages/databases (requires explicit opt-in)
-notion edit-page <id|url> -m "## Clean Slate" --range "## Archive...end" --allow-deleting-content
-
 # Pipe replacement content from a file
-cat updated-section.md | notion edit-page <id|url> --range "## Notes...end of notes"
+cat updated-section.md | notion edit-page <id|url>
+
+# Allow deletion of child pages/databases during replace
+notion edit-page <id|url> -m "## Clean Slate" --allow-deleting-content
+
+# Append after a matched section (inserts new blocks right after the match)
+notion append <id|url> -m "New content" --after "## Status...end of status"
 ```
 
-> **Ellipsis selector format:** Both `--after` and `--range` use the same selector syntax: `"start text...end text"`. Provide ~10 characters from the beginning of the target content, three dots (`...`), then ~10 characters from the end. The selector matches the first contiguous range of blocks whose text starts with the prefix and ends with the suffix. Run `notion read <id>` first to see the exact content and pick accurate selectors.
+> **`--range` (deprecated):** The `--range` flag still works for backward compatibility but uses the older `replace_content_range` API. Prefer `--find`/`--replace` for targeted edits.
 
 ---
 
@@ -180,14 +186,16 @@ echo "Created: $URL"
 # Pipe command output into a new page
 my-report-command | notion create-page --parent "$PAGE_ID" --title "Auto Report"
 
-# Surgically update a specific section of a page
-# 1. Read the page to find the section boundaries
+# Surgically update specific text on a page
+# 1. Read the page to find the text you want to change
 notion read "$PAGE_ID"
-# 2. Identify a selector from the output, e.g. the section starts with "## Status"
-#    and ends with "Blocked: none" — build the ellipsis selector from those
-# 3. Replace just that section
-notion edit-page "$PAGE_ID" -m "## Status\nAll tasks complete.\nBlocked: none" \
-  --range "## Status...Blocked: none"
+# 2. Use --find/--replace to swap specific text
+notion edit-page "$PAGE_ID" --find "Status: In Progress" --replace "Status: Done"
+
+# Multiple replacements in one call
+notion edit-page "$PAGE_ID" \
+  --find "Status: In Progress" --replace "Status: Done" \
+  --find "Blocked: yes" --replace "Blocked: none"
 
 # Insert a new sub-section after an existing section
 notion append "$PAGE_ID" -m "## New Sub-section\nContent here" \
@@ -214,4 +222,6 @@ notion append "$PAGE_ID" -m "## New Sub-section\nContent here" \
 
 **`notion edit-page` returns "Insufficient permissions"** — Enable **Update content** in integration capabilities.
 
-**`--range` / `--after` selector not found** — Run `notion read <id>` to see the exact page content. The selector must match real text: `"start...end"` with ~10 chars from the beginning and end of the target range.
+**`--find` text not found** — Run `notion read <id>` to see the exact page content. The `--find` value must match text on the page exactly.
+
+**`--after` selector not found** — Run `notion read <id>` to see the exact page content. The selector must match real text: `"start...end"` with ~10 chars from the beginning and end of the target range.
