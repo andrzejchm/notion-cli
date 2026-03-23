@@ -68,10 +68,27 @@ describe('buildPropertyUpdate', () => {
     });
   });
 
+  it('filters empty items from multi_select', () => {
+    expect(buildPropertyUpdate('Tags', 'multi_select', 'a,,b,')).toEqual({
+      multi_select: [{ name: 'a' }, { name: 'b' }],
+    });
+  });
+
   it('builds number payload', () => {
     expect(buildPropertyUpdate('Count', 'number', '42')).toEqual({
       number: 42,
     });
+  });
+
+  it('throws CliError with INVALID_ARG for non-numeric number value', () => {
+    try {
+      buildPropertyUpdate('Count', 'number', 'abc');
+      expect.fail('Expected CliError');
+    } catch (err) {
+      expect(err).toBeInstanceOf(CliError);
+      expect((err as CliError).code).toBe(ErrorCodes.INVALID_ARG);
+      expect((err as CliError).message).toContain('abc');
+    }
   });
 
   it('builds checkbox payload for "true"', () => {
@@ -95,6 +112,18 @@ describe('buildPropertyUpdate', () => {
   it('builds checkbox payload for "no"', () => {
     expect(buildPropertyUpdate('Done', 'checkbox', 'no')).toEqual({
       checkbox: false,
+    });
+  });
+
+  it('builds checkbox payload for "True" (case-insensitive)', () => {
+    expect(buildPropertyUpdate('Done', 'checkbox', 'True')).toEqual({
+      checkbox: true,
+    });
+  });
+
+  it('builds checkbox payload for "YES" (case-insensitive)', () => {
+    expect(buildPropertyUpdate('Done', 'checkbox', 'YES')).toEqual({
+      checkbox: true,
     });
   });
 
@@ -255,6 +284,14 @@ describe('buildPropertiesPayload', () => {
     expect(() => buildPropertiesPayload(['Related=some-id'], page)).toThrow(
       CliError,
     );
+  });
+
+  it('trims whitespace from property name before matching schema', () => {
+    const page = makePage({ Status: { type: 'select' } });
+    const result = buildPropertiesPayload([' Status = Done'], page);
+    expect(result).toEqual({
+      Status: { select: { name: ' Done' } },
+    });
   });
 });
 

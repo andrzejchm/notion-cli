@@ -55,14 +55,29 @@ export function buildPropertyUpdate(
 
     case 'multi_select':
       return {
-        multi_select: value.split(',').map((v) => ({ name: v.trim() })),
+        multi_select: value
+          .split(',')
+          .map((v) => v.trim())
+          .filter(Boolean)
+          .map((v) => ({ name: v })),
       };
 
-    case 'number':
-      return { number: Number(value) };
+    case 'number': {
+      const n = Number(value);
+      if (Number.isNaN(n)) {
+        throw new CliError(
+          ErrorCodes.INVALID_ARG,
+          `Invalid number value "${value}" for property "${propName}".`,
+          'Provide a numeric value, e.g. --prop "Count=42"',
+        );
+      }
+      return { number: n };
+    }
 
-    case 'checkbox':
-      return { checkbox: value === 'true' || value === 'yes' };
+    case 'checkbox': {
+      const lower = value.toLowerCase();
+      return { checkbox: lower === 'true' || lower === 'yes' };
+    }
 
     case 'url':
       return { url: value };
@@ -114,7 +129,7 @@ export function buildPropertiesPayload(
       );
     }
 
-    const propName = propString.slice(0, eqIdx);
+    const propName = propString.slice(0, eqIdx).trim();
     const value = propString.slice(eqIdx + 1);
 
     const schemaProp = page.properties[propName];

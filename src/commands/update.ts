@@ -38,7 +38,7 @@ export function updateCommand(): Command {
     .option('--title <title>', 'set the page title')
     .action(
       withErrorHandling(async (idOrUrl: string, opts: UpdateOpts) => {
-        if (!opts.title && opts.prop.length === 0) {
+        if (opts.title === undefined && opts.prop.length === 0) {
           throw new CliError(
             ErrorCodes.INVALID_ARG,
             'No properties to update.',
