@@ -44,9 +44,12 @@ async function duplicatePage(
   fixtureId: string,
   rootPageId: string,
 ): Promise<DuplicatedFixture> {
-  const original = (await client.pages.retrieve({
-    page_id: fixtureId,
-  })) as PageObjectResponse;
+  const [original, markdownResponse] = await Promise.all([
+    client.pages.retrieve({
+      page_id: fixtureId,
+    }) as Promise<PageObjectResponse>,
+    client.pages.retrieveMarkdown({ page_id: fixtureId }),
+  ]);
 
   // Response types don't match request types exactly in SDK v5.
   // Cast through unknown for the shallow property copy.
@@ -54,6 +57,9 @@ async function duplicatePage(
     parent: { type: 'page_id', page_id: rootPageId },
     properties:
       original.properties as unknown as CreatePageParameters['properties'],
+    ...(markdownResponse.markdown
+      ? { markdown: markdownResponse.markdown }
+      : {}),
   };
 
   const created = (await client.pages.create(params)) as PageObjectResponse;
