@@ -78,3 +78,45 @@ npm install -g @andrzejchm/notion-cli
 curl -fsSL https://raw.githubusercontent.com/andrzejchm/notion-cli/main/docs/skills/using-notion-cli/SKILL.md \
   -o ~/.config/opencode/skills/using-notion-cli/SKILL.md
 ```
+
+## Commands Reference
+
+### `notion update <id|url>`
+
+Update properties on any Notion page (standalone or database entry).
+
+```bash
+# Set a select property
+notion update "$PAGE_ID" --prop "Status=Done"
+
+# Set multiple properties at once
+notion update "$PAGE_ID" --prop "Status=In Progress" --prop "Priority=High"
+
+# Update the page title
+notion update "$PAGE_ID" --title "New Page Title"
+
+# Combine --title and --prop
+notion update "$PAGE_ID" --title "Updated" --prop "Status=Done"
+
+# Clear a property (set to empty)
+notion update "$PAGE_ID" --prop "Status="
+
+# Output the updated page as JSON
+notion update "$PAGE_ID" --prop "Status=Done" --json
+```
+
+**Supported property types:** `title`, `rich_text`, `select`, `status`, `multi_select`, `number`, `checkbox`, `url`, `email`, `phone_number`, `date`
+
+**`--prop` format details:**
+
+| Type | Example |
+|------|---------|
+| `title` / `rich_text` | `--prop "Name=My Title"` |
+| `select` / `status` | `--prop "Status=Done"` |
+| `multi_select` | `--prop "Tags=design,eng,qa"` |
+| `number` | `--prop "Count=42"` |
+| `checkbox` | `--prop "Done=true"` or `--prop "Done=yes"` |
+| `url` | `--prop "Link=https://example.com"` |
+| `date` | `--prop "Due=2024-12-25"` or `--prop "Range=2024-01-01,2024-01-31"` |
+
+Required integration capabilities: **Read content**, **Update content**

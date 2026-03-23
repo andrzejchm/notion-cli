@@ -96,6 +96,7 @@ notion ls
 | `notion comment <id\|url> -m <text>` | Add a comment to a page |
 | `notion append <id\|url> -m <markdown>` | Append markdown blocks to a page |
 | `notion create-page --parent <id\|url> --title <title>` | Create a new page, prints URL |
+| `notion update <id\|url> --prop "Name=Value"` | Update properties on a page |
 | `notion completion bash\|zsh\|fish` | Install shell tab completion |
 
 ### `notion db query` flags
@@ -188,6 +189,7 @@ Write commands require additional capabilities — enable in your integration se
 |---------|----------------------|
 | `notion append` | Read content, Insert content |
 | `notion create-page` | Read content, Insert content |
+| `notion update` | Read content, Update content |
 | `notion comment` | Read content, Insert content, Read comments, Insert comments |
 
 ---

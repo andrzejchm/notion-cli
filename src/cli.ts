@@ -22,6 +22,7 @@ import { profileRemoveCommand } from './commands/profile/remove.js';
 import { profileUseCommand } from './commands/profile/use.js';
 import { readCommand } from './commands/read.js';
 import { searchCommand } from './commands/search.js';
+import { updateCommand } from './commands/update.js';
 import { usersCommand } from './commands/users.js';
 import { setColorForced } from './output/color.js';
 import { setOutputMode } from './output/format.js';
@@ -108,6 +109,7 @@ program.addCommand(commentAddCommand());
 program.addCommand(appendCommand());
 program.addCommand(createPageCommand());
 program.addCommand(editPageCommand());
+program.addCommand(updateCommand());
 
 // --- Database ---
 const dbCmd = new Command('db').description('Database operations');
