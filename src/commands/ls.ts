@@ -46,6 +46,16 @@ export function lsCommand(): Command {
       },
     )
     .option(
+      '--sort <direction>',
+      'sort by last edited time (asc or desc)',
+      (val) => {
+        if (val !== 'asc' && val !== 'desc') {
+          throw new Error('--sort must be "asc" or "desc"');
+        }
+        return val as 'asc' | 'desc';
+      },
+    )
+    .option(
       '--cursor <cursor>',
       'start from this pagination cursor (from a previous --next hint)',
     )
@@ -54,6 +64,7 @@ export function lsCommand(): Command {
       withErrorHandling(
         async (opts: {
           type?: 'page' | 'database';
+          sort?: 'asc' | 'desc';
           cursor?: string;
           json?: boolean;
         }) => {
@@ -66,6 +77,12 @@ export function lsCommand(): Command {
           const notion = createNotionClient(token);
 
           const response = await notion.search({
+            sort: opts.sort
+              ? {
+                  timestamp: 'last_edited_time',
+                  direction: opts.sort === 'asc' ? 'ascending' : 'descending',
+                }
+              : undefined,
             start_cursor: opts.cursor,
             page_size: 20,
           });

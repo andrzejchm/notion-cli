@@ -13,7 +13,7 @@
 
 | Area | CLI | MCP | Parity |
 |------|-----|-----|--------|
-| Search | Basic keyword | Semantic + AI + connected sources + date/creator filters | Partial |
+| Search | Keyword + sort by last edited | Semantic + AI + connected sources + date/creator filters | Partial |
 | Page read | Markdown via API | Markdown + discussions + transcripts | Partial |
 | Page create | Under pages only | Under pages, databases, data sources; batch; templates; icon/cover | Partial |
 | Page edit | Surgical replace via `--range` | Search-and-replace (multi-op), full replace, template apply, verification | Partial |
@@ -56,11 +56,11 @@ These gaps directly limit what an AI agent can accomplish through the CLI compar
 **CLI:** `notion archive <id>` — archives (trashes) a page. Supports `--json` for full page output.
 **Status:** Shipped in v0.9.0.
 
-#### 4. Search filters (date range, creator)
+#### 4. Search filters (date range, creator) — partially addressed
 **MCP:** `created_date_range` (start/end dates), `created_by_user_ids` filter, scoped search within page/database/teamspace.
-**CLI:** Keyword-only search with `--type` filter.
-**Why important:** Agents searching for "recent" items or "my tasks" need date and creator filters to get relevant results without scanning everything.
-**Suggested flags:** `--created-after`, `--created-before`, `--created-by`
+**CLI:** Keyword search with `--type` filter and `--sort asc|desc` (sort by last edited time).
+**Status:** `--sort` added in v0.9.0. Date range and creator filters are **blocked** — the MCP server uses an internal Notion API not accessible to integration tokens. The public search endpoint only supports `sort` as an additional parameter.
+**Remaining gap:** `--created-after`, `--created-before`, `--created-by` cannot be implemented with the public API.
 
 ### Tier 2 - Medium Impact (power-user and advanced agent workflows)
 
