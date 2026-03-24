@@ -21,7 +21,7 @@
 | Move pages | - | Batch move to any parent | Gap |
 | Duplicate pages | - | Duplicate with async content copy | Gap |
 | Archive/delete | `archive` | Trash pages | ✅ Parity |
-| Database create | - | SQL DDL `CREATE TABLE` syntax | Gap |
+| Database create | `db create --prop` syntax | SQL DDL `CREATE TABLE` syntax | Partial |
 | Database schema update | Read-only schema | `ADD/DROP/RENAME/ALTER COLUMN` via DDL | Gap |
 | Database views | - | Create + update 10 view types with DSL | Gap |
 | Comments | Page-level + block-level + thread replies, list with discussion IDs | Page-level + inline (selection-anchored) + reply to thread + rich text | Partial |
@@ -69,11 +69,10 @@ These gaps directly limit what an AI agent can accomplish through the CLI compar
 **CLI:** Thread replies (`--reply-to <discussion-id>`) and block-level comments (`--block <block-id>`) shipped. Discussion IDs shown in `notion comments` list output. Inline text-selection anchoring is not available in the public API. Plain text only.
 **Remaining gap:** Rich text (mentions, dates, links) and inline text-selection anchoring (`selection_with_ellipsis`) — the latter requires internal API access.
 
-#### 6. Create databases
+#### 6. ✅ Create databases (shipped v0.10.0)
 **MCP:** `CREATE TABLE` DDL with full type system (select, relation, rollup, formula, unique_id, etc.).
-**CLI:** No equivalent.
-**Why:** Agents building project scaffolds or workflows need to create structured databases, not just pages.
-**Suggested command:** `notion create-db --parent <id> --title "Tasks" --schema "Name TITLE, Status SELECT(Todo,Done)"`
+**CLI:** `notion db create --parent <id> --title "Tasks" --prop "Status:select:To Do,Done"` — supports title, rich_text, number, select, multi_select, status, date, checkbox, url, email, phone_number, people, files, created_time, last_edited_time. Relation, rollup, formula, and unique_id are not supported (too complex for CLI flags).
+**Status:** Shipped in v0.10.0.
 
 #### 7. Move pages
 **MCP:** Batch move up to 100 pages/databases to a new parent (page, database, data source, or workspace).

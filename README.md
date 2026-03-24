@@ -95,6 +95,7 @@ notion ls
 | `notion ls` | List all accessible pages and databases (`--sort asc\|desc`) |
 | `notion open <id\|url>` | Open a page in your browser |
 | `notion read <id\|url>` | Read a page as markdown |
+| `notion db create --parent <id\|url> --title <title>` | Create a new database with property definitions |
 | `notion db schema <id\|url>` | Show database property schema and valid values |
 | `notion db query <id\|url>` | Query database entries with filtering and sorting |
 | `notion users` | List workspace members |
@@ -116,6 +117,17 @@ notion ls
 | `--type` | `--type page` | Filter by object type (`page` or `database`) |
 | `--cursor` | `--cursor <cursor>` | Pagination cursor from a previous `--next` hint |
 | `--json` | `--json` | Force JSON output |
+
+### `notion db create` flags
+
+| Flag | Example | Description |
+|------|---------|-------------|
+| `--parent` | `--parent <id\|url>` | Parent page ID or URL (required) |
+| `--title` | `--title "Tasks"` | Database title (required) |
+| `--prop` | `--prop "Status:select:To Do,Done"` | Property definition (repeatable) |
+| `--json` | `--json` | Output full JSON response |
+
+Property syntax: `Name:type[:options]`. Supported types: `title`, `rich_text`, `number`, `select`, `multi_select`, `status`, `date`, `checkbox`, `url`, `email`, `phone_number`, `people`, `files`, `created_time`, `last_edited_time`. If no title property is defined, `Name:title` is added automatically.
 
 ### `notion db query` flags
 

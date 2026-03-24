@@ -12,6 +12,7 @@ import { commentAddCommand } from './commands/comment-add.js';
 import { commentsCommand } from './commands/comments.js';
 import { completionCommand } from './commands/completion.js';
 import { createPageCommand } from './commands/create-page.js';
+import { dbCreateCommand } from './commands/db/create.js';
 import { dbQueryCommand } from './commands/db/query.js';
 import { dbSchemaCommand } from './commands/db/schema.js';
 import { editPageCommand } from './commands/edit-page.js';
@@ -115,6 +116,7 @@ program.addCommand(archiveCommand());
 
 // --- Database ---
 const dbCmd = new Command('db').description('Database operations');
+dbCmd.addCommand(dbCreateCommand());
 dbCmd.addCommand(dbSchemaCommand());
 dbCmd.addCommand(dbQueryCommand());
 program.addCommand(dbCmd);
