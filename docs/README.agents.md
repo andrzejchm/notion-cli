@@ -120,3 +120,20 @@ notion update "$PAGE_ID" --prop "Status=Done" --json
 | `date` | `--prop "Due=2024-12-25"` or `--prop "Range=2024-01-01,2024-01-31"` |
 
 Required integration capabilities: **Read content**, **Update content**
+
+### `notion archive <id|url>`
+
+Archive (trash) a Notion page.
+
+```bash
+# Archive a page by ID
+notion archive "$PAGE_ID"
+
+# Archive a page by URL
+notion archive "https://www.notion.so/My-Page-b55c9c91384d452b81dbd1ef79372b75"
+
+# Output the full updated page object as JSON
+notion archive "$PAGE_ID" --json
+```
+
+Required integration capabilities: **Read content**, **Update content**

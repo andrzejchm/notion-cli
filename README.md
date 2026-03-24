@@ -99,6 +99,7 @@ notion ls
 | `notion edit-page <id\|url> -m <markdown>` | Replace entire page content |
 | `notion create-page --parent <id\|url> --title <title>` | Create a new page, prints URL |
 | `notion update <id\|url> --prop "Name=Value"` | Update properties on a page |
+| `notion archive <id\|url>` | Archive (trash) a page |
 | `notion completion bash\|zsh\|fish` | Install shell tab completion |
 
 ### `notion db query` flags
