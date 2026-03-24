@@ -20,7 +20,7 @@
 | Page properties | Read + write via `update --prop` | Full read + write (update any property) | ✅ Parity |
 | Move pages | - | Batch move to any parent | Gap |
 | Duplicate pages | - | Duplicate with async content copy | Gap |
-| Archive/delete | - | Trash pages | Gap |
+| Archive/delete | `archive` | Trash pages | ✅ Parity |
 | Database create | - | SQL DDL `CREATE TABLE` syntax | Gap |
 | Database schema update | Read-only schema | `ADD/DROP/RENAME/ALTER COLUMN` via DDL | Gap |
 | Database views | - | Create + update 10 view types with DSL | Gap |
@@ -51,11 +51,10 @@ These gaps directly limit what an AI agent can accomplish through the CLI compar
 **CLI:** `notion create-page --parent <db-id> --title "Task" --prop "Status=To Do"` — auto-detects database vs page parent. Supports `--icon` and `--cover`.
 **Status:** Shipped in v0.8.0.
 
-#### 3. Archive / trash pages
+#### 3. ✅ Archive / trash pages (shipped v0.9.0)
 **MCP:** `update-page` with property changes or page operations; `update_data_source` with `in_trash: true`.
-**CLI:** No equivalent.
-**Why third:** Agents need to clean up after themselves — archive completed tasks, delete draft pages.
-**Suggested command:** `notion archive <id>` / `notion delete <id>`
+**CLI:** `notion archive <id>` — archives (trashes) a page. Supports `--json` for full page output.
+**Status:** Shipped in v0.9.0.
 
 #### 4. Search filters (date range, creator)
 **MCP:** `created_date_range` (start/end dates), `created_by_user_ids` filter, scoped search within page/database/teamspace.

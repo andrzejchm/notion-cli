@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Command } from 'commander';
 import { appendCommand } from './commands/append.js';
+import { archiveCommand } from './commands/archive.js';
 import { authDefaultAction } from './commands/auth/index.js';
 import { loginCommand } from './commands/auth/login.js';
 import { logoutCommand } from './commands/auth/logout.js';
@@ -110,6 +111,7 @@ program.addCommand(appendCommand());
 program.addCommand(createPageCommand());
 program.addCommand(editPageCommand());
 program.addCommand(updateCommand());
+program.addCommand(archiveCommand());
 
 // --- Database ---
 const dbCmd = new Command('db').description('Database operations');
