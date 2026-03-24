@@ -81,6 +81,27 @@ curl -fsSL https://raw.githubusercontent.com/andrzejchm/notion-cli/main/docs/ski
 
 ## Commands Reference
 
+### `notion search <query>` / `notion ls`
+
+Search or list pages and databases. Both commands support:
+
+```bash
+# Sort results by last edited time
+notion search "meeting notes" --sort desc
+notion ls --sort asc
+
+# Filter by type
+notion search "Q1" --type page
+notion ls --type database
+```
+
+| Flag | Description |
+|------|-------------|
+| `--sort <asc\|desc>` | Sort by last edited time |
+| `--type <page\|database>` | Filter by object type |
+| `--cursor <cursor>` | Pagination cursor from a previous `--next` hint |
+| `--json` | Force JSON output |
+
 ### `notion update <id|url>`
 
 Update properties on any Notion page (standalone or database entry).

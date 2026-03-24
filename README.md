@@ -85,8 +85,8 @@ notion ls
 | `notion auth status` | Show current auth state |
 | `notion auth list` | List all saved profiles |
 | `notion auth use <name>` | Switch the active profile |
-| `notion search <query>` | Search pages and databases by title |
-| `notion ls` | List all accessible pages and databases |
+| `notion search <query>` | Search pages and databases by title (`--sort asc\|desc`) |
+| `notion ls` | List all accessible pages and databases (`--sort asc\|desc`) |
 | `notion open <id\|url>` | Open a page in your browser |
 | `notion read <id\|url>` | Read a page as markdown |
 | `notion db schema <id\|url>` | Show database property schema and valid values |
@@ -101,6 +101,15 @@ notion ls
 | `notion update <id\|url> --prop "Name=Value"` | Update properties on a page |
 | `notion archive <id\|url>` | Archive (trash) a page |
 | `notion completion bash\|zsh\|fish` | Install shell tab completion |
+
+### `notion search` / `notion ls` flags
+
+| Flag | Example | Description |
+|------|---------|-------------|
+| `--sort` | `--sort desc` | Sort by last edited time (`asc` or `desc`) |
+| `--type` | `--type page` | Filter by object type (`page` or `database`) |
+| `--cursor` | `--cursor <cursor>` | Pagination cursor from a previous `--next` hint |
+| `--json` | `--json` | Force JSON output |
 
 ### `notion db query` flags
 

@@ -52,6 +52,16 @@ export function searchCommand(): Command {
       },
     )
     .option(
+      '--sort <direction>',
+      'sort by last edited time (asc or desc)',
+      (val) => {
+        if (val !== 'asc' && val !== 'desc') {
+          throw new Error('--sort must be "asc" or "desc"');
+        }
+        return val as 'asc' | 'desc';
+      },
+    )
+    .option(
       '--cursor <cursor>',
       'start from this pagination cursor (from a previous --next hint)',
     )
@@ -60,7 +70,12 @@ export function searchCommand(): Command {
       withErrorHandling(
         async (
           query: string,
-          opts: { type?: 'page' | 'database'; cursor?: string; json?: boolean },
+          opts: {
+            type?: 'page' | 'database';
+            sort?: 'asc' | 'desc';
+            cursor?: string;
+            json?: boolean;
+          },
         ) => {
           if (opts.json) {
             setOutputMode('json');
@@ -74,6 +89,12 @@ export function searchCommand(): Command {
             query,
             filter: opts.type
               ? { property: 'object', value: toSdkFilterValue(opts.type) }
+              : undefined,
+            sort: opts.sort
+              ? {
+                  timestamp: 'last_edited_time',
+                  direction: opts.sort === 'asc' ? 'ascending' : 'descending',
+                }
               : undefined,
             start_cursor: opts.cursor,
             page_size: 20,
