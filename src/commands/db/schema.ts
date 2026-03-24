@@ -2,23 +2,24 @@ import { Command } from 'commander';
 import { resolveToken } from '../../config/token.js';
 import { withErrorHandling } from '../../errors/error-handler.js';
 import { createNotionClient } from '../../notion/client.js';
-import { parseNotionId } from '../../notion/url-parser.js';
-import { formatJSON, formatTable } from '../../output/format.js';
-import { fetchDatabaseSchema } from '../../services/database.service.js';
+import { formatJSON, formatTable, getOutputMode } from '../../output/format.js';
+import {
+  fetchDatabaseSchema,
+  resolveDataSourceId,
+} from '../../services/database.service.js';
 
 export function dbSchemaCommand(): Command {
   return new Command('schema')
     .description('Show database schema (property names, types, and options)')
     .argument('<id>', 'Notion database ID or URL')
-    .option('--json', 'Output raw JSON')
     .action(
-      withErrorHandling(async (id: string, options: { json?: boolean }) => {
+      withErrorHandling(async (id: string) => {
         const { token } = await resolveToken();
         const client = createNotionClient(token);
-        const dbId = parseNotionId(id);
-        const schema = await fetchDatabaseSchema(client, dbId);
+        const dsId = await resolveDataSourceId(client, id);
+        const schema = await fetchDatabaseSchema(client, dsId);
 
-        if (options.json) {
+        if (getOutputMode() === 'json') {
           process.stdout.write(`${formatJSON(schema)}\n`);
           return;
         }
