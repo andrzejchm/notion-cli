@@ -3,7 +3,7 @@ import { resolveToken } from '../../config/token.js';
 import { withErrorHandling } from '../../errors/error-handler.js';
 import { createNotionClient } from '../../notion/client.js';
 import { parseNotionId, toUuid } from '../../notion/url-parser.js';
-import { formatJSON } from '../../output/format.js';
+import { formatJSON, getOutputMode } from '../../output/format.js';
 import { reportTokenSource } from '../../output/stderr.js';
 import {
   createDatabase,
@@ -14,7 +14,6 @@ interface DbCreateOpts {
   parent: string;
   title: string;
   prop: string[];
-  json?: boolean;
 }
 
 function collectProps(val: string, acc: string[]): string[] {
@@ -33,7 +32,6 @@ export function dbCreateCommand(): Command {
       collectProps,
       [],
     )
-    .option('--json', 'output full JSON response')
     .action(
       withErrorHandling(async (opts: DbCreateOpts) => {
         const { token, source } = await resolveToken();
@@ -50,7 +48,7 @@ export function dbCreateCommand(): Command {
           properties,
         );
 
-        if (opts.json) {
+        if (getOutputMode() === 'json') {
           process.stdout.write(`${formatJSON(response)}\n`);
           return;
         }

@@ -6,6 +6,7 @@ import {
   createDatabase,
   parsePropertyDefinition,
   parsePropertyDefinitions,
+  resolveDataSourceId,
 } from '../../src/services/database.service.js';
 
 describe('parsePropertyDefinition', () => {
@@ -252,5 +253,86 @@ describe('createDatabase', () => {
         url: 'https://notion.so/db-123',
       }),
     );
+  });
+});
+
+describe('resolveDataSourceId', () => {
+  const DS_ID = 'aabbccdd-1122-3344-5566-778899aabbcc';
+  const DB_ID = '11223344-5566-7788-99aa-bbccddeeff00';
+  const DS_ID_HEX = 'aabbccdd112233445566778899aabbcc';
+
+  function makeClient(overrides: {
+    dsRetrieve?: (args: { data_source_id: string }) => Promise<unknown>;
+    dbRetrieve?: (args: { database_id: string }) => Promise<unknown>;
+  }): Client {
+    return {
+      dataSources: {
+        retrieve:
+          overrides.dsRetrieve ??
+          vi.fn().mockRejectedValue(new Error('not found')),
+      },
+      databases: {
+        retrieve:
+          overrides.dbRetrieve ??
+          vi.fn().mockRejectedValue(new Error('not found')),
+      },
+    } as unknown as Client;
+  }
+
+  it('returns the ID when data source retrieval succeeds', async () => {
+    const client = makeClient({
+      dsRetrieve: vi.fn().mockResolvedValue({ id: DS_ID }),
+    });
+
+    const result = await resolveDataSourceId(client, DS_ID_HEX);
+    expect(result).toBe(DS_ID);
+  });
+
+  it('falls back to database retrieval when data source fails', async () => {
+    const client = makeClient({
+      dsRetrieve: vi.fn().mockRejectedValue(new Error('not found')),
+      dbRetrieve: vi.fn().mockResolvedValue({
+        id: DB_ID,
+        data_sources: [{ id: DS_ID }],
+      }),
+    });
+
+    const result = await resolveDataSourceId(client, DB_ID);
+    expect(result).toBe(DS_ID);
+  });
+
+  it('throws CliError when both data source and database retrieval fail', async () => {
+    const client = makeClient({
+      dsRetrieve: vi.fn().mockRejectedValue(new Error('not found')),
+      dbRetrieve: vi.fn().mockRejectedValue(new Error('not found')),
+    });
+
+    await expect(resolveDataSourceId(client, DS_ID_HEX)).rejects.toThrow(
+      CliError,
+    );
+  });
+
+  it('throws CliError when database has no data sources', async () => {
+    const client = makeClient({
+      dsRetrieve: vi.fn().mockRejectedValue(new Error('not found')),
+      dbRetrieve: vi.fn().mockResolvedValue({
+        id: DB_ID,
+        data_sources: [],
+      }),
+    });
+
+    await expect(resolveDataSourceId(client, DB_ID)).rejects.toThrow(CliError);
+  });
+
+  it('accepts a Notion URL and resolves the embedded ID', async () => {
+    const client = makeClient({
+      dsRetrieve: vi.fn().mockResolvedValue({ id: DS_ID }),
+    });
+
+    const result = await resolveDataSourceId(
+      client,
+      `https://notion.so/workspace/DB-Title-${DS_ID_HEX}`,
+    );
+    expect(result).toBe(DS_ID);
   });
 });

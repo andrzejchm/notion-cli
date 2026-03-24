@@ -1,11 +1,13 @@
 import { type Client, isFullPage } from '@notionhq/client';
 import type {
   CreateDatabaseResponse,
+  DatabaseObjectResponse,
   PageObjectResponse,
   QueryDataSourceParameters,
 } from '@notionhq/client/build/src/api-endpoints.js';
 import { CliError } from '../errors/cli-error.js';
 import { ErrorCodes } from '../errors/codes.js';
+import { parseNotionId, toUuid } from '../notion/url-parser.js';
 import { paginateResults } from '../output/paginate.js';
 
 export interface DatabaseSchema {
@@ -371,6 +373,44 @@ export async function createDatabase(
         : never,
     },
   });
+}
+
+/**
+ * Resolve an ID or URL to a data source ID.
+ *
+ * Tries the ID as a data source first. If that fails, treats it as a database
+ * ID and extracts the first data source from the database response.
+ */
+export async function resolveDataSourceId(
+  client: Client,
+  idOrUrl: string,
+): Promise<string> {
+  const id = toUuid(parseNotionId(idOrUrl));
+
+  // Try as data source first
+  try {
+    await client.dataSources.retrieve({ data_source_id: id });
+    return id;
+  } catch {
+    // Fall back: try as database ID
+  }
+
+  // Try as database ID → extract first data source
+  try {
+    const db = (await client.databases.retrieve({
+      database_id: id,
+    })) as DatabaseObjectResponse;
+    if (db.data_sources && db.data_sources.length > 0) {
+      return db.data_sources[0].id;
+    }
+  } catch {
+    // Both failed
+  }
+
+  throw new CliError(
+    ErrorCodes.API_NOT_FOUND,
+    `Could not find database or data source: ${id}`,
+  );
 }
 
 export function displayPropertyValue(prop: PropValue): string {

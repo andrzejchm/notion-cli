@@ -2,14 +2,14 @@ import { Command } from 'commander';
 import { resolveToken } from '../../config/token.js';
 import { withErrorHandling } from '../../errors/error-handler.js';
 import { createNotionClient } from '../../notion/client.js';
-import { parseNotionId } from '../../notion/url-parser.js';
-import { formatJSON, formatTable } from '../../output/format.js';
+import { formatJSON, formatTable, getOutputMode } from '../../output/format.js';
 import {
   buildFilter,
   buildSorts,
   type DatabaseSchema,
   fetchDatabaseSchema,
   queryDatabase,
+  resolveDataSourceId,
 } from '../../services/database.service.js';
 
 // Types that produce poor table output — skip in auto-column selection
@@ -80,7 +80,6 @@ export function dbQueryCommand(): Command {
       '--columns <columns>',
       'Comma-separated list of columns to display: --columns "Title,Status"',
     )
-    .option('--json', 'Output raw JSON')
     .action(
       withErrorHandling(
         async (
@@ -89,15 +88,14 @@ export function dbQueryCommand(): Command {
             filter: string[];
             sort: string[];
             columns?: string;
-            json?: boolean;
           },
         ) => {
           const { token } = await resolveToken();
           const client = createNotionClient(token);
-          const dbId = parseNotionId(id);
+          const dsId = await resolveDataSourceId(client, id);
 
           // Always fetch schema first (needed for filter building + column ordering)
-          const schema = await fetchDatabaseSchema(client, dbId);
+          const schema = await fetchDatabaseSchema(client, dsId);
 
           const columns = options.columns
             ? options.columns.split(',').map((c) => c.trim())
@@ -111,13 +109,13 @@ export function dbQueryCommand(): Command {
             ? buildSorts(options.sort)
             : undefined;
 
-          const entries = await queryDatabase(client, dbId, {
+          const entries = await queryDatabase(client, dsId, {
             filter,
             sorts,
             columns,
           });
 
-          if (options.json) {
+          if (getOutputMode() === 'json') {
             process.stdout.write(`${formatJSON(entries.map((e) => e.raw))}\n`);
             return;
           }
