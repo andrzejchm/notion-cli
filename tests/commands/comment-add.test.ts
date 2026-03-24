@@ -110,6 +110,43 @@ describe('comment add command', () => {
     expect(stderrOutput).toContain('INVALID_ARG');
   });
 
+  it('errors when both --reply-to and --block are provided', async () => {
+    const cmd = commentAddCommand();
+    await cmd.parseAsync([
+      'node',
+      'test',
+      '-m',
+      'ambiguous',
+      '--reply-to',
+      'disc-abc',
+      '--block',
+      'block-123',
+    ]);
+
+    expect(exitSpy).toHaveBeenCalledWith(1);
+    const stderrOutput = stderrSpy.mock.calls.map((c) => String(c[0])).join('');
+    expect(stderrOutput).toContain('INVALID_ARG');
+    expect(stderrOutput).toContain('mutually exclusive');
+  });
+
+  it('errors when a positional ID and --reply-to are both provided', async () => {
+    const cmd = commentAddCommand();
+    await cmd.parseAsync([
+      'node',
+      'test',
+      VALID_PAGE_ID,
+      '-m',
+      'ambiguous',
+      '--reply-to',
+      'disc-abc',
+    ]);
+
+    expect(exitSpy).toHaveBeenCalledWith(1);
+    const stderrOutput = stderrSpy.mock.calls.map((c) => String(c[0])).join('');
+    expect(stderrOutput).toContain('INVALID_ARG');
+    expect(stderrOutput).toContain('mutually exclusive');
+  });
+
   it('prints confirmation on success', async () => {
     const cmd = commentAddCommand();
     await cmd.parseAsync(['node', 'test', VALID_PAGE_ID, '-m', 'hello']);

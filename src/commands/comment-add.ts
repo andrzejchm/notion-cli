@@ -18,6 +18,16 @@ function resolveTarget(
   idOrUrl: string | undefined,
   opts: CommentOpts,
 ): CommentTarget {
+  const targetCount = [idOrUrl, opts.replyTo, opts.block].filter(
+    Boolean,
+  ).length;
+  if (targetCount > 1) {
+    throw new CliError(
+      ErrorCodes.INVALID_ARG,
+      'Provide only one target: a page ID/URL, --reply-to, or --block.',
+      'These options are mutually exclusive',
+    );
+  }
   if (opts.replyTo) {
     return { type: 'reply', discussionId: opts.replyTo };
   }
