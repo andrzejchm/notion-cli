@@ -4,7 +4,7 @@
 > This document tracks gaps and serves as a prioritized roadmap for closing them.
 
 **Legend:**
-- **CLI** = `@andrzejchm/notion-cli` (this repo, v0.6.0)
+- **CLI** = `@andrzejchm/notion-cli` (this repo, v0.8.0)
 - **MCP** = Official Notion MCP server
 
 ---
@@ -17,7 +17,7 @@
 | Page read | Markdown via API | Markdown + discussions + transcripts | Partial |
 | Page create | Under pages only | Under pages, databases, data sources; batch; templates; icon/cover | Partial |
 | Page edit | Surgical replace via `--range` | Search-and-replace (multi-op), full replace, template apply, verification | Partial |
-| Page properties | Read-only (db query) | Full read + write (update any property) | Gap |
+| Page properties | Read + write via `update --prop` | Full read + write (update any property) | ✅ Parity |
 | Move pages | - | Batch move to any parent | Gap |
 | Duplicate pages | - | Duplicate with async content copy | Gap |
 | Archive/delete | - | Trash pages | Gap |
@@ -27,9 +27,9 @@
 | Comments | Page-level add + list | Page-level + inline (selection-anchored) + reply to thread + rich text | Partial |
 | Users | List all | List + search + fetch by ID + fetch self | Partial |
 | Teams | - | List teamspaces + search | Gap |
-| Create pages in DB | - | Full property support, date/place/checkbox expanded formats | Gap |
+| Create pages in DB | `create-page --parent <db>` with `--prop` | Full property support, date/place/checkbox expanded formats | ✅ Parity |
 | Batch operations | - | Create up to 100 pages, move up to 100 pages | Gap |
-| Icon / Cover | - | Set emoji/image icon + cover on create and update | Gap |
+| Icon / Cover | `--icon` / `--cover` on `create-page` | Set emoji/image icon + cover on create and update | Partial |
 
 ---
 
@@ -41,17 +41,15 @@ Ordered by impact for AI-agent workflows first, then developer productivity.
 
 These gaps directly limit what an AI agent can accomplish through the CLI compared to using MCP directly.
 
-#### 1. Update page properties
+#### 1. ✅ Update page properties (shipped v0.7.0)
 **MCP:** `update_properties` command — set title, status, dates, select, people, checkbox, numbers, etc. Supports `null` to clear.
-**CLI:** No equivalent. Can only read properties via `db query`.
-**Why first:** AI agents frequently need to update task status, dates, assignees. This is the single most impactful missing write operation.
-**Suggested command:** `notion update <id> --prop "Status=Done" --prop "Priority=High"`
+**CLI:** `notion update <id> --prop "Status=Done"` — supports title, rich_text, select, status, multi_select, number, checkbox, url, email, phone_number, date.
+**Status:** Shipped in v0.7.0.
 
-#### 2. Create pages in databases (with properties)
+#### 2. ✅ Create pages in databases (with properties) (shipped v0.8.0)
 **MCP:** `create-pages` supports `data_source_id` parent with full property map including expanded date, place, checkbox formats.
-**CLI:** `create-page` only supports `page_id` parent with title + markdown body. Cannot create database entries.
-**Why second:** Agents need to create tasks, tickets, and records in databases — not just child pages.
-**Suggested command:** `notion create-page --parent <db-id> --title "Task" --prop "Status=To Do" --prop "Due=2026-04-01"`
+**CLI:** `notion create-page --parent <db-id> --title "Task" --prop "Status=To Do"` — auto-detects database vs page parent. Supports `--icon` and `--cover`.
+**Status:** Shipped in v0.8.0.
 
 #### 3. Archive / trash pages
 **MCP:** `update-page` with property changes or page operations; `update_data_source` with `in_trash: true`.
@@ -185,5 +183,5 @@ The CLI isn't just chasing MCP parity — it has unique strengths:
 ---
 
 *Last updated: 2026-03-23*
-*CLI version compared: 0.6.0*
+*CLI version compared: 0.8.0*
 *MCP version compared: Official Notion MCP (2026-03)*

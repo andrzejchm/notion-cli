@@ -218,6 +218,30 @@ export async function replaceMarkdown(
   });
 }
 
+export interface IconCoverOptions {
+  icon?: string;
+  cover?: string;
+}
+
+/**
+ * Builds the icon/cover fields for a pages.create call.
+ */
+function buildIconCover(options?: IconCoverOptions): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  if (options?.icon) {
+    const isUrl = /^https?:\/\//i.test(options.icon);
+    if (isUrl) {
+      result.icon = { type: 'external', external: { url: options.icon } };
+    } else {
+      result.icon = { type: 'emoji', emoji: options.icon };
+    }
+  }
+  if (options?.cover) {
+    result.cover = { type: 'external', external: { url: options.cover } };
+  }
+  return result;
+}
+
 /**
  * Creates a new Notion page under a parent page with the given markdown content.
  *
@@ -228,6 +252,7 @@ export async function createPage(
   parentId: string,
   title: string,
   markdown: string,
+  options?: IconCoverOptions,
 ): Promise<string> {
   const response = await client.pages.create({
     parent: { type: 'page_id', page_id: parentId },
@@ -237,7 +262,44 @@ export async function createPage(
       },
     },
     ...(markdown.trim() ? { markdown } : {}),
-  });
+    ...buildIconCover(options),
+  } as Parameters<typeof client.pages.create>[0]);
+  const url = 'url' in response ? response.url : response.id;
+  return url;
+}
+
+/**
+ * Creates a new Notion page inside a database with the given properties and
+ * optional markdown body.
+ *
+ * The `titlePropName` is the name of the title property in the database schema
+ * (not always "Name" — the caller must look it up from the schema).
+ *
+ * `extraProperties` is the pre-built Notion API properties object from
+ * `buildPropertiesPayload` — it should NOT include the title property.
+ */
+export async function createPageInDatabase(
+  client: Client,
+  databaseId: string,
+  titlePropName: string,
+  title: string,
+  extraProperties: Record<string, unknown>,
+  markdown: string,
+  options?: IconCoverOptions,
+): Promise<string> {
+  const properties: Record<string, unknown> = {
+    ...extraProperties,
+    [titlePropName]: {
+      title: [{ type: 'text', text: { content: title, link: null } }],
+    },
+  };
+
+  const response = await client.pages.create({
+    parent: { type: 'database_id', database_id: databaseId },
+    properties,
+    ...(markdown.trim() ? { markdown } : {}),
+    ...buildIconCover(options),
+  } as Parameters<typeof client.pages.create>[0]);
   const url = 'url' in response ? response.url : response.id;
   return url;
 }
