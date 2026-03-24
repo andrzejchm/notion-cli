@@ -4,7 +4,7 @@
 > This document tracks gaps and serves as a prioritized roadmap for closing them.
 
 **Legend:**
-- **CLI** = `@andrzejchm/notion-cli` (this repo, v0.8.0)
+- **CLI** = `@andrzejchm/notion-cli` (this repo, v0.9.0)
 - **MCP** = Official Notion MCP server
 
 ---
@@ -16,7 +16,7 @@
 | Search | Keyword + sort by last edited | Semantic + AI + connected sources + date/creator filters | Partial |
 | Page read | Markdown via API | Markdown + discussions + transcripts | Partial |
 | Page create | Under pages only | Under pages, databases, data sources; batch; templates; icon/cover | Partial |
-| Page edit | Surgical replace via `--range` | Search-and-replace (multi-op), full replace, template apply, verification | Partial |
+| Page edit | Multi-op `--find`/`--replace`, `--range` | Search-and-replace (multi-op), full replace, template apply, verification | Partial |
 | Page properties | Read + write via `update --prop` | Full read + write (update any property) | ✅ Parity |
 | Move pages | - | Batch move to any parent | Gap |
 | Duplicate pages | - | Duplicate with async content copy | Gap |
@@ -87,11 +87,10 @@ These gaps directly limit what an AI agent can accomplish through the CLI compar
 **Why:** Evolving database structure (adding a new status option, renaming a field) without leaving the terminal.
 **Suggested command:** `notion db alter <id> --add "Priority SELECT(High,Medium,Low)" --rename "Status:Project Status"`
 
-#### 9. Multi-operation content editing
+#### 9. ✅ Multi-operation content editing (shipped v0.9.0)
 **MCP:** `update_content` accepts an array of `{ old_str, new_str }` pairs (up to 100) in a single call, with `replace_all_matches` option.
-**CLI:** `notion edit-page` supports single `--range` replacement. No batch search-and-replace.
-**Why:** Agents making multiple edits to a page (updating several sections) currently need multiple CLI invocations.
-**Suggested approach:** Support multiple `--replace "old...new"` flags or a JSON patch file.
+**CLI:** `notion edit-page` supports multiple `--find`/`--replace` pairs in a single invocation (PR #6).
+**Status:** Shipped in v0.9.0.
 
 #### 10. Duplicate pages
 **MCP:** `duplicate-page` — async copy of any accessible page.
@@ -180,6 +179,6 @@ The CLI isn't just chasing MCP parity — it has unique strengths:
 
 ---
 
-*Last updated: 2026-03-23*
-*CLI version compared: 0.8.0*
+*Last updated: 2026-03-24*
+*CLI version compared: 0.9.0*
 *MCP version compared: Official Notion MCP (2026-03)*
