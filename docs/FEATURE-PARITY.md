@@ -18,7 +18,7 @@
 | Page create | Under pages only | Under pages, databases, data sources; batch; templates; icon/cover | Partial |
 | Page edit | Multi-op `--find`/`--replace`, `--range` | Search-and-replace (multi-op), full replace, template apply, verification | Partial |
 | Page properties | Read + write via `update --prop` | Full read + write (update any property) | ✅ Parity |
-| Move pages | - | Batch move to any parent | Gap |
+| Move pages | `move --to` / `--to-db` | Batch move to any parent | ✅ Parity |
 | Duplicate pages | - | Duplicate with async content copy | Gap |
 | Archive/delete | `archive` | Trash pages | ✅ Parity |
 | Database create | `db create --prop` syntax | SQL DDL `CREATE TABLE` syntax | Partial |
@@ -74,11 +74,10 @@ These gaps directly limit what an AI agent can accomplish through the CLI compar
 **CLI:** `notion db create --parent <id> --title "Tasks" --prop "Status:select:To Do,Done"` — supports title, rich_text, number, select, multi_select, status, date, checkbox, url, email, phone_number, people, files, created_time, last_edited_time. Relation, rollup, formula, and unique_id are not supported (too complex for CLI flags).
 **Status:** Shipped in v0.10.0.
 
-#### 7. Move pages
+#### 7. ✅ Move pages (shipped v0.11.0)
 **MCP:** Batch move up to 100 pages/databases to a new parent (page, database, data source, or workspace).
-**CLI:** No equivalent.
-**Why:** Reorganizing content (moving completed items to archive, restructuring projects) is a common agent task.
-**Suggested command:** `notion move <id...> --to <parent-id>`
+**CLI:** `notion move <ids...> --to <page-id>` or `notion move <ids...> --to-db <database-id>`. Supports multiple page IDs as variadic arguments.
+**Status:** Shipped in v0.11.0.
 
 #### 8. Update database schema
 **MCP:** `ADD COLUMN`, `DROP COLUMN`, `RENAME COLUMN`, `ALTER COLUMN SET` via DDL.
