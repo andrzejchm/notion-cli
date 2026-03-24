@@ -219,8 +219,12 @@ describe('addComment', () => {
     vi.clearAllMocks();
   });
 
-  it('calls client.comments.create with correct page_id and text content', async () => {
-    await addComment(client, 'page-id', 'Hello world');
+  it('creates a page-level comment with page target', async () => {
+    await addComment(
+      client,
+      { type: 'page', pageId: 'page-id' },
+      'Hello world',
+    );
 
     expect(client.comments.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -235,8 +239,56 @@ describe('addComment', () => {
     );
   });
 
+  it('creates a block-level comment with block target', async () => {
+    await addComment(
+      client,
+      { type: 'block', blockId: 'block-id' },
+      'Block comment',
+    );
+
+    expect(client.comments.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        parent: { block_id: 'block-id' },
+        rich_text: [
+          expect.objectContaining({
+            type: 'text',
+            text: { content: 'Block comment', link: null },
+          }),
+        ],
+      }),
+    );
+  });
+
+  it('replies to a discussion thread with reply target', async () => {
+    await addComment(
+      client,
+      { type: 'reply', discussionId: 'disc-123' },
+      'Thread reply',
+    );
+
+    expect(client.comments.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        discussion_id: 'disc-123',
+        rich_text: [
+          expect.objectContaining({
+            type: 'text',
+            text: { content: 'Thread reply', link: null },
+          }),
+        ],
+      }),
+    );
+    // reply target should NOT include parent
+    const call = vi.mocked(client.comments.create).mock.calls[0][0];
+    expect(call).not.toHaveProperty('parent');
+  });
+
   it('includes display_name when asUser option is provided', async () => {
-    await addComment(client, 'page-id', 'User comment', { asUser: true });
+    await addComment(
+      client,
+      { type: 'page', pageId: 'page-id' },
+      'User comment',
+      { asUser: true },
+    );
 
     expect(client.comments.create).toHaveBeenCalledWith(
       expect.objectContaining({

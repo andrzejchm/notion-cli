@@ -8,6 +8,15 @@ import { printOutput, setOutputMode } from '../output/format.js';
 import { paginateResults } from '../output/paginate.js';
 import { reportTokenSource } from '../output/stderr.js';
 
+function formatParent(parent: CommentObjectResponse['parent']): string {
+  switch (parent.type) {
+    case 'page_id':
+      return 'page';
+    case 'block_id':
+      return `block:${parent.block_id.slice(0, 8)}`;
+  }
+}
+
 export function commentsCommand(): Command {
   const cmd = new Command('comments');
 
@@ -40,11 +49,17 @@ export function commentsCommand(): Command {
           return [
             comment.created_time.split('T')[0],
             `${comment.created_by.id.slice(0, 8)}...`,
+            comment.discussion_id.slice(0, 8),
+            formatParent(comment.parent),
             text.slice(0, 80) + (text.length > 80 ? '…' : ''),
           ];
         });
 
-        printOutput(comments, ['DATE', 'AUTHOR ID', 'COMMENT'], rows);
+        printOutput(
+          comments,
+          ['DATE', 'AUTHOR ID', 'DISCUSSION', 'PARENT', 'COMMENT'],
+          rows,
+        );
       }),
     );
 
