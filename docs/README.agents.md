@@ -158,3 +158,28 @@ notion archive "$PAGE_ID" --json
 ```
 
 Required integration capabilities: **Read content**, **Update content**
+
+### `notion comment [id|url] -m <text>`
+
+Add a comment to a page, block, or discussion thread.
+
+```bash
+# Page-level comment
+notion comment "$PAGE_ID" -m "Reviewed and approved."
+
+# Reply to an existing discussion thread (use discussion ID from `notion comments`)
+notion comment --reply-to "$DISCUSSION_ID" -m "Agreed, let's proceed."
+
+# Comment on a specific block
+notion comment --block "$BLOCK_ID" -m "This section needs revision."
+```
+
+| Flag | Description |
+|------|-------------|
+| `-m, --message <text>` | Comment text (required) |
+| `--reply-to <discussion-id>` | Reply to an existing discussion thread |
+| `--block <block-id>` | Comment on a specific block |
+
+The `notion comments <id>` list command now shows `DISCUSSION` and `PARENT` columns so agents can reference discussion IDs with `--reply-to`.
+
+Required integration capabilities: **Read content**, **Insert content**, **Read comments**, **Insert comments**

@@ -14,28 +14,42 @@ export interface ReplaceOptions {
   allowDeletingContent?: boolean;
 }
 
+export type CommentTarget =
+  | { type: 'page'; pageId: string }
+  | { type: 'block'; blockId: string }
+  | { type: 'reply'; discussionId: string };
+
 export async function addComment(
   client: Client,
-  pageId: string,
+  target: CommentTarget,
   text: string,
   options: { asUser?: boolean } = {},
 ): Promise<void> {
-  await client.comments.create({
-    parent: { page_id: pageId },
-    rich_text: [
-      {
-        type: 'text',
-        text: { content: text, link: null },
-        annotations: {
-          bold: false,
-          italic: false,
-          strikethrough: false,
-          underline: false,
-          code: false,
-          color: 'default',
-        },
+  const richText = [
+    {
+      type: 'text' as const,
+      text: { content: text, link: null },
+      annotations: {
+        bold: false,
+        italic: false,
+        strikethrough: false,
+        underline: false,
+        code: false,
+        color: 'default' as const,
       },
-    ],
+    },
+  ];
+
+  const targetPayload =
+    target.type === 'reply'
+      ? { discussion_id: target.discussionId }
+      : target.type === 'block'
+        ? { parent: { block_id: target.blockId } }
+        : { parent: { page_id: target.pageId } };
+
+  await client.comments.create({
+    ...targetPayload,
+    rich_text: richText,
     ...(options.asUser && { display_name: { type: 'user' } }),
   });
 }

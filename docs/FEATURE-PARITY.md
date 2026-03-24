@@ -24,7 +24,7 @@
 | Database create | - | SQL DDL `CREATE TABLE` syntax | Gap |
 | Database schema update | Read-only schema | `ADD/DROP/RENAME/ALTER COLUMN` via DDL | Gap |
 | Database views | - | Create + update 10 view types with DSL | Gap |
-| Comments | Page-level add + list | Page-level + inline (selection-anchored) + reply to thread + rich text | Partial |
+| Comments | Page-level + block-level + thread replies, list with discussion IDs | Page-level + inline (selection-anchored) + reply to thread + rich text | Partial |
 | Users | List all | List + search + fetch by ID + fetch self | Partial |
 | Teams | - | List teamspaces + search | Gap |
 | Create pages in DB | `create-page --parent <db>` with `--prop` | Full property support, date/place/checkbox expanded formats | ✅ Parity |
@@ -64,11 +64,10 @@ These gaps directly limit what an AI agent can accomplish through the CLI compar
 
 ### Tier 2 - Medium Impact (power-user and advanced agent workflows)
 
-#### 5. Inline / anchored comments
+#### 5. Inline / anchored comments — partially shipped
 **MCP:** `selection_with_ellipsis` targets a specific block; `discussion_id` replies to existing threads. Rich text with mentions, dates, links.
-**CLI:** Page-level comments only. Plain text only.
-**Why:** Agents doing code/doc review need to comment on specific sections, not just drop a page-level note. Thread replies keep conversations organized.
-**Suggested flags:** `notion comment <id> -m "text" --anchor "## Section...content"` / `--reply-to <discussion-id>`
+**CLI:** Thread replies (`--reply-to <discussion-id>`) and block-level comments (`--block <block-id>`) shipped. Discussion IDs shown in `notion comments` list output. Inline text-selection anchoring is not available in the public API. Plain text only.
+**Remaining gap:** Rich text (mentions, dates, links) and inline text-selection anchoring (`selection_with_ellipsis`) — the latter requires internal API access.
 
 #### 6. Create databases
 **MCP:** `CREATE TABLE` DDL with full type system (select, relation, rollup, formula, unique_id, etc.).

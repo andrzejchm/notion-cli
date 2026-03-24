@@ -37,7 +37,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/andrzejchm/
 - **`notion db query`** — filter, sort, and select columns from any database
 - **`notion append`** — append markdown content to an existing page
 - **`notion create-page`** — create a new page with markdown body, prints URL to stdout
-- **`notion comment`** — add a comment to a page
+- **`notion comment`** — add a comment to a page, block, or discussion thread
 - **Agent-friendly** — plain text tables by default; `--json` for machine-readable output
 - **Flexible auth** — interactive setup or `NOTION_API_TOKEN` env var
 - **Accepts URLs** — pass full Notion URLs anywhere an ID is expected
@@ -70,6 +70,12 @@ my-summarize-command | notion create-page --parent "$PAGE_ID" --title "Auto Summ
 # Add a comment to a page
 notion comment "$PAGE_ID" -m "Reviewed and approved."
 
+# Reply to an existing discussion thread
+notion comment --reply-to "$DISCUSSION_ID" -m "Agreed, let's proceed."
+
+# Comment on a specific block
+notion comment --block "$BLOCK_ID" -m "This section needs revision."
+
 # List everything your integration can access
 notion ls
 ```
@@ -93,7 +99,7 @@ notion ls
 | `notion db query <id\|url>` | Query database entries with filtering and sorting |
 | `notion users` | List workspace members |
 | `notion comments <id\|url>` | Read page comments |
-| `notion comment <id\|url> -m <text>` | Add a comment to a page |
+| `notion comment [id\|url] -m <text>` | Add a comment to a page, block, or thread |
 | `notion append <id\|url> -m <markdown>` | Append markdown blocks to a page |
 | `notion edit-page <id\|url> --find <old> --replace <new>` | Search-and-replace text on a page |
 | `notion edit-page <id\|url> -m <markdown>` | Replace entire page content |
