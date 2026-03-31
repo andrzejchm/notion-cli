@@ -12,7 +12,10 @@ import { Command } from 'commander';
 import { withErrorHandling } from '../errors/error-handler.js';
 
 function skillPath(): string {
-  const entryPoint = realpathSync(process.argv[1] ?? '');
+  if (!process.argv[1]) {
+    throw new Error('Cannot determine install path. Run with: notion skill');
+  }
+  const entryPoint = realpathSync(process.argv[1]);
   const packageRoot = dirname(dirname(entryPoint));
   const candidates = [
     join(packageRoot, '.agents', 'skills', 'using-notion-cli', 'SKILL.md'),
@@ -95,9 +98,13 @@ async function installInteractive(
 
 function installNonInteractive(source: string, targets: AgentTarget[]): void {
   const detected = targets.filter((t) => t.detected);
-  const first = targets[0];
-  const toInstall = detected.length > 0 ? detected : first ? [first] : [];
-  for (const target of toInstall) {
+  if (detected.length === 0) {
+    process.stderr.write(
+      'No agents detected. Use --path to specify install location:\n  notion skill --path ~/.claude/skills/using-notion-cli/SKILL.md\n',
+    );
+    return;
+  }
+  for (const target of detected) {
     const dest = installTo(source, target);
     process.stdout.write(`Installed: ${target.name}: ${dest}\n`);
   }
