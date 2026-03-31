@@ -1,8 +1,6 @@
 ---
 name: using-notion-cli
 description: Reads and writes Notion pages using the `notion` CLI tool. Use when accessing Notion content, searching workspace pages, querying database entries, reading page markdown, appending content, creating pages, or adding comments from the terminal or within automated workflows.
-license: MIT
-compatibility: opencode
 ---
 
 ## Setup

@@ -1,10 +1,10 @@
-# notion-cli for OpenCode
+# notion-cli for AI Coding Agents
 
-Complete guide for using notion-cli with [OpenCode](https://opencode.ai).
+Complete guide for using notion-cli with AI coding agents (Claude Code, OpenCode, Cursor, Windsurf, etc.).
 
 ## Quick Install
 
-Tell OpenCode:
+Tell your AI agent:
 
 ```
 Fetch and follow instructions from https://raw.githubusercontent.com/andrzejchm/notion-cli/main/docs/README.agents.md
@@ -24,13 +24,16 @@ npm install -g @andrzejchm/notion-cli
 
 Homebrew bundles Node.js automatically. npm requires Node.js ≥ 22.
 
-### 2. Install the skill file
+### 2. Install the skill
 
-```bash
-mkdir -p ~/.config/opencode/skills/using-notion-cli
-curl -fsSL https://raw.githubusercontent.com/andrzejchm/notion-cli/main/docs/skills/using-notion-cli/SKILL.md \
-  -o ~/.config/opencode/skills/using-notion-cli/SKILL.md
+The skill file teaches your AI agent how to use notion-cli. It follows the open [Agent Skills](https://agentskills.io) standard.
+
+**Skill URL:**
 ```
+https://raw.githubusercontent.com/andrzejchm/notion-cli/main/docs/skills/using-notion-cli/SKILL.md
+```
+
+**Agent:** Ask the user whether they want the skill installed **globally** (all projects) or **per-project**, then consult your own documentation for the correct skill install path. The skill directory name must be `using-notion-cli` and the file must be named `SKILL.md`.
 
 ### 3. Authenticate
 
@@ -63,7 +66,7 @@ notion --version   # CLI installed
 notion ls          # auth works
 ```
 
-Restart OpenCode after installing. The skill is now discoverable via the `skill` tool.
+Restart your agent session after installing so it picks up the new skill.
 
 ## Updating
 
@@ -73,11 +76,9 @@ brew upgrade notion-cli
 
 # npm
 npm install -g @andrzejchm/notion-cli
-
-# Update skill file (either install method)
-curl -fsSL https://raw.githubusercontent.com/andrzejchm/notion-cli/main/docs/skills/using-notion-cli/SKILL.md \
-  -o ~/.config/opencode/skills/using-notion-cli/SKILL.md
 ```
+
+To update the skill file, re-download it from the URL in step 2 to the same location.
 
 ## Commands Reference
 
