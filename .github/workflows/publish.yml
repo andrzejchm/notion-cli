@@ -91,6 +91,35 @@ jobs:
             echo "No notable changes." >> "$OUT"
           fi
 
+          # Contributors (exclude repo owner and bots)
+          if [ -z "$PREV_TAG" ]; then
+            AUTHORS=$(git log --pretty=format:"%an|%ae" HEAD)
+          else
+            AUTHORS=$(git log --pretty=format:"%an|%ae" "${PREV_TAG}..HEAD")
+          fi
+
+          CONTRIBUTORS=$(echo "$AUTHORS" \
+            | sort -u \
+            | grep -v '\[bot\]' \
+            | grep -v 'dependabot' \
+            | grep -vi 'github-actions' \
+            | while IFS='|' read -r name email; do
+                # look up GitHub username from email
+                login=$(curl -sf -H "Authorization: token ${{ github.token }}" \
+                  "https://api.github.com/search/users?q=${email}+in:email" \
+                  | jq -r '.items[0].login // empty' 2>/dev/null || true)
+                if [ -n "$login" ] && [ "$login" != "${{ github.repository_owner }}" ]; then
+                  echo "@${login}"
+                fi
+              done \
+            | sort -u)
+
+          if [ -n "$CONTRIBUTORS" ]; then
+            echo "### Contributors" >> "$OUT"
+            echo "Thanks to $(echo "$CONTRIBUTORS" | tr '\n' ' ' | sed 's/ *$//; s/  */ /g; s/ \(@[^ ]*\)$/ and \1/; s/ /, /g; s/, and / and /') for contributing to this release! :tada:" >> "$OUT"
+            echo "" >> "$OUT"
+          fi
+
           if [ -n "$PREV_TAG" ]; then
             COMPARE_URL="https://github.com/${{ github.repository }}/compare/${PREV_TAG}...${CURRENT_TAG}"
             echo "**Full diff:** ${COMPARE_URL}" >> "$OUT"
