@@ -108,7 +108,7 @@ jobs:
 
           if [ -n "$CONTRIBUTORS" ]; then
             echo "### Contributors" >> "$OUT"
-            echo "Thanks to $(echo "$CONTRIBUTORS" | tr '\n' ' ' | sed 's/ *$//; s/  */ /g; s/ \(@[^ ]*\)$/ and \1/; s/ /, /g; s/, and / and /') for contributing to this release! :tada:" >> "$OUT"
+            echo "Thanks to $(echo "$CONTRIBUTORS" | paste -sd, - | sed 's/,/, /g; s/, \([^,]*\)$/ and \1/') for contributing to this release! :tada:" >> "$OUT"
             echo "" >> "$OUT"
           fi
 
