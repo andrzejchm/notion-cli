@@ -30,7 +30,7 @@ The skill file teaches your AI agent how to use notion-cli. It follows the open 
 
 **Skill URL:**
 ```
-https://raw.githubusercontent.com/andrzejchm/notion-cli/main/docs/skills/using-notion-cli/SKILL.md
+https://raw.githubusercontent.com/andrzejchm/notion-cli/main/.agents/skills/using-notion-cli/SKILL.md
 ```
 
 **Agent:** Ask the user whether they want the skill installed **globally** (all projects) or **per-project**, then consult your own documentation for the correct skill install path. The skill directory name must be `using-notion-cli` and the file must be named `SKILL.md`.

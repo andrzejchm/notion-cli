@@ -1,7 +1,11 @@
 ---
 name: using-notion-cli
-description: Reads and writes Notion pages using the `notion` CLI tool. Use when accessing Notion content, searching workspace pages, querying database entries, reading page markdown, appending content, creating pages, or adding comments from the terminal or within automated workflows.
+description: Use when reading or writing Notion pages, searching a Notion workspace, querying or creating Notion databases, appending or editing page content, creating pages, updating page properties, adding comments, or archiving pages — via the `notion` CLI tool in the terminal.
 ---
+
+## Overview
+
+`notion` is a CLI tool for reading and writing Notion content from the terminal or agent workflows. Use it any time you need to interact with Notion: read pages, search, query databases, append or edit content, create pages, update properties, post comments, or archive pages.
 
 ## Setup
 
@@ -47,6 +51,7 @@ notion auth logout                   # remove a profile (interactive selector)
 notion auth logout --profile <name>  # remove specific profile directly
 notion auth list                     # list all saved profiles
 notion auth use <name>               # switch active profile
+notion --profile <name> <command>    # use a specific profile for one command
 ```
 
 **Headless/CI agents:** Use `NOTION_API_TOKEN=<token>` env var — overrides all config, no TTY needed.
@@ -78,7 +83,9 @@ notion ls | jq '.[] | select(.type == "database")'
 notion search "query"                    # search all pages/databases by title
 notion search "query" --type page        # pages only
 notion search "query" --type database    # databases only
+notion search "query" --sort asc         # sort by last edited time (asc or desc)
 notion ls                                # list everything accessible to integration
+notion ls --sort desc                    # sort by last edited time
 notion users                             # list workspace members
 notion comments <id|url>                 # list page comments
 notion open <id|url>                     # open in browser
@@ -100,6 +107,8 @@ notion db query <id|url> --filter "Status=Done"       # filter (repeatable)
 notion db query <id|url> --sort "Created:desc"        # sort (repeatable)
 notion db query <id|url> --columns "Title,Status"     # limit columns
 notion db query <id|url> --json | jq '.[] | .properties'
+
+notion db create --parent <page-id|url> --title "My Database"  # create a new database
 ```
 
 ### Write Operations
@@ -123,7 +132,11 @@ notion create-page --parent <id|url> --title "Page" --cover "https://example.com
 
 URL=$(notion create-page --parent <id|url> --title "Summary" -m "...")   # capture URL
 
-notion comment <id|url> -m "Reviewed and approved."      # add comment to a page
+notion comment <id|url> -m "Reviewed and approved."                  # add comment to a page
+notion comment <id|url> -m "Reply" --reply-to <discussion-id>        # reply to a discussion thread
+notion comment <id|url> -m "Note" --block <block-id>                 # comment on a specific block
+
+notion archive <id|url>                                              # move page to trash
 ```
 
 #### Updating Page Properties

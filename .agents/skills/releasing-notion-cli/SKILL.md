@@ -1,6 +1,8 @@
 ---
 name: releasing-notion-cli
 description: Publishes a new version of notion-cli to npm and updates the Homebrew tap. Use when releasing a new version, bumping the version number, or verifying a release went through.
+metadata:
+  internal: true
 ---
 
 ## Versioning Rules

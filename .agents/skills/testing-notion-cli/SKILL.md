@@ -1,6 +1,8 @@
 ---
 name: testing-notion-cli
 description: Runs exploratory end-to-end test scenarios against the notion CLI using YAML-defined test cases. Use when testing CLI behavior, running e2e scenarios, validating CLI commands against a real Notion workspace, or discovering new edge-case scenarios.
+metadata:
+  internal: true
 ---
 
 ## Overview
