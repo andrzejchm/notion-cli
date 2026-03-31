@@ -1,11 +1,11 @@
 ---
 name: using-notion-cli
-description: Use when reading or writing Notion pages, searching a Notion workspace, querying or creating Notion databases, appending or editing page content, creating pages, updating page properties, adding comments, or archiving pages — via the `notion` CLI tool in the terminal.
+description: Use when reading or writing Notion pages, searching a Notion workspace, querying or creating Notion databases, appending or editing page content, creating pages, updating page properties, moving pages, adding comments, or archiving pages — via the `notion` CLI tool in the terminal.
 ---
 
 ## Overview
 
-`notion` is a CLI tool for reading and writing Notion content from the terminal or agent workflows. Use it any time you need to interact with Notion: read pages, search, query databases, append or edit content, create pages, update properties, post comments, or archive pages.
+`notion` is a CLI tool for reading and writing Notion content from the terminal or agent workflows. Use it any time you need to interact with Notion: read pages, search, query databases, append or edit content, create pages, update properties, move pages, post comments, or archive pages.
 
 ## Setup
 
@@ -137,6 +137,9 @@ notion comment <id|url> -m "Reply" --reply-to <discussion-id>        # reply to 
 notion comment <id|url> -m "Note" --block <block-id>                 # comment on a specific block
 
 notion archive <id|url>                                              # move page to trash
+
+notion move <ids|urls...> --to <id|url>                              # move pages to a new parent page
+notion move <ids|urls...> --to-db <id|url>                           # move pages to a database parent
 ```
 
 #### Updating Page Properties
@@ -242,6 +245,13 @@ notion create-page --parent "$DB_ID" --title "Fix login bug" \
 # Insert a new sub-section after an existing section
 notion append "$PAGE_ID" -m "## New Sub-section\nContent here" \
   --after "## Existing Section...last line of section"
+
+# Move pages to a different parent
+ARCHIVE_ID=$(notion search "Archive" --type page | jq -r '.[0].id')
+notion move "$PAGE_ID" --to "$ARCHIVE_ID"
+
+# Move multiple pages into a database
+notion move page1-id page2-id --to-db "$DB_ID"
 ```
 
 ---
