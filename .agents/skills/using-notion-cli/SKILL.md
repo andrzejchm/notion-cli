@@ -3,11 +3,11 @@ name: using-notion-cli
 description: Use when reading or writing Notion pages, searching a Notion workspace, querying or creating Notion databases, appending or editing page content, creating pages, updating page properties, moving pages, adding comments, or archiving pages — via the `notion` CLI tool in the terminal.
 ---
 
-## Overview - skill version 0.9.1
+## Overview - skill version 0.11.0
 
 `notion` is a CLI tool for reading and writing Notion content from the terminal or agent workflows. Use it any time you need to interact with Notion: read pages, search, query databases, append or edit content, create pages, update properties, move pages, post comments, or archive pages.
 
-> **Version check:** Run `notion --version`. If your installed version is older than 0.9.1, update with `npm install -g @andrzejchm/notion-cli` and refresh this skill with `notion skill`.
+> **Version check:** Run `notion --version`. If your installed version is older than 0.11.0, update with `npm install -g @andrzejchm/notion-cli` and refresh this skill with `notion skill`.
 
 ## Setup
 
