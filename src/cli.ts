@@ -18,6 +18,7 @@ import { dbSchemaCommand } from './commands/db/schema.js';
 import { editPageCommand } from './commands/edit-page.js';
 import { initCommand } from './commands/init.js';
 import { lsCommand } from './commands/ls.js';
+import { moveCommand } from './commands/move.js';
 import { openCommand } from './commands/open.js';
 import { profileListCommand } from './commands/profile/list.js';
 import { profileRemoveCommand } from './commands/profile/remove.js';
@@ -113,6 +114,7 @@ program.addCommand(createPageCommand());
 program.addCommand(editPageCommand());
 program.addCommand(updateCommand());
 program.addCommand(archiveCommand());
+program.addCommand(moveCommand());
 
 // --- Database ---
 const dbCmd = new Command('db').description('Database operations');

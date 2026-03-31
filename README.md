@@ -107,6 +107,8 @@ notion ls
 | `notion create-page --parent <id\|url> --title <title>` | Create a new page, prints URL |
 | `notion update <id\|url> --prop "Name=Value"` | Update properties on a page |
 | `notion archive <id\|url>` | Archive (trash) a page |
+| `notion move <ids\|urls...> --to <id\|url>` | Move pages to a new parent page |
+| `notion move <ids\|urls...> --to-db <id\|url>` | Move pages to a database parent |
 | `notion completion bash\|zsh\|fish` | Install shell tab completion |
 
 ### `notion search` / `notion ls` flags
