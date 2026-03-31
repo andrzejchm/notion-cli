@@ -3,19 +3,23 @@ name: using-notion-cli
 description: Use when reading or writing Notion pages, searching a Notion workspace, querying or creating Notion databases, appending or editing page content, creating pages, updating page properties, adding comments, or archiving pages — via the `notion` CLI tool in the terminal.
 ---
 
-## Overview
+## Overview - skill version 0.9.1
 
 `notion` is a CLI tool for reading and writing Notion content from the terminal or agent workflows. Use it any time you need to interact with Notion: read pages, search, query databases, append or edit content, create pages, update properties, post comments, or archive pages.
+
+> **Version check:** Run `notion --version`. If your installed version is older than 0.9.1, update with `npm install -g @andrzejchm/notion-cli` and refresh this skill with `notion skill`.
 
 ## Setup
 
 Install once:
+
 ```bash
 npm install -g @andrzejchm/notion-cli
 notion auth login   # interactive setup — choose OAuth or integration token
 ```
 
 Or set env var (preferred for CI/agents):
+
 ```bash
 export NOTION_API_TOKEN=ntn_your_token_here
 ```
@@ -25,6 +29,7 @@ Get token: https://www.notion.so/profile/integrations/internal
 Pages must be shared with your integration: open page → `⋯` → **Add connections**.
 
 **Integration capabilities** (set at notion.so/profile/integrations/internal → your integration → Capabilities):
+
 - Read-only commands: **Read content** only
 - `notion append`, `notion append --after`, `notion create-page` (page parent): also need **Insert content**
 - `notion create-page --parent <db>`: also need **Insert content** + database must be shared with integration
@@ -37,11 +42,11 @@ Pages must be shared with your integration: open page → `⋯` → **Add connec
 
 Two auth methods are available. If both are configured, **OAuth takes precedence**.
 
-| Method | Command | Attribution | Notes |
-|--------|---------|-------------|-------|
-| Interactive setup | `notion auth login` | — | Guides you to choose; TTY required |
-| OAuth user login | select "OAuth user login" in `notion auth login` | Your Notion account | Browser required; `--manual` for headless |
-| Integration token | select "Integration token" in `notion auth login` | Integration bot | Works in CI/headless; must connect integration to pages |
+| Method            | Command                                           | Attribution         | Notes                                                   |
+| ----------------- | ------------------------------------------------- | ------------------- | ------------------------------------------------------- |
+| Interactive setup | `notion auth login`                               | —                   | Guides you to choose; TTY required                      |
+| OAuth user login  | select "OAuth user login" in `notion auth login`  | Your Notion account | Browser required; `--manual` for headless               |
+| Integration token | select "Integration token" in `notion auth login` | Integration bot     | Works in CI/headless; must connect integration to pages |
 
 ```bash
 notion auth login                    # interactive selector — OAuth or integration token
@@ -60,14 +65,15 @@ notion --profile <name> <command>    # use a specific profile for one command
 
 ## Output Modes
 
-| Context | Default | Override |
-|---------|---------|----------|
-| Terminal (TTY) | Formatted tables | `--json` |
-| Piped / agent | Plain text tables | `--json` |
+| Context        | Default           | Override |
+| -------------- | ----------------- | -------- |
+| Terminal (TTY) | Formatted tables  | `--json` |
+| Piped / agent  | Plain text tables | `--json` |
 
 `notion read` always outputs **markdown** — in terminal and when piped.
 
 Pipe any command to get JSON:
+
 ```bash
 notion search "query" | jq '.[0].id'
 notion ls | jq '.[] | select(.type == "database")'
@@ -187,6 +193,7 @@ notion append <id|url> -m "New content" --after "## Status...end of status"
 ## ID Formats
 
 All commands accept any of:
+
 - `abc123def456789012345678901234ab` (32-char hex)
 - `abc123de-f456-7890-1234-5678901234ab` (UUID)
 - `https://www.notion.so/workspace/Page-Title-abc123` (full URL)

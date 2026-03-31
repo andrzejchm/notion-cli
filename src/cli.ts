@@ -25,6 +25,7 @@ import { profileRemoveCommand } from './commands/profile/remove.js';
 import { profileUseCommand } from './commands/profile/use.js';
 import { readCommand } from './commands/read.js';
 import { searchCommand } from './commands/search.js';
+import { skillCommand } from './commands/skill.js';
 import { updateCommand } from './commands/update.js';
 import { usersCommand } from './commands/users.js';
 import { setColorForced } from './output/color.js';
@@ -125,5 +126,6 @@ program.addCommand(dbCmd);
 
 // --- Utilities ---
 program.addCommand(completionCommand());
+program.addCommand(skillCommand());
 
 await program.parseAsync();
