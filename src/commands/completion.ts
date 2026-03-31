@@ -8,7 +8,7 @@ _notion_completion() {
   local cur prev words cword
   _init_completion || return
 
-  local commands="init profile completion --help --version --verbose --color"
+  local commands="init profile completion skill --help --version --verbose --color"
   local profile_commands="list use remove"
 
   case "$prev" in
@@ -42,6 +42,7 @@ _notion() {
     'init:authenticate with Notion and save a profile'
     'profile:manage authentication profiles'
     'completion:output shell completion script'
+    'skill:install the agent skill file'
   )
 
   local -a global_opts
@@ -94,6 +95,7 @@ complete -c notion -l color -d 'force color output'
 complete -c notion -n '__fish_use_subcommand' -a init -d 'authenticate with Notion and save a profile'
 complete -c notion -n '__fish_use_subcommand' -a profile -d 'manage authentication profiles'
 complete -c notion -n '__fish_use_subcommand' -a completion -d 'output shell completion script'
+complete -c notion -n '__fish_use_subcommand' -a skill -d 'install the agent skill file'
 
 # profile subcommands
 complete -c notion -n '__fish_seen_subcommand_from profile' -a list -d 'list all authentication profiles'

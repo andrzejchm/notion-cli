@@ -7,10 +7,10 @@ metadata:
 
 ## Versioning Rules
 
-| Change type | Version bump |
-|-------------|-------------|
-| Bug fix, no behavior change | patch (0.x.Y) |
-| New feature, backward compatible | minor (0.X.0) |
+| Change type                                             | Version bump  |
+| ------------------------------------------------------- | ------------- |
+| Bug fix, no behavior change                             | patch (0.x.Y) |
+| New feature, backward compatible                        | minor (0.X.0) |
 | Breaking change (removed command, config format change) | major (X.0.0) |
 
 Never release after a single change. Accumulate related changes, confirm they work locally, then release.
@@ -20,7 +20,8 @@ Never release after a single change. Accumulate related changes, confirm they wo
 - [ ] Changes tested locally (`npm install -g .` from repo root)
 - [ ] `npm run ci` passes (typecheck + biome check)
 - [ ] `npm run test` passes
-- [ ] SKILL.md in `docs/skills/using-notion-cli/` is up to date with new commands/behavior
+- [ ] SKILL.md in `.agents/skills/using-notion-cli/` is up to date with new commands/behavior
+- [ ] SKILL.md version number updated in the "Overview - skill version X.Y.Z" heading to match new version
 
 ## Release steps
 
@@ -42,6 +43,7 @@ git push && git push origin vX.Y.Z
 ```
 
 The `v*` tag triggers the publish workflow (`.github/workflows/publish.yml`):
+
 - Runs CI (typecheck + biome check + tests)
 - Builds and publishes to npm on success
 
@@ -56,6 +58,7 @@ Wait for both jobs (`Typecheck, lint & test` and `Publish to npm`) to show ✓.
 The workflow also auto-creates a GitHub release with a changelog grouped by commit type (feat/fix/perf/refactor/docs/chore). Commit messages must follow conventional commits (`type: message` or `type(scope): message`) for correct grouping.
 
 Verify the release was created:
+
 ```bash
 gh release view vX.Y.Z --repo andrzejchm/notion-cli
 ```

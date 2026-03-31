@@ -26,6 +26,7 @@
   "files": [
     "dist/",
     "docs/",
+    ".agents/skills/using-notion-cli/",
     "README.md"
   ],
   "type": "module",
