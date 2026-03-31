@@ -1,0 +1,54 @@
+name: Integration tests
+
+# pull_request_target runs the workflow from the BASE branch (main),
+# not from the PR's head. This means the workflow code cannot be
+# tampered with by a fork, making it safe to expose secrets — as long
+# as the code being *tested* is reviewed before approval.
+#
+# For fork PRs the "integration-tests" environment must be configured
+# in the repository settings with a "Required reviewers" protection
+# rule so a maintainer can inspect the PR before secrets are used.
+
+on:
+  pull_request_target:
+    branches: ['**']
+
+jobs:
+  integration:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    # Fork PRs require manual approval via the environment protection rule.
+    # Same-repo PRs run immediately (no reviewers gate on the environment).
+    environment: ${{ github.event.pull_request.head.repo.fork && 'integration-tests-fork' || 'integration-tests' }}
+
+    steps:
+      # IMPORTANT: checkout the PR head commit, not the base branch.
+      # For pull_request_target the default checkout is the base branch.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Run integration tests
+        run: npm run test:integration
+        env:
+          NOTION_TEST_TOKEN: ${{ secrets.NOTION_TEST_TOKEN }}
+          NOTION_TEST_ROOT_PAGE_ID: ${{ secrets.NOTION_TEST_ROOT_PAGE_ID }}
+          NOTION_FIXTURE_RICH_PAGE_ID: ${{ secrets.NOTION_FIXTURE_RICH_PAGE_ID }}
+          NOTION_FIXTURE_SIMPLE_PAGE_ID: ${{ secrets.NOTION_FIXTURE_SIMPLE_PAGE_ID }}
+          NOTION_FIXTURE_EMPTY_PAGE_ID: ${{ secrets.NOTION_FIXTURE_EMPTY_PAGE_ID }}
+          NOTION_FIXTURE_TASK_DB_ID: ${{ secrets.NOTION_FIXTURE_TASK_DB_ID }}
+          NOTION_FIXTURE_EMPTY_DB_ID: ${{ secrets.NOTION_FIXTURE_EMPTY_DB_ID }}
+          NOTION_FIXTURE_COMMENTS_PAGE_ID: ${{ secrets.NOTION_FIXTURE_COMMENTS_PAGE_ID }}
