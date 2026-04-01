@@ -102,6 +102,7 @@ notion ls
 | `notion comments <id\|url>` | Read page comments |
 | `notion comment [id\|url] -m <text>` | Add a comment to a page, block, or thread |
 | `notion append <id\|url> -m <markdown>` | Append markdown blocks to a page |
+| `notion attach <id\|url> <file> [files...]` | Upload and attach file(s) to a page |
 | `notion edit-page <id\|url> --find <old> --replace <new>` | Search-and-replace text on a page |
 | `notion edit-page <id\|url> -m <markdown>` | Replace entire page content |
 | `notion create-page --parent <id\|url> --title <title>` | Create a new page, prints URL |
@@ -110,6 +111,29 @@ notion ls
 | `notion move <ids\|urls...> --to <id\|url>` | Move pages to a new parent page |
 | `notion move <ids\|urls...> --to-db <id\|url>` | Move pages to a database parent |
 | `notion completion bash\|zsh\|fish` | Install shell tab completion |
+
+### `notion attach` flags
+
+| Flag | Example | Description |
+|------|---------|-------------|
+| `--caption <text>` | `--caption "My screenshot"` | Caption for the file block(s) |
+| `--type <type>` | `--type image` | Override auto-detected block type (`image\|file\|pdf\|audio\|video`) |
+| `--json` | `--json` | Output JSON response |
+
+### `notion append` / `notion create-page` — `--file` flag
+
+Both commands accept a repeatable `--file <path>` option to attach local files after the markdown content is written:
+
+```bash
+# Append markdown and attach a file
+notion append "$PAGE_ID" -m "See attached screenshot:" --file screenshot.png
+
+# Create a page with an attached PDF
+notion create-page --parent "$PAGE_ID" --title "Report" --file report.pdf
+
+# Attach multiple files
+notion append "$PAGE_ID" --file image.png --file data.csv
+```
 
 ### `notion search` / `notion ls` flags
 
@@ -220,6 +244,7 @@ Write commands require additional capabilities — enable in your integration se
 | Command | Required capabilities |
 |---------|----------------------|
 | `notion append` | Read content, Insert content |
+| `notion attach` | Read content, Insert content |
 | `notion create-page` | Read content, Insert content |
 | `notion update` | Read content, Update content |
 | `notion comment` | Read content, Insert content, Read comments, Insert comments |

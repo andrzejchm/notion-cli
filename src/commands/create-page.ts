@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { Command } from 'commander';
 import { resolveToken } from '../config/token.js';
 import { CliError } from '../errors/cli-error.js';
@@ -8,6 +9,11 @@ import { parseNotionId, toUuid } from '../notion/url-parser.js';
 import { reportTokenSource } from '../output/stderr.js';
 import { fetchDatabaseSchema } from '../services/database.service.js';
 import { buildPropertiesPayload } from '../services/update.service.js';
+import {
+  buildFileBlock,
+  resolveBlockType,
+  uploadFile,
+} from '../services/upload.service.js';
 import { createPage, createPageInDatabase } from '../services/write.service.js';
 import { readStdin } from '../utils/stdin.js';
 
@@ -18,9 +24,10 @@ interface CreatePageOpts {
   prop: string[];
   icon?: string;
   cover?: string;
+  file: string[];
 }
 
-function collectProps(val: string, acc: string[]): string[] {
+function collectValues(val: string, acc: string[]): string[] {
   acc.push(val);
   return acc;
 }
@@ -55,11 +62,17 @@ export function createPageCommand(): Command {
     .option(
       '--prop <property=value>',
       'set a property value (repeatable, database parents only)',
-      collectProps,
+      collectValues,
       [],
     )
     .option('--icon <emoji-or-url>', 'page icon — emoji character or image URL')
     .option('--cover <url>', 'page cover image URL')
+    .option(
+      '--file <path>',
+      'attach a local file to the page after creation (repeatable)',
+      collectValues,
+      [],
+    )
     .action(
       withErrorHandling(async (opts: CreatePageOpts) => {
         const { token, source } = await resolveToken();
@@ -78,6 +91,8 @@ export function createPageCommand(): Command {
 
         // Try to resolve as a database first
         const dbSchema = await tryGetDatabaseSchema(client, parentUuid);
+
+        let createdPageUrl: string;
 
         if (dbSchema) {
           // Database parent — find the title property name
@@ -99,7 +114,7 @@ export function createPageCommand(): Command {
               ? buildPropertiesPayload(opts.prop, dbSchema.properties)
               : {};
 
-          const url = await createPageInDatabase(
+          createdPageUrl = await createPageInDatabase(
             client,
             dbSchema.databaseId,
             titlePropName,
@@ -108,7 +123,6 @@ export function createPageCommand(): Command {
             markdown,
             iconCover,
           );
-          process.stdout.write(`${url}\n`);
         } else {
           // Page parent
           if (opts.prop.length > 0) {
@@ -119,15 +133,45 @@ export function createPageCommand(): Command {
             );
           }
 
-          const url = await createPage(
+          createdPageUrl = await createPage(
             client,
             parentUuid,
             opts.title,
             markdown,
             iconCover,
           );
-          process.stdout.write(`${url}\n`);
         }
+
+        // Attach files if provided (two-step: page created first, then files appended)
+        if (opts.file.length > 0) {
+          for (const filePath of opts.file) {
+            if (!existsSync(filePath)) {
+              throw new CliError(
+                ErrorCodes.INVALID_ARG,
+                `File not found: ${filePath}`,
+                'Provide a valid file path',
+              );
+            }
+          }
+
+          // Parse the created page ID from the URL/ID returned by the API
+          const createdPageId = toUuid(parseNotionId(createdPageUrl));
+
+          const blocks = await Promise.all(
+            opts.file.map(async (filePath) => {
+              const result = await uploadFile(client, filePath);
+              const blockType = resolveBlockType(result.contentType);
+              return buildFileBlock(result.fileUploadId, blockType);
+            }),
+          );
+
+          await client.blocks.children.append({
+            block_id: createdPageId,
+            children: blocks,
+          });
+        }
+
+        process.stdout.write(`${createdPageUrl}\n`);
       }),
     );
 
