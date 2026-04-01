@@ -1,13 +1,13 @@
 ---
 name: using-notion-cli
-description: Use when reading or writing Notion pages, searching a Notion workspace, querying or creating Notion databases, appending or editing page content, creating pages, updating page properties, moving pages, adding comments, or archiving pages — via the `notion` CLI tool in the terminal.
+description: Use when reading or writing Notion pages, searching a Notion workspace, querying or creating Notion databases, appending or editing page content, creating pages, updating page properties, moving pages, attaching files, adding comments, or archiving pages — via the `notion` CLI tool in the terminal.
 ---
 
-## Overview - skill version 0.11.0
+## Overview - skill version 0.12.0
 
-`notion` is a CLI tool for reading and writing Notion content from the terminal or agent workflows. Use it any time you need to interact with Notion: read pages, search, query databases, append or edit content, create pages, update properties, move pages, post comments, or archive pages.
+`notion` is a CLI tool for reading and writing Notion content from the terminal or agent workflows. Use it any time you need to interact with Notion: read pages, search, query databases, append or edit content, create pages, update properties, move pages, post comments, attach files, or archive pages.
 
-> **Version check:** Run `notion --version`. If your installed version is older than 0.11.0, update with `npm install -g @andrzejchm/notion-cli` and refresh this skill with `notion skill`.
+> **Version check:** Run `notion --version`. If your installed version is older than 0.12.0, update with `npm install -g @andrzejchm/notion-cli` and refresh this skill with `notion skill`.
 
 ## Setup
 
@@ -34,6 +34,7 @@ Pages must be shared with your integration: open page → `⋯` → **Add connec
 - `notion append`, `notion append --after`, `notion create-page` (page parent): also need **Insert content**
 - `notion create-page --parent <db>`: also need **Insert content** + database must be shared with integration
 - `notion edit-page`: also need **Update content** + **Insert content**
+- `notion attach`: also need **Insert content**
 - `notion comment`: also need **Read comments** + **Insert comments**
 
 ---
@@ -122,19 +123,26 @@ notion db create --parent <page-id|url> --title "My Database"  # create a new da
 ```bash
 notion append <id|url> -m "## Heading\nParagraph text"   # append markdown blocks to a page
 notion append <id|url> -m "$(cat notes.md)"              # append file contents
+notion append <id|url> --file screenshot.png             # attach a local file
+notion append <id|url> -m "See results:" --file chart.png  # markdown + file attachment
+notion append <id|url> --file a.png --file b.pdf         # multiple files (repeatable)
 
 notion create-page --parent <page-id|url> --title "Title"               # child page under a page
 notion create-page --parent <page-id|url> --title "Title" -m "# Hello"  # with markdown body
 echo "# Content" | notion create-page --parent <page-id|url> --title "Title"  # from stdin
+notion create-page --parent <page-id|url> --title "Report" --file report.pdf  # with file attachment
+notion create-page --parent <page-id|url> --title "Notes" -m "# Agenda" --file slides.pdf --file notes.txt
 
 # Create entry in a database (auto-detected from parent ID)
 notion create-page --parent <db-id|url> --title "New Task"
 notion create-page --parent <db-id|url> --title "Task" --prop "Status=To Do" --prop "Priority=High"
 notion create-page --parent <db-id|url> --title "Task" --prop "Due=2026-04-01" -m "# Details"
 
-# Icon and cover
+# Icon and cover (emoji, URL, or local file path)
 notion create-page --parent <id|url> --title "Page" --icon "🚀"
+notion create-page --parent <id|url> --title "Page" --icon ./logo.png              # upload local file as icon
 notion create-page --parent <id|url> --title "Page" --cover "https://example.com/img.jpg"
+notion create-page --parent <id|url> --title "Page" --cover ./banner.jpg           # upload local file as cover
 
 URL=$(notion create-page --parent <id|url> --title "Summary" -m "...")   # capture URL
 
@@ -148,6 +156,25 @@ notion move <ids|urls...> --to <id|url>                              # move page
 notion move <ids|urls...> --to-db <id|url>                           # move pages to a database parent
 ```
 
+#### File Attachments
+
+Upload local files to Notion and attach them as blocks (image, file, PDF, audio, video). Block type is auto-detected from file extension. Files ≤20 MB upload in one request; larger files are chunked automatically.
+
+```bash
+notion attach <id|url> screenshot.png                                # attach a single file
+notion attach <id|url> report.pdf data.csv image.png                 # attach multiple files
+notion attach <id|url> diagram.png --caption "Architecture diagram"  # with caption
+notion attach <id|url> file.svg --type image                         # override auto-detected type
+```
+
+| Flag | Description |
+|------|-------------|
+| `--caption <text>` | Caption for the file block(s) |
+| `--type <type>` | Override block type (`image\|file\|pdf\|audio\|video`) |
+| `--json` | Output JSON response |
+
+The `--file <path>` flag (repeatable) is also available on `notion append` and `notion create-page` for inline file attachment alongside markdown content.
+
 #### Updating Page Properties
 
 ```bash
@@ -160,7 +187,16 @@ notion update <id|url> --prop "Done=true"                        # checkbox (tru
 notion update <id|url> --prop "Status="                          # clear a property (empty value)
 ```
 
-Supported types: title, rich_text, select, status, multi_select, number, checkbox, url, email, phone_number, date.
+Supported types: title, rich_text, select, status, multi_select, number, checkbox, url, email, phone_number, date, files.
+
+```bash
+# Files property — local file paths or URLs (comma-separated for multiple)
+notion update <id|url> --prop "Attachments=./report.pdf"                    # upload local file
+notion update <id|url> --prop "Attachments=https://example.com/file.pdf"    # external URL
+notion update <id|url> --prop "Attachments=./a.pdf,./b.png"                 # multiple files
+```
+
+> **Note:** Setting a `files` property **replaces** all existing files (Notion API behavior). To keep existing files, re-include them in the value.
 
 #### Surgical Editing
 
@@ -259,6 +295,19 @@ notion move "$PAGE_ID" --to "$ARCHIVE_ID"
 
 # Move multiple pages into a database
 notion move page1-id page2-id --to-db "$DB_ID"
+
+# Attach a generated screenshot to a documentation page
+notion attach "$PAGE_ID" ./screenshot.png --caption "Current UI state"
+
+# Create a report page with attached artifacts
+notion create-page --parent "$PAGE_ID" --title "Build Report $(date +%Y-%m-%d)" \
+  -m "# Build Results\nAll tests passed." --file ./test-results.pdf --file ./coverage.png
+
+# Append analysis with supporting data file
+notion append "$PAGE_ID" -m "## Data Analysis\nSee attached CSV:" --file ./export.csv
+
+# Upload a local file as icon for a page
+notion update "$PAGE_ID" --icon ./logo.png
 ```
 
 ---
