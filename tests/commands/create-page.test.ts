@@ -1,13 +1,28 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { mockCreatePage, mockCreatePageInDatabase, mockFetchDatabaseSchema } =
-  vi.hoisted(() => ({
-    mockCreatePage: vi.fn().mockResolvedValue('https://notion.so/new-page-123'),
-    mockCreatePageInDatabase: vi
-      .fn()
-      .mockResolvedValue('https://notion.so/db-page-123'),
-    mockFetchDatabaseSchema: vi.fn(),
-  }));
+const { mockReadStdin } = vi.hoisted(() => ({
+  mockReadStdin: vi.fn().mockResolvedValue(''),
+}));
+
+const {
+  mockCreatePage,
+  mockCreatePageInDatabase,
+  mockFetchDatabaseSchema,
+  mockUploadFilesAsBlocks,
+} = vi.hoisted(() => ({
+  mockCreatePage: vi
+    .fn()
+    .mockResolvedValue(
+      'https://notion.so/Test-Page-aabbccddaabbccddaabbccddaabbccdd',
+    ),
+  mockCreatePageInDatabase: vi
+    .fn()
+    .mockResolvedValue(
+      'https://notion.so/DB-Page-ccddaabbccddaabbccddaabbccddaabb',
+    ),
+  mockFetchDatabaseSchema: vi.fn(),
+  mockUploadFilesAsBlocks: vi.fn().mockResolvedValue([]),
+}));
 
 const { mockBuildPropertiesPayload } = vi.hoisted(() => ({
   mockBuildPropertiesPayload: vi.fn().mockReturnValue({
@@ -26,7 +41,9 @@ vi.mock('../../src/output/stderr.js', () => ({
 }));
 
 vi.mock('../../src/notion/client.js', () => ({
-  createNotionClient: vi.fn(() => ({})),
+  createNotionClient: vi.fn(() => ({
+    blocks: { children: { append: vi.fn().mockResolvedValue({}) } },
+  })),
 }));
 
 vi.mock('../../src/services/write.service.js', () => ({
@@ -42,8 +59,12 @@ vi.mock('../../src/services/update.service.js', () => ({
   buildPropertiesPayload: mockBuildPropertiesPayload,
 }));
 
+vi.mock('../../src/services/upload.service.js', () => ({
+  uploadFilesAsBlocks: mockUploadFilesAsBlocks,
+}));
+
 vi.mock('../../src/utils/stdin.js', () => ({
-  readStdin: vi.fn().mockResolvedValue(''),
+  readStdin: mockReadStdin,
 }));
 
 import { createPageCommand } from '../../src/commands/create-page.js';
@@ -64,6 +85,12 @@ describe('createPageCommand', () => {
     exitSpy = vi
       .spyOn(process, 'exit')
       .mockImplementation(() => undefined as never);
+
+    // Simulate TTY so stdin path isn't triggered unexpectedly
+    Object.defineProperty(process.stdin, 'isTTY', {
+      value: true,
+      configurable: true,
+    });
 
     // Default: parent is NOT a database (fetchDatabaseSchema rejects)
     mockFetchDatabaseSchema.mockRejectedValue(new Error('Not a database'));
@@ -95,7 +122,9 @@ describe('createPageCommand', () => {
       '# Hello',
       { icon: undefined, cover: undefined },
     );
-    expect(stdoutSpy).toHaveBeenCalledWith('https://notion.so/new-page-123\n');
+    expect(stdoutSpy).toHaveBeenCalledWith(
+      'https://notion.so/Test-Page-aabbccddaabbccddaabbccddaabbccdd\n',
+    );
   });
 
   it('creates a page in a database when parent is a database', async () => {
@@ -137,7 +166,9 @@ describe('createPageCommand', () => {
       '',
       { icon: undefined, cover: undefined },
     );
-    expect(stdoutSpy).toHaveBeenCalledWith('https://notion.so/db-page-123\n');
+    expect(stdoutSpy).toHaveBeenCalledWith(
+      'https://notion.so/DB-Page-ccddaabbccddaabbccddaabbccddaabb\n',
+    );
   });
 
   it('errors when --prop is used with a page parent', async () => {
@@ -248,5 +279,109 @@ describe('createPageCommand', () => {
       '',
       { icon: undefined, cover: undefined },
     );
+  });
+
+  it('--file attaches files after page creation', async () => {
+    const fakeBlock = { type: 'image' };
+    mockUploadFilesAsBlocks.mockResolvedValueOnce([fakeBlock]);
+
+    const cmd = createPageCommand();
+    await cmd.parseAsync([
+      'node',
+      'test',
+      '--parent',
+      'b55c9c91384d452b81dbd1ef79372b75',
+      '--title',
+      'Test Page',
+      '--file',
+      '/path/to/image.png',
+    ]);
+
+    expect(mockCreatePage).toHaveBeenCalled();
+    expect(mockUploadFilesAsBlocks).toHaveBeenCalledWith(
+      ['/path/to/image.png'],
+      {},
+      expect.anything(),
+    );
+    expect(stdoutSpy).toHaveBeenCalledWith(
+      expect.stringContaining('notion.so'),
+    );
+  });
+
+  it('--file without markdown creates page with files only', async () => {
+    const fakeBlock = { type: 'file' };
+    mockUploadFilesAsBlocks.mockResolvedValueOnce([fakeBlock]);
+
+    const cmd = createPageCommand();
+    await cmd.parseAsync([
+      'node',
+      'test',
+      '--parent',
+      'b55c9c91384d452b81dbd1ef79372b75',
+      '--title',
+      'Files Only Page',
+      '--file',
+      '/path/to/doc.pdf',
+      '--file',
+      '/path/to/sheet.xlsx',
+    ]);
+
+    expect(mockCreatePage).toHaveBeenCalled();
+    expect(mockUploadFilesAsBlocks).toHaveBeenCalledWith(
+      ['/path/to/doc.pdf', '/path/to/sheet.xlsx'],
+      {},
+      expect.anything(),
+    );
+  });
+
+  it('does not read stdin when --file is provided without -m in non-TTY', async () => {
+    Object.defineProperty(process.stdin, 'isTTY', {
+      value: false,
+      configurable: true,
+    });
+    mockUploadFilesAsBlocks.mockResolvedValueOnce([{ type: 'file' }]);
+
+    const cmd = createPageCommand();
+    await cmd.parseAsync([
+      'node',
+      'test',
+      '--parent',
+      'b55c9c91384d452b81dbd1ef79372b75',
+      '--title',
+      'Files Only Page',
+      '--file',
+      '/path/to/doc.pdf',
+    ]);
+
+    expect(mockReadStdin).not.toHaveBeenCalled();
+    expect(mockUploadFilesAsBlocks).toHaveBeenCalled();
+  });
+
+  it('--file propagates file-not-found error from uploadFilesAsBlocks', async () => {
+    const { CliError } = await import('../../src/errors/cli-error.js');
+    const { ErrorCodes } = await import('../../src/errors/codes.js');
+    mockUploadFilesAsBlocks.mockRejectedValueOnce(
+      new CliError(
+        ErrorCodes.INVALID_ARG,
+        'File not found: /no/such/file.png',
+        'Provide a valid file path',
+      ),
+    );
+
+    const cmd = createPageCommand();
+    await cmd.parseAsync([
+      'node',
+      'test',
+      '--parent',
+      'b55c9c91384d452b81dbd1ef79372b75',
+      '--title',
+      'Test Page',
+      '--file',
+      '/no/such/file.png',
+    ]);
+
+    expect(exitSpy).toHaveBeenCalledWith(1);
+    const stderrOutput = stderrSpy.mock.calls.map((c) => String(c[0])).join('');
+    expect(stderrOutput).toContain('File not found');
   });
 });

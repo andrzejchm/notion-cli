@@ -1,4 +1,3 @@
-import { existsSync } from 'node:fs';
 import type { Client } from '@notionhq/client';
 import { Command } from 'commander';
 import { resolveToken } from '../config/token.js';
@@ -12,11 +11,7 @@ import {
 import { createNotionClient } from '../notion/client.js';
 import { parseNotionId, toUuid } from '../notion/url-parser.js';
 import { reportTokenSource } from '../output/stderr.js';
-import {
-  buildFileBlock,
-  resolveBlockType,
-  uploadFile,
-} from '../services/upload.service.js';
+import { uploadFilesAsBlocks } from '../services/upload.service.js';
 import { appendMarkdown } from '../services/write.service.js';
 import { readStdin } from '../utils/stdin.js';
 
@@ -30,7 +25,7 @@ async function resolveMarkdown(
   hasFiles: boolean,
 ): Promise<string> {
   if (message) return message;
-  if (!process.stdin.isTTY) return readStdin();
+  if (!process.stdin.isTTY && !hasFiles) return readStdin();
   if (!hasFiles) {
     throw new CliError(
       ErrorCodes.INVALID_ARG,
@@ -68,23 +63,7 @@ async function appendFileBlocks(
   uuid: string,
   filePaths: string[],
 ): Promise<void> {
-  for (const filePath of filePaths) {
-    if (!existsSync(filePath)) {
-      throw new CliError(
-        ErrorCodes.INVALID_ARG,
-        `File not found: ${filePath}`,
-        'Provide a valid file path',
-      );
-    }
-  }
-
-  const blocks = await Promise.all(
-    filePaths.map(async (filePath) => {
-      const result = await uploadFile(client, filePath);
-      const blockType = resolveBlockType(result.contentType);
-      return buildFileBlock(result.fileUploadId, blockType);
-    }),
-  );
+  const blocks = await uploadFilesAsBlocks(filePaths, {}, client);
 
   await client.blocks.children.append({
     block_id: uuid,
@@ -123,6 +102,14 @@ export function appendCommand(): Command {
           const markdown = await resolveMarkdown(opts.message, hasFiles);
           const uuid = toUuid(parseNotionId(idOrUrl));
 
+          if (opts.after && !markdown.trim()) {
+            throw new CliError(
+              ErrorCodes.INVALID_ARG,
+              '--after requires markdown content (-m or stdin)',
+              'Provide markdown via -m/--message or pipe it through stdin',
+            );
+          }
+
           if (markdown.trim()) {
             await appendMarkdownWithErrorHandling(
               client,
@@ -136,7 +123,15 @@ export function appendCommand(): Command {
             await appendFileBlocks(client, uuid, opts.file);
           }
 
-          process.stdout.write('Appended.\n');
+          if (hasFiles && markdown.trim()) {
+            process.stdout.write(
+              `Appended and attached ${opts.file.length} file(s).\n`,
+            );
+          } else if (hasFiles) {
+            process.stdout.write(`Attached ${opts.file.length} file(s).\n`);
+          } else {
+            process.stdout.write('Appended.\n');
+          }
         },
       ),
     );

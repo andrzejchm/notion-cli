@@ -1,11 +1,23 @@
 import type { Client } from '@notionhq/client';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   buildFileBlock,
   detectMimeType,
+  PART_SIZE,
   resolveBlockType,
   uploadFile,
+  uploadFilesAsBlocks,
 } from '../../src/services/upload.service.js';
+
+vi.mock('node:fs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:fs')>();
+  return {
+    ...actual,
+    existsSync: vi.fn(),
+    statSync: vi.fn(),
+    createReadStream: vi.fn(),
+  };
+});
 
 // ──────────────────────────────────────────────────────────────────────────────
 // detectMimeType
@@ -312,7 +324,6 @@ describe('buildFileBlock', () => {
 describe('uploadFile', () => {
   const SMALL_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
   const LARGE_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
-  const CHUNK_SIZE = 20 * 1024 * 1024; // 20 MB
 
   function createMockClient(uploadId = 'upload-id-abc') {
     return {
@@ -323,17 +334,6 @@ describe('uploadFile', () => {
       },
     } as unknown as Client;
   }
-
-  beforeEach(() => {
-    vi.mock('node:fs', async (importOriginal) => {
-      const actual = await importOriginal<typeof import('node:fs')>();
-      return {
-        ...actual,
-        statSync: vi.fn(),
-        createReadStream: vi.fn(),
-      };
-    });
-  });
 
   afterEach(() => {
     vi.restoreAllMocks();
@@ -391,7 +391,7 @@ describe('uploadFile', () => {
     const client = createMockClient();
     await uploadFile(client, '/path/to/large.mp4');
 
-    const expectedParts = Math.ceil(LARGE_FILE_SIZE / CHUNK_SIZE); // 2 parts
+    const expectedParts = Math.ceil(LARGE_FILE_SIZE / PART_SIZE); // 2 parts
     expect(client.fileUploads.create).toHaveBeenCalledWith(
       expect.objectContaining({
         mode: 'multi_part',
@@ -480,5 +480,165 @@ describe('uploadFile', () => {
       filename: 'document.pdf',
       contentType: 'application/pdf',
     });
+  });
+
+  it('throws CliError for zero-byte file', async () => {
+    const { statSync } = await import('node:fs');
+    vi.mocked(statSync).mockReturnValue({ size: 0 } as ReturnType<
+      typeof statSync
+    >);
+
+    const client = createMockClient();
+    await expect(uploadFile(client, '/path/to/empty.png')).rejects.toThrow(
+      'Cannot upload empty file: empty.png',
+    );
+  });
+});
+
+// ──────────────────────────────────────────────────────────────────────────────
+// uploadFilesAsBlocks
+// ──────────────────────────────────────────────────────────────────────────────
+
+describe('uploadFilesAsBlocks', () => {
+  const UPLOAD_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+
+  function createMockClient(uploadId = 'upload-id-abc') {
+    return {
+      fileUploads: {
+        create: vi.fn().mockResolvedValue({ id: uploadId }),
+        send: vi.fn().mockResolvedValue({ id: uploadId }),
+        complete: vi.fn().mockResolvedValue({ id: uploadId }),
+      },
+    } as unknown as Client;
+  }
+
+  function makeMockStream(size: number) {
+    const stream = {
+      on: vi.fn((event: string, handler: (data?: unknown) => void) => {
+        if (event === 'data') handler(Buffer.alloc(size));
+        if (event === 'end') handler();
+        return stream;
+      }),
+    };
+    return stream;
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('uploads a single file and returns one block', async () => {
+    const { existsSync, statSync, createReadStream } = await import('node:fs');
+    vi.mocked(existsSync).mockReturnValue(true);
+    vi.mocked(statSync).mockReturnValue({
+      size: UPLOAD_FILE_SIZE,
+    } as ReturnType<typeof statSync>);
+    vi.mocked(createReadStream).mockReturnValue(
+      makeMockStream(UPLOAD_FILE_SIZE) as unknown as ReturnType<
+        typeof createReadStream
+      >,
+    );
+
+    const client = createMockClient('upload-single');
+    const blocks = await uploadFilesAsBlocks(
+      ['/path/to/image.png'],
+      {},
+      client,
+    );
+
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0]).toEqual({
+      type: 'image',
+      image: {
+        file_upload: { id: 'upload-single' },
+        type: 'file_upload',
+        caption: [],
+      },
+    });
+  });
+
+  it('uploads multiple files and returns one block per file', async () => {
+    const { existsSync, statSync, createReadStream } = await import('node:fs');
+    vi.mocked(existsSync).mockReturnValue(true);
+    vi.mocked(statSync).mockReturnValue({
+      size: UPLOAD_FILE_SIZE,
+    } as ReturnType<typeof statSync>);
+    vi.mocked(createReadStream).mockReturnValue(
+      makeMockStream(UPLOAD_FILE_SIZE) as unknown as ReturnType<
+        typeof createReadStream
+      >,
+    );
+
+    const client = createMockClient('upload-multi');
+    const blocks = await uploadFilesAsBlocks(
+      ['/path/to/image.png', '/path/to/audio.mp3', '/path/to/doc.pdf'],
+      {},
+      client,
+    );
+
+    expect(blocks).toHaveLength(3);
+    expect(blocks[0]).toMatchObject({ type: 'image' });
+    expect(blocks[1]).toMatchObject({ type: 'audio' });
+    expect(blocks[2]).toMatchObject({ type: 'pdf' });
+  });
+
+  it('throws CliError when file does not exist', async () => {
+    const { existsSync } = await import('node:fs');
+    vi.mocked(existsSync).mockReturnValue(false);
+
+    const client = createMockClient();
+    await expect(
+      uploadFilesAsBlocks(['/path/to/missing.png'], {}, client),
+    ).rejects.toThrow('File not found: /path/to/missing.png');
+  });
+
+  it('passes caption through to the block', async () => {
+    const { existsSync, statSync, createReadStream } = await import('node:fs');
+    vi.mocked(existsSync).mockReturnValue(true);
+    vi.mocked(statSync).mockReturnValue({
+      size: UPLOAD_FILE_SIZE,
+    } as ReturnType<typeof statSync>);
+    vi.mocked(createReadStream).mockReturnValue(
+      makeMockStream(UPLOAD_FILE_SIZE) as unknown as ReturnType<
+        typeof createReadStream
+      >,
+    );
+
+    const client = createMockClient('upload-caption');
+    const blocks = await uploadFilesAsBlocks(
+      ['/path/to/image.png'],
+      { caption: 'My caption' },
+      client,
+    );
+
+    expect(blocks[0]).toMatchObject({
+      type: 'image',
+      image: expect.objectContaining({
+        caption: [{ type: 'text', text: { content: 'My caption' } }],
+      }),
+    });
+  });
+
+  it('overrides auto-detected type when type option is provided', async () => {
+    const { existsSync, statSync, createReadStream } = await import('node:fs');
+    vi.mocked(existsSync).mockReturnValue(true);
+    vi.mocked(statSync).mockReturnValue({
+      size: UPLOAD_FILE_SIZE,
+    } as ReturnType<typeof statSync>);
+    vi.mocked(createReadStream).mockReturnValue(
+      makeMockStream(UPLOAD_FILE_SIZE) as unknown as ReturnType<
+        typeof createReadStream
+      >,
+    );
+
+    const client = createMockClient('upload-type');
+    // image.png would normally be detected as 'image', override to 'file'
+    const blocks = await uploadFilesAsBlocks(
+      ['/path/to/image.png'],
+      { type: 'file' },
+      client,
+    );
+
+    expect(blocks[0]).toMatchObject({ type: 'file' });
   });
 });

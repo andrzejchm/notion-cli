@@ -277,8 +277,13 @@ async function buildIconCover(
         type: 'file_upload',
         file_upload: { id: uploaded.fileUploadId },
       };
+    } else {
+      throw new CliError(
+        ErrorCodes.INVALID_ARG,
+        `Cover not found: "${options.cover}" is not a valid URL or existing file path.`,
+        'Provide an http(s):// URL or a valid local file path for --cover',
+      );
     }
-    // If cover is not a URL and not a local file, ignore it
   }
 
   return result;

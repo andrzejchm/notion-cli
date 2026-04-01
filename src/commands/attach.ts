@@ -1,22 +1,15 @@
-import { existsSync } from 'node:fs';
-import { Command } from 'commander';
+import { Command, Option } from 'commander';
 import { resolveToken } from '../config/token.js';
-import { CliError } from '../errors/cli-error.js';
-import { ErrorCodes } from '../errors/codes.js';
 import { withErrorHandling } from '../errors/error-handler.js';
 import { createNotionClient } from '../notion/client.js';
 import { parseNotionId, toUuid } from '../notion/url-parser.js';
+import { formatJSON, getOutputMode } from '../output/format.js';
 import { reportTokenSource } from '../output/stderr.js';
-import {
-  buildFileBlock,
-  resolveBlockType,
-  uploadFile,
-} from '../services/upload.service.js';
+import { uploadFilesAsBlocks } from '../services/upload.service.js';
 
 interface AttachOpts {
   caption?: string;
   type?: 'image' | 'file' | 'pdf' | 'audio' | 'video';
-  json?: boolean;
 }
 
 export function attachCommand(): Command {
@@ -28,11 +21,12 @@ export function attachCommand(): Command {
     .argument('<file>', 'file to attach')
     .argument('[files...]', 'additional files to attach')
     .option('--caption <text>', 'caption for the file block(s)')
-    .option(
-      '--type <type>',
-      'override auto-detected block type (image|file|pdf|audio|video)',
+    .addOption(
+      new Option(
+        '--type <type>',
+        'override auto-detected block type (image|file|pdf|audio|video)',
+      ).choices(['image', 'file', 'pdf', 'audio', 'video']),
     )
-    .option('--json', 'output JSON response')
     .action(
       withErrorHandling(
         async (
@@ -48,29 +42,11 @@ export function attachCommand(): Command {
           const pageId = toUuid(parseNotionId(idOrUrl));
           const allFiles = [firstFile, ...extraFiles];
 
-          // Validate all files exist before uploading any
-          for (const filePath of allFiles) {
-            if (!existsSync(filePath)) {
-              throw new CliError(
-                ErrorCodes.INVALID_ARG,
-                `File not found: ${filePath}`,
-                'Provide a valid file path',
-              );
-            }
-          }
-
-          // Upload all files and build blocks
-          const blocks = await Promise.all(
-            allFiles.map(async (filePath) => {
-              const result = await uploadFile(client, filePath);
-              const blockType =
-                opts.type ?? resolveBlockType(result.contentType);
-              return buildFileBlock(
-                result.fileUploadId,
-                blockType,
-                opts.caption,
-              );
-            }),
+          // Upload all files and build blocks (validation happens inside)
+          const blocks = await uploadFilesAsBlocks(
+            allFiles,
+            { caption: opts.caption, type: opts.type },
+            client,
           );
 
           // Append all blocks to the page
@@ -79,10 +55,11 @@ export function attachCommand(): Command {
             children: blocks,
           });
 
-          if (opts.json) {
-            process.stdout.write(`${JSON.stringify(response, null, 2)}\n`);
+          const mode = getOutputMode();
+          if (mode === 'json') {
+            process.stdout.write(`${formatJSON(response)}\n`);
           } else {
-            const pageUrl = `https://www.notion.so/${pageId.replace(/-/g, '')}`;
+            const pageUrl = `https://www.notion.so/${parseNotionId(idOrUrl)}`;
             process.stdout.write(
               `Attached ${allFiles.length} file(s) to ${pageUrl}\n`,
             );

@@ -1,4 +1,3 @@
-import { existsSync } from 'node:fs';
 import { Command } from 'commander';
 import { resolveToken } from '../config/token.js';
 import { CliError } from '../errors/cli-error.js';
@@ -9,11 +8,7 @@ import { parseNotionId, toUuid } from '../notion/url-parser.js';
 import { reportTokenSource } from '../output/stderr.js';
 import { fetchDatabaseSchema } from '../services/database.service.js';
 import { buildPropertiesPayload } from '../services/update.service.js';
-import {
-  buildFileBlock,
-  resolveBlockType,
-  uploadFile,
-} from '../services/upload.service.js';
+import { uploadFilesAsBlocks } from '../services/upload.service.js';
 import { createPage, createPageInDatabase } from '../services/write.service.js';
 import { readStdin } from '../utils/stdin.js';
 
@@ -82,7 +77,7 @@ export function createPageCommand(): Command {
         let markdown = '';
         if (opts.message) {
           markdown = opts.message;
-        } else if (!process.stdin.isTTY) {
+        } else if (!process.stdin.isTTY && opts.file.length === 0) {
           markdown = await readStdin();
         }
 
@@ -144,26 +139,10 @@ export function createPageCommand(): Command {
 
         // Attach files if provided (two-step: page created first, then files appended)
         if (opts.file.length > 0) {
-          for (const filePath of opts.file) {
-            if (!existsSync(filePath)) {
-              throw new CliError(
-                ErrorCodes.INVALID_ARG,
-                `File not found: ${filePath}`,
-                'Provide a valid file path',
-              );
-            }
-          }
-
           // Parse the created page ID from the URL/ID returned by the API
           const createdPageId = toUuid(parseNotionId(createdPageUrl));
 
-          const blocks = await Promise.all(
-            opts.file.map(async (filePath) => {
-              const result = await uploadFile(client, filePath);
-              const blockType = resolveBlockType(result.contentType);
-              return buildFileBlock(result.fileUploadId, blockType);
-            }),
-          );
+          const blocks = await uploadFilesAsBlocks(opts.file, {}, client);
 
           await client.blocks.children.append({
             block_id: createdPageId,

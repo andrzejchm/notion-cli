@@ -5,9 +5,24 @@ import { CliError } from '../../src/errors/cli-error.js';
 import { ErrorCodes } from '../../src/errors/codes.js';
 import {
   buildPropertiesPayload,
+  buildPropertiesPayloadAsync,
   buildPropertyUpdate,
   updatePageProperties,
 } from '../../src/services/update.service.js';
+
+const { mockUploadFile, mockExistsSync } = vi.hoisted(() => ({
+  mockUploadFile: vi.fn(),
+  mockExistsSync: vi.fn().mockReturnValue(false),
+}));
+
+vi.mock('../../src/services/upload.service.js', () => ({
+  uploadFile: mockUploadFile,
+}));
+
+vi.mock('node:fs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:fs')>();
+  return { ...actual, existsSync: mockExistsSync };
+});
 
 // Minimal helper to build a fake PageObjectResponse with given properties
 function makePage(props: Record<string, { type: string }>): PageObjectResponse {
@@ -292,6 +307,85 @@ describe('buildPropertiesPayload', () => {
     expect(result).toEqual({
       Status: { select: { name: ' Done' } },
     });
+  });
+});
+
+// ──────────────────────────────────────────────────────────────────────────────
+// buildPropertiesPayloadAsync
+// ──────────────────────────────────────────────────────────────────────────────
+
+describe('buildPropertiesPayloadAsync', () => {
+  let client: Client;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    client = createMockClient();
+    mockExistsSync.mockReturnValue(false);
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('uploads a local file for a files property', async () => {
+    mockExistsSync.mockReturnValue(true);
+    mockUploadFile.mockResolvedValueOnce({
+      fileUploadId: 'upload-id-123',
+      filename: 'photo.png',
+      contentType: 'image/png',
+    });
+
+    const schema = { Attachment: { type: 'files' } };
+    const result = await buildPropertiesPayloadAsync(
+      client,
+      ['Attachment=/path/to/photo.png'],
+      schema,
+    );
+
+    expect(mockUploadFile).toHaveBeenCalledWith(client, '/path/to/photo.png');
+    expect(result).toEqual({
+      Attachment: {
+        files: [
+          {
+            type: 'file_upload',
+            file_upload: { id: 'upload-id-123' },
+            name: 'photo.png',
+          },
+        ],
+      },
+    });
+  });
+
+  it('throws CliError when file path does not exist and is not a URL', async () => {
+    mockExistsSync.mockReturnValue(false);
+
+    const schema = { Attachment: { type: 'files' } };
+
+    await expect(
+      buildPropertiesPayloadAsync(
+        client,
+        ['Attachment=/no/such/file.png'],
+        schema,
+      ),
+    ).rejects.toBeInstanceOf(CliError);
+  });
+
+  it('handles non-files properties the same as buildPropertiesPayload', async () => {
+    const schema = {
+      Name: { type: 'title' },
+      Status: { type: 'select' },
+    };
+    const result = await buildPropertiesPayloadAsync(
+      client,
+      ['Name=My Task', 'Status=Done'],
+      schema,
+    );
+
+    expect(result).toEqual({
+      Name: { title: [{ type: 'text', text: { content: 'My Task' } }] },
+      Status: { select: { name: 'Done' } },
+    });
+    expect(mockUploadFile).not.toHaveBeenCalled();
   });
 });
 

@@ -1,10 +1,12 @@
-import { createReadStream, statSync } from 'node:fs';
+import { createReadStream, existsSync, statSync } from 'node:fs';
 import { basename, extname } from 'node:path';
 import type { Client } from '@notionhq/client';
 import type { BlockObjectRequest } from '@notionhq/client/build/src/api-endpoints.js';
+import { CliError } from '../errors/cli-error.js';
+import { ErrorCodes } from '../errors/codes.js';
 
-const MULTI_PART_THRESHOLD = 20 * 1024 * 1024; // 20 MB
-const CHUNK_SIZE = 20 * 1024 * 1024; // 20 MB per part
+// Files larger than PART_SIZE use multi-part upload; each part is also PART_SIZE bytes.
+export const PART_SIZE = 20 * 1024 * 1024; // 20 MB
 
 const MIME_MAP: Record<string, string> = {
   '.png': 'image/png',
@@ -113,7 +115,15 @@ async function uploadSinglePart(
   });
 
   const data = await readStreamChunk(filePath, 0, fileSize - 1);
-  const blob = new Blob([data.buffer as ArrayBuffer], { type: contentType });
+  const blob = new Blob(
+    [
+      data.buffer.slice(
+        data.byteOffset,
+        data.byteOffset + data.byteLength,
+      ) as ArrayBuffer,
+    ],
+    { type: contentType },
+  );
 
   await client.fileUploads.send({
     file_upload_id: upload.id,
@@ -133,7 +143,7 @@ async function uploadMultiPart(
   contentType: string,
   fileSize: number,
 ): Promise<string> {
-  const numberOfParts = Math.ceil(fileSize / CHUNK_SIZE);
+  const numberOfParts = Math.ceil(fileSize / PART_SIZE);
 
   const upload = await client.fileUploads.create({
     mode: 'multi_part',
@@ -143,10 +153,18 @@ async function uploadMultiPart(
   });
 
   for (let part = 0; part < numberOfParts; part++) {
-    const start = part * CHUNK_SIZE;
-    const end = Math.min(start + CHUNK_SIZE, fileSize) - 1;
+    const start = part * PART_SIZE;
+    const end = Math.min(start + PART_SIZE, fileSize) - 1;
     const data = await readStreamChunk(filePath, start, end);
-    const blob = new Blob([data.buffer as ArrayBuffer], { type: contentType });
+    const blob = new Blob(
+      [
+        data.buffer.slice(
+          data.byteOffset,
+          data.byteOffset + data.byteLength,
+        ) as ArrayBuffer,
+      ],
+      { type: contentType },
+    );
 
     await client.fileUploads.send({
       file_upload_id: upload.id,
@@ -173,8 +191,16 @@ export async function uploadFile(
   const contentType = detectMimeType(filePath);
   const { size: fileSize } = statSync(filePath);
 
+  if (fileSize === 0) {
+    throw new CliError(
+      ErrorCodes.INVALID_ARG,
+      `Cannot upload empty file: ${filename}`,
+      'Provide a file with content',
+    );
+  }
+
   const fileUploadId =
-    fileSize <= MULTI_PART_THRESHOLD
+    fileSize <= PART_SIZE
       ? await uploadSinglePart(
           client,
           filePath,
@@ -222,5 +248,44 @@ export function buildFileBlock(
       return { type: 'pdf', pdf: fileContent };
     case 'file':
       return { type: 'file', file: fileContent };
+    default:
+      throw new CliError(
+        ErrorCodes.INVALID_ARG,
+        `Unknown block type: ${blockType}`,
+        'Valid types are: image, file, pdf, audio, video',
+      );
   }
+}
+
+export interface UploadFilesAsBlocksOptions {
+  caption?: string;
+  type?: 'image' | 'file' | 'pdf' | 'audio' | 'video';
+}
+
+/**
+ * Validates, uploads, and builds Notion BlockObjectRequests for a list of local file paths.
+ * Throws CliError(INVALID_ARG) if any file does not exist.
+ */
+export async function uploadFilesAsBlocks(
+  files: string[],
+  opts: UploadFilesAsBlocksOptions,
+  client: Client,
+): Promise<BlockObjectRequest[]> {
+  for (const filePath of files) {
+    if (!existsSync(filePath)) {
+      throw new CliError(
+        ErrorCodes.INVALID_ARG,
+        `File not found: ${filePath}`,
+        'Provide a valid file path',
+      );
+    }
+  }
+
+  return Promise.all(
+    files.map(async (filePath) => {
+      const result = await uploadFile(client, filePath);
+      const blockType = opts.type ?? resolveBlockType(result.contentType);
+      return buildFileBlock(result.fileUploadId, blockType, opts.caption);
+    }),
+  );
 }
