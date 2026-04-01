@@ -1,9 +1,24 @@
 import type { Client } from '@notionhq/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { CliError } from '../../src/errors/cli-error.js';
 import {
   createPage,
   createPageInDatabase,
 } from '../../src/services/write.service.js';
+
+const { mockUploadFile, mockExistsSync } = vi.hoisted(() => ({
+  mockUploadFile: vi.fn(),
+  mockExistsSync: vi.fn().mockReturnValue(false),
+}));
+
+vi.mock('../../src/services/upload.service.js', () => ({
+  uploadFile: mockUploadFile,
+}));
+
+vi.mock('node:fs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:fs')>();
+  return { ...actual, existsSync: mockExistsSync };
+});
 
 function createMockClient() {
   return {
@@ -18,6 +33,7 @@ describe('createPage', () => {
 
   beforeEach(() => {
     client = createMockClient();
+    mockExistsSync.mockReturnValue(false);
   });
 
   afterEach(() => {
@@ -155,6 +171,59 @@ describe('createPage', () => {
     const call = vi.mocked(client.pages.create).mock.calls[0][0];
     expect(call).not.toHaveProperty('icon');
     expect(call).not.toHaveProperty('cover');
+  });
+
+  it('uploads local file for --icon when path exists', async () => {
+    mockExistsSync.mockReturnValue(true);
+    mockUploadFile.mockResolvedValueOnce({
+      fileUploadId: 'icon-upload-id',
+      filename: 'icon.png',
+      contentType: 'image/png',
+    });
+
+    await createPage(client, 'parent-id', 'My Page', '', {
+      icon: '/path/to/icon.png',
+    });
+
+    expect(mockUploadFile).toHaveBeenCalledWith(client, '/path/to/icon.png');
+    expect(client.pages.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        icon: { type: 'file_upload', file_upload: { id: 'icon-upload-id' } },
+      }),
+    );
+  });
+
+  it('uploads local file for --cover when path exists', async () => {
+    mockExistsSync.mockReturnValue(true);
+    mockUploadFile.mockResolvedValueOnce({
+      fileUploadId: 'cover-upload-id',
+      filename: 'cover.jpg',
+      contentType: 'image/jpeg',
+    });
+
+    await createPage(client, 'parent-id', 'My Page', '', {
+      cover: '/path/to/cover.jpg',
+    });
+
+    expect(mockUploadFile).toHaveBeenCalledWith(client, '/path/to/cover.jpg');
+    expect(client.pages.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        cover: {
+          type: 'file_upload',
+          file_upload: { id: 'cover-upload-id' },
+        },
+      }),
+    );
+  });
+
+  it('throws CliError when --cover is not a URL and not an existing file', async () => {
+    mockExistsSync.mockReturnValue(false);
+
+    await expect(
+      createPage(client, 'parent-id', 'My Page', '', {
+        cover: '/no/such/cover.jpg',
+      }),
+    ).rejects.toBeInstanceOf(CliError);
   });
 });
 

@@ -82,6 +82,66 @@ To update the skill file, re-download it from the URL in step 2 to the same loca
 
 ## Commands Reference
 
+### `notion attach <id|url> <file> [files...]`
+
+Upload and attach local files to a Notion page as file blocks.
+
+```bash
+# Attach a single image
+notion attach "$PAGE_ID" screenshot.png
+
+# Attach multiple files
+notion attach "$PAGE_ID" report.pdf data.csv image.png
+
+# Add a caption to all attached files
+notion attach "$PAGE_ID" diagram.png --caption "Architecture diagram"
+
+# Override auto-detected block type
+notion attach "$PAGE_ID" file.svg --type image
+
+# Output JSON response
+notion attach "$PAGE_ID" file.pdf --json
+```
+
+| Flag | Description |
+|------|-------------|
+| `--caption <text>` | Caption for the file block(s) |
+| `--type <type>` | Override auto-detected block type (`image\|file\|pdf\|audio\|video`) |
+| `--json` | Output JSON response |
+
+Block type is auto-detected from the file extension. Images (png, jpg, gif, webp, svg, etc.) become `image` blocks, audio files become `audio` blocks, video files become `video` blocks, PDFs become `pdf` blocks, and everything else becomes a `file` block.
+
+Files ≤20 MB are uploaded in a single request. Larger files are split into 20 MB chunks automatically.
+
+Required integration capabilities: **Read content**, **Insert content**
+
+### `notion append <id|url>` — `--file` flag
+
+The `append` command accepts a repeatable `--file <path>` option to attach local files after the markdown content:
+
+```bash
+# Append markdown and attach a file
+notion append "$PAGE_ID" -m "See attached screenshot:" --file screenshot.png
+
+# Attach files without any markdown (files only)
+notion append "$PAGE_ID" --file image.png --file data.csv
+
+# Pipe markdown and attach a file
+echo "# Report" | notion append "$PAGE_ID" --file report.pdf
+```
+
+### `notion create-page` — `--file` flag
+
+The `create-page` command accepts a repeatable `--file <path>` option to attach local files after the page is created:
+
+```bash
+# Create a page and attach a PDF
+notion create-page --parent "$PAGE_ID" --title "Report" --file report.pdf
+
+# Create a page with markdown body and attached files
+notion create-page --parent "$PAGE_ID" --title "Meeting Notes" -m "# Agenda" --file slides.pdf --file notes.txt
+```
+
 ### `notion search <query>` / `notion ls`
 
 Search or list pages and databases. Both commands support:

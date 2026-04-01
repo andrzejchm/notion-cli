@@ -1,6 +1,8 @@
+import { existsSync } from 'node:fs';
 import type { Client } from '@notionhq/client';
 import { CliError } from '../errors/cli-error.js';
 import { ErrorCodes } from '../errors/codes.js';
+import { uploadFile } from './upload.service.js';
 
 export interface AppendOptions {
   /** Insert after this content selector instead of appending to the end. */
@@ -239,20 +241,51 @@ export interface IconCoverOptions {
 
 /**
  * Builds the icon/cover fields for a pages.create call.
+ * Supports:
+ * - Emoji characters for icon
+ * - External URLs for icon and cover
+ * - Local file paths for icon and cover (uploaded via Notion file upload API)
  */
-function buildIconCover(options?: IconCoverOptions): Record<string, unknown> {
+async function buildIconCover(
+  client: Client,
+  options?: IconCoverOptions,
+): Promise<Record<string, unknown>> {
   const result: Record<string, unknown> = {};
+
   if (options?.icon) {
     const isUrl = /^https?:\/\//i.test(options.icon);
     if (isUrl) {
       result.icon = { type: 'external', external: { url: options.icon } };
+    } else if (existsSync(options.icon)) {
+      const uploaded = await uploadFile(client, options.icon);
+      result.icon = {
+        type: 'file_upload',
+        file_upload: { id: uploaded.fileUploadId },
+      };
     } else {
       result.icon = { type: 'emoji', emoji: options.icon };
     }
   }
+
   if (options?.cover) {
-    result.cover = { type: 'external', external: { url: options.cover } };
+    const isUrl = /^https?:\/\//i.test(options.cover);
+    if (isUrl) {
+      result.cover = { type: 'external', external: { url: options.cover } };
+    } else if (existsSync(options.cover)) {
+      const uploaded = await uploadFile(client, options.cover);
+      result.cover = {
+        type: 'file_upload',
+        file_upload: { id: uploaded.fileUploadId },
+      };
+    } else {
+      throw new CliError(
+        ErrorCodes.INVALID_ARG,
+        `Cover not found: "${options.cover}" is not a valid URL or existing file path.`,
+        'Provide an http(s):// URL or a valid local file path for --cover',
+      );
+    }
   }
+
   return result;
 }
 
@@ -268,6 +301,7 @@ export async function createPage(
   markdown: string,
   options?: IconCoverOptions,
 ): Promise<string> {
+  const iconCover = await buildIconCover(client, options);
   const response = await client.pages.create({
     parent: { type: 'page_id', page_id: parentId },
     properties: {
@@ -276,7 +310,7 @@ export async function createPage(
       },
     },
     ...(markdown.trim() ? { markdown } : {}),
-    ...buildIconCover(options),
+    ...iconCover,
   } as Parameters<typeof client.pages.create>[0]);
   const url = 'url' in response ? response.url : response.id;
   return url;
@@ -308,11 +342,12 @@ export async function createPageInDatabase(
     },
   };
 
+  const iconCover = await buildIconCover(client, options);
   const response = await client.pages.create({
     parent: { type: 'database_id', database_id: databaseId },
     properties,
     ...(markdown.trim() ? { markdown } : {}),
-    ...buildIconCover(options),
+    ...iconCover,
   } as Parameters<typeof client.pages.create>[0]);
   const url = 'url' in response ? response.url : response.id;
   return url;

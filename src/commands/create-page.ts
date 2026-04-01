@@ -8,6 +8,7 @@ import { parseNotionId, toUuid } from '../notion/url-parser.js';
 import { reportTokenSource } from '../output/stderr.js';
 import { fetchDatabaseSchema } from '../services/database.service.js';
 import { buildPropertiesPayload } from '../services/update.service.js';
+import { uploadFilesAsBlocks } from '../services/upload.service.js';
 import { createPage, createPageInDatabase } from '../services/write.service.js';
 import { readStdin } from '../utils/stdin.js';
 
@@ -18,9 +19,10 @@ interface CreatePageOpts {
   prop: string[];
   icon?: string;
   cover?: string;
+  file: string[];
 }
 
-function collectProps(val: string, acc: string[]): string[] {
+function collectValues(val: string, acc: string[]): string[] {
   acc.push(val);
   return acc;
 }
@@ -55,11 +57,17 @@ export function createPageCommand(): Command {
     .option(
       '--prop <property=value>',
       'set a property value (repeatable, database parents only)',
-      collectProps,
+      collectValues,
       [],
     )
     .option('--icon <emoji-or-url>', 'page icon — emoji character or image URL')
     .option('--cover <url>', 'page cover image URL')
+    .option(
+      '--file <path>',
+      'attach a local file to the page after creation (repeatable)',
+      collectValues,
+      [],
+    )
     .action(
       withErrorHandling(async (opts: CreatePageOpts) => {
         const { token, source } = await resolveToken();
@@ -69,7 +77,7 @@ export function createPageCommand(): Command {
         let markdown = '';
         if (opts.message) {
           markdown = opts.message;
-        } else if (!process.stdin.isTTY) {
+        } else if (!process.stdin.isTTY && opts.file.length === 0) {
           markdown = await readStdin();
         }
 
@@ -78,6 +86,8 @@ export function createPageCommand(): Command {
 
         // Try to resolve as a database first
         const dbSchema = await tryGetDatabaseSchema(client, parentUuid);
+
+        let createdPageUrl: string;
 
         if (dbSchema) {
           // Database parent — find the title property name
@@ -99,7 +109,7 @@ export function createPageCommand(): Command {
               ? buildPropertiesPayload(opts.prop, dbSchema.properties)
               : {};
 
-          const url = await createPageInDatabase(
+          createdPageUrl = await createPageInDatabase(
             client,
             dbSchema.databaseId,
             titlePropName,
@@ -108,7 +118,6 @@ export function createPageCommand(): Command {
             markdown,
             iconCover,
           );
-          process.stdout.write(`${url}\n`);
         } else {
           // Page parent
           if (opts.prop.length > 0) {
@@ -119,15 +128,29 @@ export function createPageCommand(): Command {
             );
           }
 
-          const url = await createPage(
+          createdPageUrl = await createPage(
             client,
             parentUuid,
             opts.title,
             markdown,
             iconCover,
           );
-          process.stdout.write(`${url}\n`);
         }
+
+        // Attach files if provided (two-step: page created first, then files appended)
+        if (opts.file.length > 0) {
+          // Parse the created page ID from the URL/ID returned by the API
+          const createdPageId = toUuid(parseNotionId(createdPageUrl));
+
+          const blocks = await uploadFilesAsBlocks(opts.file, {}, client);
+
+          await client.blocks.children.append({
+            block_id: createdPageId,
+            children: blocks,
+          });
+        }
+
+        process.stdout.write(`${createdPageUrl}\n`);
       }),
     );
 
