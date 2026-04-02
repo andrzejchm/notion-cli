@@ -116,7 +116,32 @@ notion db query <id|url> --columns "Title,Status"     # limit columns
 notion db query <id|url> --json | jq '.[] | .properties'
 
 notion db create --parent <page-id|url> --title "My Database"  # create a new database
+notion db create --parent <page-id|url> --title "Tasks" \
+  --prop "Status:select:To Do,In Progress,Done" \
+  --prop "Priority:select:High,Medium,Low" \
+  --prop "Due:date:" \
+  --prop "Notes:rich_text:"                                    # with property definitions
 ```
+
+#### Creating Databases with Properties
+
+Use `--prop "Name:type[:options]"` (repeatable) to define columns when creating a database.
+
+```bash
+# Database with select, date, and text properties
+notion db create --parent "$PAGE_ID" --title "Project Tracker" \
+  --prop "Status:select:To Do,In Progress,Done" \
+  --prop "Priority:select:High,Medium,Low" \
+  --prop "Due:date:" \
+  --prop "Notes:rich_text:"
+
+# Minimal — title column is added automatically if not specified
+notion db create --parent "$PAGE_ID" --title "Simple List"
+```
+
+Supported property types: `title`, `rich_text`, `number`, `select`, `multi_select`, `status`, `date`, `checkbox`, `url`, `email`, `phone_number`, `people`, `files`, `created_time`, `last_edited_time`.
+
+**Important:** After creating a database, use `notion search "DB Title" --type database` to find the database ID for subsequent operations. The ID returned by `db create` is a URL-based ID that may differ from the API-accessible database ID.
 
 ### Write Operations
 
@@ -279,9 +304,14 @@ notion edit-page "$PAGE_ID" \
   --find "Status: In Progress" --replace "Status: Done" \
   --find "Blocked: yes" --replace "Blocked: none"
 
-# Create a database entry with properties
-DB_ID=$(notion search "Tasks" --type database | jq -r '.[0].id')
-notion db schema "$DB_ID"   # check property names and valid values first
+# Create a database with typed columns, then add entries
+notion db create --parent "$PAGE_ID" --title "Sprint Tasks" \
+  --prop "Status:select:To Do,In Progress,Done" \
+  --prop "Priority:select:High,Medium,Low" \
+  --prop "Due:date:" --prop "Notes:rich_text:"
+# Use search to get the API-accessible database ID (may differ from db create output)
+DB_ID=$(notion search "Sprint Tasks" --type database | jq -r '.[0].id')
+notion db schema "$DB_ID"   # verify property names and valid values
 notion create-page --parent "$DB_ID" --title "Fix login bug" \
   --prop "Status=To Do" --prop "Priority=High" --prop "Due=2026-04-15"
 
