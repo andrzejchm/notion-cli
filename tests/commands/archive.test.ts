@@ -54,13 +54,13 @@ describe('archiveCommand', () => {
     setOutputMode('auto');
   });
 
-  it('calls client.pages.update with archived: true', async () => {
+  it('calls client.pages.update with in_trash: true', async () => {
     const cmd = archiveCommand();
     await cmd.parseAsync(['node', 'test', 'b55c9c91384d452b81dbd1ef79372b75']);
 
     expect(mockPagesUpdate).toHaveBeenCalledWith({
       page_id: 'b55c9c91-384d-452b-81db-d1ef79372b75',
-      archived: true,
+      in_trash: true,
     });
   });
 
