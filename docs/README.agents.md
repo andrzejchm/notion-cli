@@ -142,6 +142,37 @@ notion create-page --parent "$PAGE_ID" --title "Report" --file report.pdf
 notion create-page --parent "$PAGE_ID" --title "Meeting Notes" -m "# Agenda" --file slides.pdf --file notes.txt
 ```
 
+### `notion db create`
+
+Create a new database under a parent page with typed property columns.
+
+```bash
+# Database with select, date, and text properties
+notion db create --parent "$PAGE_ID" --title "Project Tracker" \
+  --prop "Status:select:To Do,In Progress,Done" \
+  --prop "Priority:select:High,Medium,Low" \
+  --prop "Due:date:" \
+  --prop "Notes:rich_text:"
+
+# Minimal — title column is added automatically if not specified
+notion db create --parent "$PAGE_ID" --title "Simple List"
+```
+
+| Flag | Description |
+|------|-------------|
+| `--parent <id\|url>` | Parent page ID or URL (required) |
+| `--title <title>` | Database title (required) |
+| `--prop <definition>` | Property definition (repeatable) |
+| `--json` | Output full JSON response |
+
+**Property syntax:** `Name:type[:options]`
+
+Supported types: `title`, `rich_text`, `number`, `select`, `multi_select`, `status`, `date`, `checkbox`, `url`, `email`, `phone_number`, `people`, `files`, `created_time`, `last_edited_time`.
+
+**Important:** After creating a database, use `notion search "DB Title" --type database` to find the database ID for subsequent operations. The ID returned by `db create` is a URL-based ID that may differ from the API-accessible database ID.
+
+Required integration capabilities: **Read content**, **Insert content**
+
 ### `notion search <query>` / `notion ls`
 
 Search or list pages and databases. Both commands support:
