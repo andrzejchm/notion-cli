@@ -1,6 +1,22 @@
-import { APIErrorCode, Client, isNotionClientError } from '@notionhq/client';
+import {
+  APIErrorCode,
+  Client,
+  isNotionClientError,
+  LogLevel,
+} from '@notionhq/client';
+import type { Logger } from '@notionhq/client/build/src/logging.js';
 import { CliError } from '../errors/cli-error.js';
 import { ErrorCodes } from '../errors/codes.js';
+
+/**
+ * Custom logger that routes all SDK log output to stderr.
+ * Prevents SDK warning/info messages from polluting stdout when using --json flag.
+ */
+const stderrLogger: Logger = (level, message, extraInfo) => {
+  process.stderr.write(
+    `[notion-sdk] ${level}: ${message} ${JSON.stringify(extraInfo)}\n`,
+  );
+};
 
 export interface WorkspaceInfo {
   workspaceName: string;
@@ -13,7 +29,11 @@ export interface WorkspaceInfo {
  * Throws CliError(AUTH_INVALID) on unauthorized error.
  */
 export async function validateToken(token: string): Promise<WorkspaceInfo> {
-  const notion = new Client({ auth: token });
+  const notion = new Client({
+    auth: token,
+    logLevel: LogLevel.WARN,
+    logger: stderrLogger,
+  });
 
   try {
     const me = await notion.users.me({});
@@ -49,5 +69,10 @@ export async function validateToken(token: string): Promise<WorkspaceInfo> {
  * Used by all commands that need to interact with the Notion API.
  */
 export function createNotionClient(token: string): Client {
-  return new Client({ auth: token, timeoutMs: 120_000 });
+  return new Client({
+    auth: token,
+    timeoutMs: 120_000,
+    logLevel: LogLevel.WARN,
+    logger: stderrLogger,
+  });
 }
