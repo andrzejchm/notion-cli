@@ -16,6 +16,7 @@ import { createPageCommand } from './commands/create-page.js';
 import { dbCreateCommand } from './commands/db/create.js';
 import { dbQueryCommand } from './commands/db/query.js';
 import { dbSchemaCommand } from './commands/db/schema.js';
+import { dbUpdateCommand } from './commands/db/update.js';
 import { deleteBlockCommand } from './commands/delete-block.js';
 import { editPageCommand } from './commands/edit-page.js';
 import { initCommand } from './commands/init.js';
@@ -126,6 +127,7 @@ const dbCmd = new Command('db').description('Database operations');
 dbCmd.addCommand(dbCreateCommand());
 dbCmd.addCommand(dbSchemaCommand());
 dbCmd.addCommand(dbQueryCommand());
+dbCmd.addCommand(dbUpdateCommand());
 program.addCommand(dbCmd);
 
 // --- Utilities ---
