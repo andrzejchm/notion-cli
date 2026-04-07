@@ -4,6 +4,8 @@ import type {
   DatabaseObjectResponse,
   PageObjectResponse,
   QueryDataSourceParameters,
+  UpdateDataSourceParameters,
+  UpdateDataSourceResponse,
 } from '@notionhq/client/build/src/api-endpoints.js';
 import { CliError } from '../errors/cli-error.js';
 import { ErrorCodes } from '../errors/codes.js';
@@ -411,6 +413,123 @@ export async function resolveDataSourceId(
     ErrorCodes.API_NOT_FOUND,
     `Could not find database or data source: ${id}`,
   );
+}
+
+// --- Database schema update ---
+
+export interface DatabaseUpdateOptions {
+  addProps: string[];
+  removeProps: string[];
+  renameProps: string[];
+  setOptions: string[];
+  title?: string;
+}
+
+type UpdatePayload = Omit<UpdateDataSourceParameters, 'data_source_id'>;
+
+/**
+ * Build the `dataSources.update()` payload from CLI flag values.
+ *
+ * For `--rename-prop` and `--set-options`, the current schema is required to
+ * look up property IDs and types.
+ */
+export function buildDatabaseUpdatePayload(
+  opts: DatabaseUpdateOptions,
+  schema: DatabaseSchema,
+): UpdatePayload {
+  const properties: Record<string, unknown> = {};
+
+  // --add-prop: reuse existing parsePropertyDefinition
+  for (const def of opts.addProps) {
+    const { name, config } = parsePropertyDefinition(def);
+    properties[name] = config;
+  }
+
+  // --remove-prop: set to null
+  for (const name of opts.removeProps) {
+    properties[name] = null;
+  }
+
+  // --rename-prop: parse "OldName:NewName", look up property ID
+  for (const raw of opts.renameProps) {
+    const colonIdx = raw.indexOf(':');
+    if (colonIdx === -1) {
+      throw new CliError(
+        ErrorCodes.INVALID_ARG,
+        `Invalid rename format: "${raw}"`,
+        'Use format: --rename-prop "OldName:NewName"',
+      );
+    }
+    const oldName = raw.slice(0, colonIdx).trim();
+    const newName = raw.slice(colonIdx + 1).trim();
+    const propConfig = schema.properties[oldName];
+    if (!propConfig) {
+      const available = Object.keys(schema.properties).join(', ');
+      throw new CliError(
+        ErrorCodes.INVALID_ARG,
+        `Property "${oldName}" not found in schema`,
+        `Available properties: ${available}`,
+      );
+    }
+    properties[propConfig.id] = { name: newName };
+  }
+
+  // --set-options: parse "PropName:opt1,opt2,opt3"
+  for (const raw of opts.setOptions) {
+    const colonIdx = raw.indexOf(':');
+    if (colonIdx === -1) {
+      throw new CliError(
+        ErrorCodes.INVALID_ARG,
+        `Invalid set-options format: "${raw}"`,
+        'Use format: --set-options "PropertyName:opt1,opt2,opt3"',
+      );
+    }
+    const propName = raw.slice(0, colonIdx).trim();
+    const optionsStr = raw.slice(colonIdx + 1).trim();
+    const propConfig = schema.properties[propName];
+    if (!propConfig) {
+      const available = Object.keys(schema.properties).join(', ');
+      throw new CliError(
+        ErrorCodes.INVALID_ARG,
+        `Property "${propName}" not found in schema`,
+        `Available properties: ${available}`,
+      );
+    }
+    if (propConfig.type !== 'select' && propConfig.type !== 'multi_select') {
+      throw new CliError(
+        ErrorCodes.INVALID_ARG,
+        `Property "${propName}" is of type "${propConfig.type}" — only select and multi_select properties support --set-options`,
+      );
+    }
+    const options = optionsStr.split(',').map((opt) => ({ name: opt.trim() }));
+    properties[propName] = { [propConfig.type]: { options } };
+  }
+
+  const payload: UpdatePayload = {};
+
+  if (opts.title !== undefined) {
+    payload.title = [{ type: 'text', text: { content: opts.title } }];
+  }
+
+  if (Object.keys(properties).length > 0) {
+    payload.properties = properties as UpdateDataSourceParameters['properties'];
+  }
+
+  return payload;
+}
+
+/**
+ * Update a Notion data source schema via the API.
+ */
+export async function updateDatabaseSchema(
+  client: Client,
+  dataSourceId: string,
+  payload: UpdatePayload,
+): Promise<UpdateDataSourceResponse> {
+  return client.dataSources.update({
+    data_source_id: dataSourceId,
+    ...payload,
+  });
 }
 
 export function displayPropertyValue(prop: PropValue): string {
