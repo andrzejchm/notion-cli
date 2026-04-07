@@ -16,6 +16,7 @@ import { createPageCommand } from './commands/create-page.js';
 import { dbCreateCommand } from './commands/db/create.js';
 import { dbQueryCommand } from './commands/db/query.js';
 import { dbSchemaCommand } from './commands/db/schema.js';
+import { deleteBlockCommand } from './commands/delete-block.js';
 import { editPageCommand } from './commands/edit-page.js';
 import { initCommand } from './commands/init.js';
 import { lsCommand } from './commands/ls.js';
@@ -117,6 +118,7 @@ program.addCommand(createPageCommand());
 program.addCommand(editPageCommand());
 program.addCommand(updateCommand());
 program.addCommand(archiveCommand());
+program.addCommand(deleteBlockCommand());
 program.addCommand(moveCommand());
 
 // --- Database ---
