@@ -48,13 +48,16 @@ export async function fetchDatabaseSchema(
   client: Client,
   dbId: string,
 ): Promise<DatabaseSchema> {
-  // In Notion SDK v5, databases are exposed as "data sources"
-  // client.dataSources.retrieve() returns DataSourceObjectResponse with .properties
-  const ds = await client.dataSources.retrieve({ data_source_id: dbId });
+  // Resolve the data source ID — the input may be a data source ID or a database page ID.
+  // resolveDataSourceId handles the fallback (try as data source, then as database).
+  const resolvedId = await resolveDataSourceId(client, dbId);
+  const ds = await client.dataSources.retrieve({ data_source_id: resolvedId });
 
   // Only full data sources have title and properties
   const title =
-    'title' in ds ? ds.title.map((rt) => rt.plain_text).join('') || dbId : dbId;
+    'title' in ds
+      ? ds.title.map((rt) => rt.plain_text).join('') || resolvedId
+      : resolvedId;
 
   const properties: Record<string, DatabasePropertyConfig> = {};
 
@@ -85,9 +88,9 @@ export async function fetchDatabaseSchema(
     typeof ds.parent === 'object' &&
     'database_id' in ds.parent
       ? (ds.parent as { database_id: string }).database_id
-      : dbId;
+      : resolvedId;
 
-  return { id: dbId, databaseId, title, properties };
+  return { id: resolvedId, databaseId, title, properties };
 }
 
 export async function queryDatabase(

@@ -7,7 +7,7 @@ import { Command } from 'commander';
 import { resolveToken } from '../config/token.js';
 import { withErrorHandling } from '../errors/error-handler.js';
 import { createNotionClient } from '../notion/client.js';
-import { printOutput, setOutputMode } from '../output/format.js';
+import { getOutputMode, printOutput, setOutputMode } from '../output/format.js';
 import { reportTokenSource } from '../output/stderr.js';
 
 function getTitle(item: PageObjectResponse | DataSourceObjectResponse): string {
@@ -105,7 +105,11 @@ export function searchCommand(): Command {
           ) as (PageObjectResponse | DataSourceObjectResponse)[];
 
           if (fullResults.length === 0) {
-            process.stdout.write(`No results found for "${query}"\n`);
+            if (getOutputMode() === 'json') {
+              process.stdout.write('[]\n');
+            } else {
+              process.stdout.write(`No results found for "${query}"\n`);
+            }
             return;
           }
 
