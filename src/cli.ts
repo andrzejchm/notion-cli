@@ -17,6 +17,7 @@ import { dbCreateCommand } from './commands/db/create.js';
 import { dbQueryCommand } from './commands/db/query.js';
 import { dbSchemaCommand } from './commands/db/schema.js';
 import { dbUpdateCommand } from './commands/db/update.js';
+import { dbUpdateRowsCommand } from './commands/db/update-rows.js';
 import { deleteBlockCommand } from './commands/delete-block.js';
 import { editPageCommand } from './commands/edit-page.js';
 import { initCommand } from './commands/init.js';
@@ -128,6 +129,7 @@ dbCmd.addCommand(dbCreateCommand());
 dbCmd.addCommand(dbSchemaCommand());
 dbCmd.addCommand(dbQueryCommand());
 dbCmd.addCommand(dbUpdateCommand());
+dbCmd.addCommand(dbUpdateRowsCommand());
 program.addCommand(dbCmd);
 
 // --- Utilities ---
