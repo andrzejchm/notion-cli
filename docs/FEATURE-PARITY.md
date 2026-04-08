@@ -4,7 +4,7 @@
 > This document tracks gaps and serves as a prioritized roadmap for closing them.
 
 **Legend:**
-- **CLI** = `@andrzejchm/notion-cli` (this repo, v0.9.0)
+- **CLI** = `@andrzejchm/notion-cli` (this repo, v0.13.0)
 - **MCP** = Official Notion MCP server
 
 ---
@@ -20,15 +20,15 @@
 | Page properties | Read + write via `update --prop` | Full read + write (update any property) | ✅ Parity |
 | Move pages | `move --to` / `--to-db` | Batch move to any parent | ✅ Parity |
 | Duplicate pages | - | Duplicate with async content copy | Gap |
-| Archive/delete | `archive` | Trash pages | ✅ Parity |
+| Archive/delete | `archive` (pages + databases), `delete-block` | Trash pages | ✅ Parity |
 | Database create | `db create --prop` syntax | SQL DDL `CREATE TABLE` syntax | Partial |
-| Database schema update | Read-only schema | `ADD/DROP/RENAME/ALTER COLUMN` via DDL | Gap |
+| Database schema update | `--add-prop, --remove-prop, --rename-prop, --set-options` | `ADD/DROP/RENAME/ALTER COLUMN` via DDL | Partial |
 | Database views | - | Create + update 10 view types with DSL | Gap |
 | Comments | Page-level + block-level + thread replies, list with discussion IDs | Page-level + inline (selection-anchored) + reply to thread + rich text | Partial |
 | Users | List all | List + search + fetch by ID + fetch self | Partial |
 | Teams | - | List teamspaces + search | Gap |
 | Create pages in DB | `create-page --parent <db>` with `--prop` | Full property support, date/place/checkbox expanded formats | ✅ Parity |
-| Batch operations | - | Create up to 100 pages, move up to 100 pages | Gap |
+| Batch operations | `db update-rows` with filter + dry-run | Create up to 100 pages, move up to 100 pages | Partial |
 | Icon / Cover | `--icon` / `--cover` on `create-page` | Set emoji/image icon + cover on create and update | Partial |
 
 ---
@@ -79,11 +79,10 @@ These gaps directly limit what an AI agent can accomplish through the CLI compar
 **CLI:** `notion move <ids...> --to <page-id>` or `notion move <ids...> --to-db <database-id>`. Supports multiple page IDs as variadic arguments.
 **Status:** Shipped in v0.11.0.
 
-#### 8. Update database schema
+#### 8. ✅ Update database schema (shipped v0.13.0)
 **MCP:** `ADD COLUMN`, `DROP COLUMN`, `RENAME COLUMN`, `ALTER COLUMN SET` via DDL.
-**CLI:** Read-only schema via `notion db schema`.
-**Why:** Evolving database structure (adding a new status option, renaming a field) without leaving the terminal.
-**Suggested command:** `notion db alter <id> --add "Priority SELECT(High,Medium,Low)" --rename "Status:Project Status"`
+**CLI:** `notion db update <id> --add-prop "Priority:number"` / `--remove-prop` / `--rename-prop` / `--set-options` / `--title`.
+**Status:** Shipped in v0.13.0. Covers add/remove/rename properties and select option management. Does not support relation, rollup, formula, or unique_id types.
 
 #### 9. ✅ Multi-operation content editing (shipped v0.9.0)
 **MCP:** `update_content` accepts an array of `{ old_str, new_str }` pairs (up to 100) in a single call, with `replace_all_matches` option.
@@ -96,53 +95,63 @@ These gaps directly limit what an AI agent can accomplish through the CLI compar
 **Why:** Templating workflows — copy a template page to start a new project/sprint.
 **Suggested command:** `notion duplicate <id>`
 
+#### 11. ✅ Batch update-rows (shipped v0.13.0)
+**MCP:** Create up to 100 pages in a single call.
+**CLI:** `notion db update-rows <id> --filter "Status=Open" --prop "Priority=High"` — query + batch update with concurrency control. `--dry-run` for safe preview.
+**Status:** Shipped in v0.13.0. Covers batch property updates with filter. Batch page creation (100 pages in one call) is still a gap.
+
+#### 12. ✅ Delete blocks (shipped v0.13.0)
+**MCP:** No direct equivalent (MCP can trash pages but not arbitrary blocks).
+**CLI:** `notion delete-block <id>` — deletes any block via `DELETE /v1/blocks/{block_id}`.
+**Status:** Shipped in v0.13.0. CLI-only feature not available in MCP.
+
 ### Tier 3 - Lower Impact (nice-to-have, niche workflows)
 
-#### 11. Database views (create + update)
+#### 13. Database views (create + update)
 **MCP:** 10 view types (table, board, calendar, timeline, gallery, list, form, chart, map, dashboard) with DSL for filters, sorts, grouping.
 **CLI:** No equivalent.
 **Why:** Mostly a UI concern; agents rarely need to create views programmatically. But useful for project setup automation.
 
-#### 12. Page icon and cover
+#### 14. Page icon and cover
 **MCP:** Set emoji/custom emoji/image URL as icon; set image URL as cover on create and update.
 **CLI:** No equivalent.
 **Why:** Cosmetic but helps agents create polished pages. Low effort to add as flags.
 **Suggested flags:** `--icon "🚀"` / `--cover "https://..."`
 
-#### 13. Teams / teamspaces listing
+#### 15. Teams / teamspaces listing
 **MCP:** `get-teams` with name search.
 **CLI:** No equivalent.
 **Why:** Rarely needed by agents. Useful for workspace discovery in large organizations.
 **Suggested command:** `notion teams`
 
-#### 14. Scoped search (within page / database / teamspace)
+#### 16. Scoped search (within page / database / teamspace)
 **MCP:** `page_url`, `data_source_url`, `teamspace_id` parameters scope search.
 **CLI:** Global search only.
 **Why:** Useful for agents working within a specific project area, but global search + filtering usually suffices.
 **Suggested flags:** `--within <id>`
 
-#### 15. Page verification
+#### 17. Page verification
 **MCP:** `update_verification` — mark pages as verified with optional expiry (Business/Enterprise only).
 **CLI:** No equivalent.
 **Why:** Enterprise-only feature, limited audience.
 
-#### 16. Template application
+#### 18. Template application
 **MCP:** Apply database templates on create and update (template content is async).
 **CLI:** No equivalent.
 **Why:** Useful for standardized page creation but requires database template discovery first.
 **Suggested flags:** `--template <template-id>`
 
-#### 17. Batch page creation
+#### 19. Batch page creation
 **MCP:** Create up to 100 pages in a single call.
 **CLI:** One page per invocation.
 **Why:** Performance optimization for bulk workflows. Can be scripted with shell loops for now.
 
-#### 18. Advanced user lookup
+#### 20. Advanced user lookup
 **MCP:** Search users by name/email, fetch by ID, fetch authenticated user (`self`).
 **CLI:** `notion users` lists all, no search or lookup.
 **Suggested flags:** `notion users --search "john"` / `notion users --id <uuid>` / `notion users --me`
 
-#### 19. Fetch page discussions inline
+#### 21. Fetch page discussions inline
 **MCP:** `include_discussions: true` on fetch shows discussion anchors in page content; `get-comments` with `include_all_blocks`, `include_resolved`.
 **CLI:** `notion comments` shows page-level comments only, no block-level discussions, no resolved filter.
 **Suggested flags:** `--all-blocks` / `--include-resolved`
@@ -172,11 +181,11 @@ The CLI isn't just chasing MCP parity — it has unique strengths:
 - Tier 1 items (1-4) should be tackled before any Tier 2 work
 - Items 1 and 2 can share infrastructure (property value parsing, `--prop` flag syntax)
 - Item 3 (archive) is likely a small addition once property updates work (archive is a property)
-- Items 6 and 8 (database create/alter) can share a schema DSL parser
+- Items 6 (database create) and 8 (database alter) are both shipped and share property definition parsing
 - The CLI should NOT try to replicate MCP's SQL DDL syntax — a simpler flag-based approach fits CLI ergonomics better
 
 ---
 
-*Last updated: 2026-03-24*
-*CLI version compared: 0.9.0*
+*Last updated: 2026-04-08*
+*CLI version compared: 0.13.0*
 *MCP version compared: Official Notion MCP (2026-03)*
