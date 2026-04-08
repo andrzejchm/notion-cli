@@ -96,8 +96,10 @@ notion ls
 | `notion open <id\|url>` | Open a page in your browser |
 | `notion read <id\|url>` | Read a page as markdown |
 | `notion db create --parent <id\|url> --title <title>` | Create a new database with property definitions |
+| `notion db update [options] <id\|url>` | Update database schema (add/remove/rename properties, manage options) |
 | `notion db schema <id\|url>` | Show database property schema and valid values |
 | `notion db query <id\|url>` | Query database entries with filtering and sorting |
+| `notion db update-rows [options] <id\|url>` | Batch update properties on filtered database rows |
 | `notion users` | List workspace members |
 | `notion comments <id\|url>` | Read page comments |
 | `notion comment [id\|url] -m <text>` | Add a comment to a page, block, or thread |
@@ -107,7 +109,8 @@ notion ls
 | `notion edit-page <id\|url> -m <markdown>` | Replace entire page content |
 | `notion create-page --parent <id\|url> --title <title>` | Create a new page, prints URL |
 | `notion update <id\|url> --prop "Name=Value"` | Update properties on a page |
-| `notion archive <id\|url>` | Archive (trash) a page |
+| `notion archive <id\|url>` | Archive (trash) a page or database |
+| `notion delete-block <id\|url>` | Delete a block by ID or URL |
 | `notion move <ids\|urls...> --to <id\|url>` | Move pages to a new parent page |
 | `notion move <ids\|urls...> --to-db <id\|url>` | Move pages to a database parent |
 | `notion completion bash\|zsh\|fish` | Install shell tab completion |
@@ -163,6 +166,28 @@ Property syntax: `Name:type[:options]`. Supported types: `title`, `rich_text`, `
 | `--sort` | `--sort "Created:desc"` | Sort by property (`:asc` or `:desc`) |
 | `--columns` | `--columns "Title,Status"` | Only show specific columns |
 | `--json` | `--json` | Force JSON output |
+
+### `notion db update` flags
+
+| Flag | Example | Description |
+|------|---------|-------------|
+| `--add-prop <definition>` | `--add-prop "Priority:number"` | Add a new property (repeatable) |
+| `--remove-prop <name>` | `--remove-prop "Old Column"` | Remove a property (repeatable) |
+| `--rename-prop <old:new>` | `--rename-prop "Status:Project Status"` | Rename a property (repeatable) |
+| `--set-options <prop:opts>` | `--set-options "Priority:High,Medium,Low"` | Replace all select/multi\_select options |
+| `--title <title>` | `--title "New DB Name"` | Update database title |
+| `--json` | `--json` | Output full JSON response |
+
+Property syntax for `--add-prop`: same as `notion db create --prop` — `Name:type[:options]`.
+
+### `notion db update-rows` flags
+
+| Flag | Example | Description |
+|------|---------|-------------|
+| `--filter <expr>` | `--filter "Status=Done"` | Filter rows to update (repeatable, same syntax as `db query`) |
+| `--prop <property=value>` | `--prop "Priority=High"` | Property to update (repeatable, required) |
+| `--dry-run` | `--dry-run` | Show matching rows without making changes |
+| `--json` | `--json` | Output JSON array of results |
 
 ---
 

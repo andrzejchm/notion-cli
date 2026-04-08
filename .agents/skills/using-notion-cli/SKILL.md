@@ -1,13 +1,13 @@
 ---
 name: using-notion-cli
-description: Use when reading or writing Notion pages, searching a Notion workspace, querying or creating Notion databases, appending or editing page content, creating pages, updating page properties, moving pages, attaching files, adding comments, or archiving pages — via the `notion` CLI tool in the terminal.
+description: Use when reading or writing Notion pages, searching a Notion workspace, querying or creating Notion databases, updating database schemas, batch-updating database rows, appending or editing page content, creating pages, updating page properties, moving pages, attaching files, adding comments, deleting blocks, or archiving pages and databases — via the `notion` CLI tool in the terminal.
 ---
 
-## Overview - skill version 0.12.0
+## Overview - skill version 0.13.0
 
-`notion` is a CLI tool for reading and writing Notion content from the terminal or agent workflows. Use it any time you need to interact with Notion: read pages, search, query databases, append or edit content, create pages, update properties, move pages, post comments, attach files, or archive pages.
+`notion` is a CLI tool for reading and writing Notion content from the terminal or agent workflows. Use it any time you need to interact with Notion: read pages, search, query databases, create and update database schemas, batch-update rows, append or edit content, create pages, update properties, move pages, post comments, attach files, delete blocks, or archive pages and databases.
 
-> **Version check:** Run `notion --version`. If your installed version is older than 0.12.0, update with `npm install -g @andrzejchm/notion-cli` and refresh this skill with `notion skill`.
+> **Version check:** Run `notion --version`. If your installed version is older than 0.13.0, update with `npm install -g @andrzejchm/notion-cli` and refresh this skill with `notion skill`.
 
 ## Setup
 
@@ -36,6 +36,9 @@ Pages must be shared with your integration: open page → `⋯` → **Add connec
 - `notion edit-page`: also need **Update content** + **Insert content**
 - `notion attach`: also need **Insert content**
 - `notion comment`: also need **Read comments** + **Insert comments**
+- `notion db update`: also need **Update content**
+- `notion db update-rows`: also need **Read content** + **Update content**
+- `notion delete-block`: also need **Update content**
 
 ---
 
@@ -143,6 +146,27 @@ Supported property types: `title`, `rich_text`, `number`, `select`, `multi_selec
 
 **Important:** After creating a database, use `notion search "DB Title" --type database` to find the database ID for subsequent operations. The ID returned by `db create` is a URL-based ID that may differ from the API-accessible database ID.
 
+#### Updating Database Schema
+
+```bash
+notion db update <id|url> --add-prop "Priority:number"                     # add a number property
+notion db update <id|url> --add-prop "Severity:select:Low,Medium,High"     # add select with options
+notion db update <id|url> --remove-prop "Old Column"                       # remove a property
+notion db update <id|url> --rename-prop "Status:Project Status"            # rename a property
+notion db update <id|url> --set-options "Priority:P1,P2,P3"               # replace select options
+notion db update <id|url> --title "New Database Title"                     # update title
+notion db update <id|url> --add-prop "URL:url" --remove-prop "Notes"      # multiple ops in one call
+```
+
+#### Batch Updating Database Rows
+
+```bash
+notion db update-rows <id|url> --filter "Status=Open" --prop "Priority=P3"    # update filtered rows
+notion db update-rows <id|url> --prop "Status=Closed"                         # update ALL rows
+notion db update-rows <id|url> --filter "Status=Done" --prop "Priority=Low" --dry-run  # preview
+notion db update-rows <id|url> --filter "Category=Bug" --prop "Status=Done" --json     # JSON output
+```
+
 ### Write Operations
 
 ```bash
@@ -175,7 +199,8 @@ notion comment <id|url> -m "Reviewed and approved."                  # add comme
 notion comment <id|url> -m "Reply" --reply-to <discussion-id>        # reply to a discussion thread
 notion comment <id|url> -m "Note" --block <block-id>                 # comment on a specific block
 
-notion archive <id|url>                                              # move page to trash
+notion archive <id|url>                                              # move page or database to trash
+notion delete-block <id|url>                                         # delete a block (inline db, paragraph, etc.)
 
 notion move <ids|urls...> --to <id|url>                              # move pages to a new parent page
 notion move <ids|urls...> --to-db <id|url>                           # move pages to a database parent
@@ -338,6 +363,21 @@ notion append "$PAGE_ID" -m "## Data Analysis\nSee attached CSV:" --file ./expor
 
 # Upload a local file as icon for a page
 notion update "$PAGE_ID" --icon ./logo.png
+
+# Modify a database schema — add a column after creation
+notion db update "$DB_ID" --add-prop "Sprint:select:S1,S2,S3"
+
+# Clean up stale select options
+notion db update "$DB_ID" --set-options "Status:To Do,In Progress,Done"
+
+# Batch close all "In Progress" tasks
+notion db update-rows "$DB_ID" --filter "Status=In Progress" --prop "Status=Done"
+
+# Preview a batch update before applying
+notion db update-rows "$DB_ID" --filter "Priority=Low" --prop "Status=Archived" --dry-run
+
+# Delete an inline database from a page
+notion delete-block "$BLOCK_ID"
 ```
 
 ---
@@ -363,3 +403,9 @@ notion update "$PAGE_ID" --icon ./logo.png
 **`--find` text not found** — Run `notion read <id>` to see the exact page content. The `--find` value must match text on the page exactly.
 
 **`--after` selector not found** — Run `notion read <id>` to see the exact page content. The selector must match real text: `"start...end"` with ~10 chars from the beginning and end of the target range.
+
+**`notion db update` fails with "Property not found"** — Run `notion db schema <id>` to see exact property names. For `--rename-prop` and `--set-options`, the property must exist.
+
+**`notion db update-rows` updates 0 rows** — Check that your `--filter` matches rows: run `notion db query <id> --filter "..."` first.
+
+**`notion archive` fails for a database** — Try using the data source ID (from `notion db schema <id> --json`) instead of the database page ID.

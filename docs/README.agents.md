@@ -173,6 +173,71 @@ Supported types: `title`, `rich_text`, `number`, `select`, `multi_select`, `stat
 
 Required integration capabilities: **Read content**, **Insert content**
 
+### `notion db update <id|url>`
+
+Update database schema — add, remove, or rename properties and manage select options.
+
+```bash
+# Add a new property
+notion db update "$DB_ID" --add-prop "Priority:number"
+
+# Add a select property with options
+notion db update "$DB_ID" --add-prop "Severity:select:Low,Medium,High,Critical"
+
+# Remove a property
+notion db update "$DB_ID" --remove-prop "Old Column"
+
+# Rename a property
+notion db update "$DB_ID" --rename-prop "Status:Project Status"
+
+# Replace all select/multi_select options
+notion db update "$DB_ID" --set-options "Priority:P1,P2,P3"
+
+# Update database title
+notion db update "$DB_ID" --title "Renamed Database"
+
+# Multiple operations in one call
+notion db update "$DB_ID" --add-prop "URL:url" --remove-prop "Notes" --json
+```
+
+| Flag | Description |
+|------|-------------|
+| `--add-prop <definition>` | Add a new property (repeatable). Syntax: `Name:type[:options]` |
+| `--remove-prop <name>` | Remove a property (repeatable) |
+| `--rename-prop <old:new>` | Rename a property (repeatable) |
+| `--set-options <prop:opts>` | Replace all select/multi\_select options |
+| `--title <title>` | Update database title |
+| `--json` | Output full JSON response |
+
+Required integration capabilities: **Read content**, **Update content**
+
+### `notion db update-rows <id|url>`
+
+Batch update properties on database rows matching a filter.
+
+```bash
+# Update all rows matching a filter
+notion db update-rows "$DB_ID" --filter "Status=Open" --prop "Priority=High"
+
+# Update all rows (no filter)
+notion db update-rows "$DB_ID" --prop "Status=Closed"
+
+# Dry run — preview affected rows without modifying
+notion db update-rows "$DB_ID" --filter "Category=Bug" --prop "Status=Done" --dry-run
+
+# JSON output with per-row success/error
+notion db update-rows "$DB_ID" --filter "Priority=Low" --prop "Status=Archived" --json
+```
+
+| Flag | Description |
+|------|-------------|
+| `--filter <expr>` | Filter rows to update (repeatable, same syntax as `db query --filter`) |
+| `--prop <property=value>` | Property to set on matching rows (repeatable, required) |
+| `--dry-run` | Show matching rows without making changes |
+| `--json` | Output JSON array of `{id, title, success, error?}` objects |
+
+Required integration capabilities: **Read content**, **Update content**
+
 ### `notion search <query>` / `notion ls`
 
 Search or list pages and databases. Both commands support:
@@ -236,7 +301,7 @@ Required integration capabilities: **Read content**, **Update content**
 
 ### `notion archive <id|url>`
 
-Archive (trash) a Notion page.
+Archive (trash) a Notion page or database.
 
 ```bash
 # Archive a page by ID
@@ -247,6 +312,26 @@ notion archive "https://www.notion.so/My-Page-b55c9c91384d452b81dbd1ef79372b75"
 
 # Output the full updated page object as JSON
 notion archive "$PAGE_ID" --json
+
+# Archive a database
+notion archive "$DB_ID"
+```
+
+Required integration capabilities: **Read content**, **Update content**
+
+### `notion delete-block <id|url>`
+
+Delete a block from a page (inline database, paragraph, etc.).
+
+```bash
+# Delete an inline database
+notion delete-block "$BLOCK_ID"
+
+# Delete a block by URL
+notion delete-block "https://www.notion.so/page#blockid"
+
+# Output JSON response
+notion delete-block "$BLOCK_ID" --json
 ```
 
 Required integration capabilities: **Read content**, **Update content**
